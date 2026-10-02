@@ -1,0 +1,35 @@
+{
+  "players": 2,
+  "capitals": ["california", "new_york"],
+  "banks": [12, 8],
+  "holdings": [
+    { "territory": "washington", "owner": 0, "units": { "infantry": 1 } },
+    { "territory": "oregon", "owner": 0, "units": { "infantry": 1 } },
+    { "territory": "california", "owner": 0, "factory": true, "units": { "infantry": 3, "artillery": 1, "tank": 2, "fighter": 1 } },
+    { "territory": "idaho", "owner": 0, "units": { "infantry": 2 } },
+    { "territory": "nevada_utah", "owner": 0, "units": { "infantry": 2 } },
+    { "territory": "arizona", "owner": 0, "units": { "infantry": 2 } },
+    { "territory": "new_mexico", "owner": 0, "units": { "infantry": 2 } },
+    { "territory": "texas", "owner": 0, "units": { "infantry": 2, "artillery": 1 } },
+    { "territory": "oklahoma", "owner": 0, "units": { "infantry": 2, "artillery": 1 } },
+    { "territory": "arkansas", "owner": 0, "units": { "infantry": 2 } },
+    { "territory": "gulf_south", "owner": 0, "units": { "infantry": 1 } },
+    { "territory": "florida", "owner": 0, "units": { "infantry": 1 } },
+    { "territory": "montana", "owner": 1, "units": { "infantry": 1 } },
+    { "territory": "wyoming", "owner": 1, "units": { "infantry": 1 } },
+    { "territory": "colorado", "owner": 1, "units": { "infantry": 1 } },
+    { "territory": "dakotas", "owner": 1, "units": { "infantry": 1 } },
+    { "territory": "plains", "owner": 1, "units": { "infantry": 2 } },
+    { "territory": "upper_midwest", "owner": 1, "units": { "infantry": 1 } },
+    { "territory": "heartland", "owner": 1, "units": { "infantry": 2 } },
+    { "territory": "great_lakes", "owner": 1, "units": { "infantry": 2, "artillery": 1 } },
+    { "territory": "mid_atlantic", "owner": 1, "units": { "infantry": 2 } },
+    { "territory": "pa_nj", "owner": 1, "units": { "infantry": 2 } },
+    { "territory": "new_york", "owner": 1, "factory": true, "units": { "infantry": 3, "artillery": 1, "tank": 1, "fighter": 1 } },
+    { "territory": "new_england", "owner": 1, "units": { "infantry": 1 } }
+  ],
+  "neutrals": {
+    "appalachia": { "infantry": 2 },
+    "southeast": { "infantry": 2 }
+  }
+}

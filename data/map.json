@@ -1,0 +1,997 @@
+{
+  "name": "Continental US (simplified, 26 land territories)",
+  "viewBox": {
+    "width": 1000,
+    "height": 470
+  },
+  "regions": [
+    {
+      "id": "pacific",
+      "name": "Pacific",
+      "bonus": 2
+    },
+    {
+      "id": "mountain_west",
+      "name": "Mountain West",
+      "bonus": 3
+    },
+    {
+      "id": "southwest",
+      "name": "Southwest",
+      "bonus": 2
+    },
+    {
+      "id": "midwest",
+      "name": "Midwest",
+      "bonus": 3
+    },
+    {
+      "id": "south",
+      "name": "South",
+      "bonus": 3
+    },
+    {
+      "id": "northeast",
+      "name": "Northeast",
+      "bonus": 2
+    }
+  ],
+  "territories": [
+    {
+      "id": "washington",
+      "name": "Washington",
+      "states": "WA",
+      "region": "pacific",
+      "neighbors": [
+        "oregon",
+        "idaho"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          55,
+          55
+        ],
+        [
+          150,
+          45
+        ],
+        [
+          165,
+          105
+        ],
+        [
+          70,
+          120
+        ]
+      ],
+      "label": [
+        110,
+        85
+      ]
+    },
+    {
+      "id": "oregon",
+      "name": "Oregon",
+      "states": "OR",
+      "region": "pacific",
+      "neighbors": [
+        "washington",
+        "california",
+        "idaho",
+        "nevada_utah"
+      ],
+      "ipc": 1,
+      "domain": "land",
+      "points": [
+        [
+          55,
+          125
+        ],
+        [
+          160,
+          110
+        ],
+        [
+          155,
+          175
+        ],
+        [
+          50,
+          185
+        ]
+      ],
+      "label": [
+        100,
+        150
+      ]
+    },
+    {
+      "id": "california",
+      "name": "California",
+      "states": "CA",
+      "region": "pacific",
+      "neighbors": [
+        "oregon",
+        "nevada_utah",
+        "arizona"
+      ],
+      "ipc": 5,
+      "domain": "land",
+      "points": [
+        [
+          50,
+          190
+        ],
+        [
+          150,
+          180
+        ],
+        [
+          140,
+          300
+        ],
+        [
+          110,
+          340
+        ],
+        [
+          60,
+          330
+        ],
+        [
+          45,
+          260
+        ]
+      ],
+      "label": [
+        95,
+        262
+      ]
+    },
+    {
+      "id": "idaho",
+      "name": "Idaho",
+      "states": "ID",
+      "region": "mountain_west",
+      "neighbors": [
+        "washington",
+        "oregon",
+        "montana",
+        "wyoming",
+        "nevada_utah"
+      ],
+      "ipc": 1,
+      "domain": "land",
+      "points": [
+        [
+          170,
+          60
+        ],
+        [
+          240,
+          50
+        ],
+        [
+          250,
+          140
+        ],
+        [
+          175,
+          150
+        ]
+      ],
+      "label": [
+        210,
+        105
+      ]
+    },
+    {
+      "id": "montana",
+      "name": "Montana",
+      "states": "MT",
+      "region": "mountain_west",
+      "neighbors": [
+        "idaho",
+        "wyoming",
+        "dakotas"
+      ],
+      "ipc": 1,
+      "domain": "land",
+      "points": [
+        [
+          245,
+          30
+        ],
+        [
+          400,
+          25
+        ],
+        [
+          405,
+          85
+        ],
+        [
+          250,
+          90
+        ]
+      ],
+      "label": [
+        325,
+        60
+      ]
+    },
+    {
+      "id": "wyoming",
+      "name": "Wyoming",
+      "states": "WY",
+      "region": "mountain_west",
+      "neighbors": [
+        "idaho",
+        "montana",
+        "dakotas",
+        "plains",
+        "colorado",
+        "nevada_utah"
+      ],
+      "ipc": 1,
+      "domain": "land",
+      "points": [
+        [
+          250,
+          95
+        ],
+        [
+          400,
+          90
+        ],
+        [
+          395,
+          155
+        ],
+        [
+          245,
+          160
+        ]
+      ],
+      "label": [
+        320,
+        128
+      ]
+    },
+    {
+      "id": "nevada_utah",
+      "name": "Nevada+Utah",
+      "states": "NV+UT",
+      "region": "mountain_west",
+      "neighbors": [
+        "oregon",
+        "california",
+        "idaho",
+        "wyoming",
+        "colorado",
+        "arizona"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          175,
+          155
+        ],
+        [
+          245,
+          145
+        ],
+        [
+          240,
+          265
+        ],
+        [
+          170,
+          270
+        ]
+      ],
+      "label": [
+        207,
+        212
+      ]
+    },
+    {
+      "id": "colorado",
+      "name": "Colorado",
+      "states": "CO",
+      "region": "mountain_west",
+      "neighbors": [
+        "wyoming",
+        "nevada_utah",
+        "new_mexico",
+        "oklahoma",
+        "plains"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          245,
+          165
+        ],
+        [
+          390,
+          160
+        ],
+        [
+          385,
+          235
+        ],
+        [
+          240,
+          240
+        ]
+      ],
+      "label": [
+        315,
+        200
+      ]
+    },
+    {
+      "id": "arizona",
+      "name": "Arizona",
+      "states": "AZ",
+      "region": "southwest",
+      "neighbors": [
+        "california",
+        "nevada_utah",
+        "new_mexico"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          170,
+          275
+        ],
+        [
+          235,
+          270
+        ],
+        [
+          230,
+          345
+        ],
+        [
+          165,
+          350
+        ]
+      ],
+      "label": [
+        200,
+        312
+      ]
+    },
+    {
+      "id": "new_mexico",
+      "name": "New Mexico",
+      "states": "NM",
+      "region": "southwest",
+      "neighbors": [
+        "arizona",
+        "colorado",
+        "oklahoma",
+        "texas"
+      ],
+      "ipc": 1,
+      "domain": "land",
+      "points": [
+        [
+          240,
+          245
+        ],
+        [
+          380,
+          240
+        ],
+        [
+          375,
+          325
+        ],
+        [
+          235,
+          330
+        ]
+      ],
+      "label": [
+        307,
+        287
+      ]
+    },
+    {
+      "id": "texas",
+      "name": "Texas",
+      "states": "TX",
+      "region": "southwest",
+      "neighbors": [
+        "new_mexico",
+        "oklahoma",
+        "arkansas",
+        "gulf_south"
+      ],
+      "ipc": 5,
+      "domain": "land",
+      "points": [
+        [
+          385,
+          245
+        ],
+        [
+          540,
+          240
+        ],
+        [
+          560,
+          340
+        ],
+        [
+          520,
+          395
+        ],
+        [
+          430,
+          390
+        ],
+        [
+          380,
+          330
+        ]
+      ],
+      "label": [
+        472,
+        318
+      ]
+    },
+    {
+      "id": "oklahoma",
+      "name": "Oklahoma",
+      "states": "OK",
+      "region": "southwest",
+      "neighbors": [
+        "new_mexico",
+        "colorado",
+        "plains",
+        "heartland",
+        "arkansas",
+        "texas"
+      ],
+      "ipc": 1,
+      "domain": "land",
+      "points": [
+        [
+          385,
+          205
+        ],
+        [
+          545,
+          200
+        ],
+        [
+          540,
+          235
+        ],
+        [
+          380,
+          238
+        ]
+      ],
+      "label": [
+        460,
+        220
+      ]
+    },
+    {
+      "id": "dakotas",
+      "name": "Dakotas",
+      "states": "ND+SD",
+      "region": "midwest",
+      "neighbors": [
+        "montana",
+        "wyoming",
+        "plains",
+        "upper_midwest",
+        "heartland"
+      ],
+      "ipc": 1,
+      "domain": "land",
+      "points": [
+        [
+          410,
+          30
+        ],
+        [
+          530,
+          25
+        ],
+        [
+          535,
+          100
+        ],
+        [
+          415,
+          105
+        ]
+      ],
+      "label": [
+        472,
+        68
+      ]
+    },
+    {
+      "id": "plains",
+      "name": "Plains",
+      "states": "NE+KS",
+      "region": "midwest",
+      "neighbors": [
+        "wyoming",
+        "colorado",
+        "oklahoma",
+        "dakotas",
+        "heartland"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          415,
+          110
+        ],
+        [
+          530,
+          105
+        ],
+        [
+          525,
+          195
+        ],
+        [
+          410,
+          195
+        ]
+      ],
+      "label": [
+        470,
+        152
+      ]
+    },
+    {
+      "id": "upper_midwest",
+      "name": "Upper Midwest",
+      "states": "MN+WI",
+      "region": "midwest",
+      "neighbors": [
+        "dakotas",
+        "heartland",
+        "great_lakes"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          540,
+          30
+        ],
+        [
+          660,
+          25
+        ],
+        [
+          665,
+          105
+        ],
+        [
+          545,
+          110
+        ]
+      ],
+      "label": [
+        602,
+        70
+      ]
+    },
+    {
+      "id": "heartland",
+      "name": "Heartland",
+      "states": "IA+MO",
+      "region": "midwest",
+      "neighbors": [
+        "dakotas",
+        "plains",
+        "upper_midwest",
+        "great_lakes",
+        "appalachia",
+        "arkansas",
+        "oklahoma"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          540,
+          115
+        ],
+        [
+          660,
+          110
+        ],
+        [
+          655,
+          200
+        ],
+        [
+          535,
+          200
+        ]
+      ],
+      "label": [
+        597,
+        158
+      ]
+    },
+    {
+      "id": "great_lakes",
+      "name": "Great Lakes",
+      "states": "IL+IN+MI+OH",
+      "region": "midwest",
+      "neighbors": [
+        "upper_midwest",
+        "heartland",
+        "appalachia",
+        "pa_nj"
+      ],
+      "ipc": 5,
+      "domain": "land",
+      "points": [
+        [
+          670,
+          110
+        ],
+        [
+          810,
+          105
+        ],
+        [
+          820,
+          190
+        ],
+        [
+          675,
+          195
+        ]
+      ],
+      "label": [
+        745,
+        150
+      ]
+    },
+    {
+      "id": "gulf_south",
+      "name": "Gulf South",
+      "states": "LA+MS+AL",
+      "region": "south",
+      "neighbors": [
+        "texas",
+        "arkansas",
+        "appalachia",
+        "southeast",
+        "florida"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          540,
+          268
+        ],
+        [
+          700,
+          265
+        ],
+        [
+          710,
+          345
+        ],
+        [
+          550,
+          350
+        ]
+      ],
+      "label": [
+        625,
+        308
+      ]
+    },
+    {
+      "id": "appalachia",
+      "name": "Appalachia",
+      "states": "KY+TN+WV",
+      "region": "south",
+      "neighbors": [
+        "heartland",
+        "great_lakes",
+        "pa_nj",
+        "mid_atlantic",
+        "southeast",
+        "gulf_south",
+        "arkansas"
+      ],
+      "ipc": 2,
+      "domain": "land",
+      "points": [
+        [
+          665,
+          205
+        ],
+        [
+          800,
+          200
+        ],
+        [
+          805,
+          260
+        ],
+        [
+          660,
+          262
+        ]
+      ],
+      "label": [
+        732,
+        235
+      ]
+    },
+    {
+      "id": "florida",
+      "name": "Florida",
+      "states": "FL",
+      "region": "south",
+      "neighbors": [
+        "gulf_south",
+        "southeast"
+      ],
+      "ipc": 3,
+      "domain": "land",
+      "points": [
+        [
+          715,
+          270
+        ],
+        [
+          775,
+          268
+        ],
+        [
+          765,
+          420
+        ],
+        [
+          720,
+          425
+        ]
+      ],
+      "label": [
+        748,
+        350
+      ]
+    },
+    {
+      "id": "southeast",
+      "name": "Southeast",
+      "states": "GA+SC+NC",
+      "region": "south",
+      "neighbors": [
+        "gulf_south",
+        "florida",
+        "appalachia",
+        "mid_atlantic"
+      ],
+      "ipc": 3,
+      "domain": "land",
+      "points": [
+        [
+          810,
+          205
+        ],
+        [
+          945,
+          200
+        ],
+        [
+          950,
+          295
+        ],
+        [
+          815,
+          298
+        ]
+      ],
+      "label": [
+        880,
+        252
+      ]
+    },
+    {
+      "id": "arkansas",
+      "name": "Arkansas",
+      "states": "AR",
+      "region": "south",
+      "neighbors": [
+        "texas",
+        "oklahoma",
+        "heartland",
+        "appalachia",
+        "gulf_south"
+      ],
+      "ipc": 1,
+      "domain": "land",
+      "points": [
+        [
+          540,
+          205
+        ],
+        [
+          660,
+          202
+        ],
+        [
+          655,
+          265
+        ],
+        [
+          535,
+          262
+        ]
+      ],
+      "label": [
+        597,
+        235
+      ]
+    },
+    {
+      "id": "mid_atlantic",
+      "name": "Mid-Atlantic",
+      "states": "VA+MD+DE",
+      "region": "northeast",
+      "neighbors": [
+        "appalachia",
+        "southeast",
+        "pa_nj"
+      ],
+      "ipc": 3,
+      "domain": "land",
+      "points": [
+        [
+          810,
+          115
+        ],
+        [
+          945,
+          110
+        ],
+        [
+          940,
+          195
+        ],
+        [
+          805,
+          192
+        ]
+      ],
+      "label": [
+        877,
+        158
+      ]
+    },
+    {
+      "id": "pa_nj",
+      "name": "Pennsylvania+NJ",
+      "states": "PA+NJ",
+      "region": "northeast",
+      "neighbors": [
+        "great_lakes",
+        "appalachia",
+        "mid_atlantic",
+        "new_york"
+      ],
+      "ipc": 4,
+      "domain": "land",
+      "points": [
+        [
+          705,
+          60
+        ],
+        [
+          800,
+          55
+        ],
+        [
+          805,
+          100
+        ],
+        [
+          710,
+          105
+        ]
+      ],
+      "label": [
+        752,
+        82
+      ]
+    },
+    {
+      "id": "new_york",
+      "name": "New York",
+      "states": "NY",
+      "region": "northeast",
+      "neighbors": [
+        "pa_nj",
+        "new_england"
+      ],
+      "ipc": 4,
+      "domain": "land",
+      "points": [
+        [
+          810,
+          25
+        ],
+        [
+          900,
+          20
+        ],
+        [
+          895,
+          105
+        ],
+        [
+          805,
+          110
+        ]
+      ],
+      "label": [
+        852,
+        65
+      ]
+    },
+    {
+      "id": "new_england",
+      "name": "New England",
+      "states": "ME+NH+VT+MA+RI+CT",
+      "region": "northeast",
+      "neighbors": [
+        "new_york"
+      ],
+      "ipc": 3,
+      "domain": "land",
+      "points": [
+        [
+          905,
+          15
+        ],
+        [
+          975,
+          12
+        ],
+        [
+          980,
+          90
+        ],
+        [
+          900,
+          92
+        ]
+      ],
+      "label": [
+        942,
+        52
+      ]
+    }
+  ]
+}

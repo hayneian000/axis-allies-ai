@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Axis &amp; Allies (America) — Phase 1</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="setup">
+      <h1>Axis &amp; Allies — America (hot-seat)</h1>
+      <label>Players
+        <select id="numPlayers">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+        </select>
+      </label>
+      <label>Seed <input id="seed" type="number" value="1" /></label>
+      <button id="startBtn">Start game</button>
+      <p class="hint">Free-for-all. Control every capital in play to win. 20-round cap, then highest income wins.</p>
+    </div>
+
+    <div id="game" hidden>
+      <header id="topbar">
+        <span id="banner"></span>
+        <span id="steps"></span>
+      </header>
+      <div id="app">
+        <div id="mapcol">
+          <svg id="map" viewBox="0 0 1000 470" role="img" aria-label="Game map"></svg>
+          <div id="selinfo"></div>
+        </div>
+        <div id="side">
+          <div id="roster"></div>
+          <div id="phasepanel"></div>
+          <div id="tabs">
+            <div id="tabbtns">
+              <button id="tab-log" class="tab active">Log</button>
+              <button id="tab-chat" class="tab">Chat</button>
+            </div>
+            <div id="log"></div>
+            <div id="chatwrap" hidden>
+              <div id="chat"></div>
+              <div id="chatrow">
+                <input id="chatText" type="text" maxlength="500" placeholder="Message as current player to all" />
+                <button id="chatSend">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer id="actionbar">
+        <span id="fb-phase"></span>
+        <span id="error"></span>
+        <span class="spacer"></span>
+        <button id="endPhaseBtn">End phase</button>
+        <button id="saveBtn">Save</button>
+        <label id="loadLabel">Load <input id="loadInput" type="file" accept="application/json" hidden /></label>
+        <button id="newBtn">New game</button>
+      </footer>
+    </div>
+
+    <div id="modal" hidden>
+      <div id="modal-box" role="dialog" aria-modal="true">
+        <div id="modal-head">
+          <strong id="modal-title"></strong>
+          <button id="modal-close" title="Close">✕</button>
+        </div>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

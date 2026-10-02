@@ -1,0 +1,9 @@
+{
+  "infantry": { "cost": 3, "attack": 1, "defense": 2, "move": 1, "air": false, "boostedAttack": 2 },
+  "artillery": { "cost": 4, "attack": 2, "defense": 2, "move": 1, "air": false },
+  "tank": { "cost": 6, "attack": 3, "defense": 3, "move": 2, "air": false, "blitz": true },
+  "fighter": { "cost": 10, "attack": 3, "defense": 4, "move": 4, "air": true },
+  "bomber": { "cost": 12, "attack": 4, "defense": 1, "move": 6, "air": true, "strategicBomb": true },
+  "aa": { "cost": 5, "attack": 0, "defense": 0, "move": 1, "air": false, "aaFire": true, "noCombatMove": true, "neverCasualty": true },
+  "factory": { "cost": 15, "attack": 0, "defense": 0, "move": 0, "air": false, "structure": true }
+}

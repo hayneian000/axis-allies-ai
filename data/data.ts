@@ -1,0 +1,159 @@
+import mapJson from './map.json';
+import unitsJson from './units.json';
+import scenario2p from './scenario-2p.json';
+import scenario3p from './scenario-3p.json';
+import scenario4p from './scenario-4p.json';
+
+export interface TerritoryDef {
+  id: string;
+  name: string;
+  states: string;
+  domain: string;
+  ipc: number;
+  neighbors: string[];
+  /** Stylized polygon approximating the real geography. */
+  points: Array<[number, number]>;
+  /** Label anchor for name/units text. */
+  label: [number, number];
+}
+
+export interface MapData {
+  name: string;
+  viewBox: { width: number; height: number };
+  territories: TerritoryDef[];
+}
+
+export type UnitType =
+  | 'infantry'
+  | 'artillery'
+  | 'tank'
+  | 'fighter'
+  | 'bomber'
+  | 'aa';
+
+export type UnitOrFactory = UnitType | 'factory';
+
+export const UNIT_TYPES: UnitType[] = [
+  'infantry',
+  'artillery',
+  'tank',
+  'fighter',
+  'bomber',
+  'aa',
+];
+
+export interface UnitStats {
+  cost: number;
+  attack: number;
+  defense: number;
+  move: number;
+  air?: boolean;
+  boostedAttack?: number;
+  blitz?: boolean;
+  strategicBomb?: boolean;
+  aaFire?: boolean;
+  noCombatMove?: boolean;
+  neverCasualty?: boolean;
+  structure?: boolean;
+}
+
+export interface HoldingDef {
+  territory: string;
+  owner: number;
+  factory?: boolean;
+  units: Partial<Record<UnitType, number>>;
+}
+
+export interface ScenarioDef {
+  players: number;
+  capitals: string[];
+  banks: number[];
+  holdings: HoldingDef[];
+  neutrals: Record<string, Partial<Record<UnitType, number>>>;
+}
+
+export const MAP: MapData = mapJson as unknown as MapData;
+export const UNITS: Record<UnitOrFactory, UnitStats> = unitsJson as Record<UnitOrFactory, UnitStats>;
+
+const SCENARIOS: Record<number, ScenarioDef> = {
+  2: scenario2p as ScenarioDef,
+  3: scenario3p as ScenarioDef,
+  4: scenario4p as ScenarioDef,
+};
+
+export function scenarioFor(playerCount: number): ScenarioDef {
+  const s = SCENARIOS[playerCount];
+  if (!s) throw new Error(`No scenario for ${playerCount} players.`);
+  return s;
+}
+
+const byId: Record<string, TerritoryDef> = Object.fromEntries(
+  MAP.territories.map((t) => [t.id, t]),
+);
+
+export function territoryDef(id: string): TerritoryDef | undefined {
+  return byId[id];
+}
+
+export function neighborsOf(id: string): string[] {
+  return byId[id]?.neighbors ?? [];
+}
+
+export function areAdjacent(a: string, b: string): boolean {
+  return neighborsOf(a).includes(b);
+}
+
+export function ipcOf(id: string): number {
+  return byId[id]?.ipc ?? 0;
+}
+
+export function centroid(points: Array<[number, number]>): { x: number; y: number } {
+  const n = points.length;
+  return {
+    x: points.reduce((s, p) => s + p[0], 0) / n,
+    y: points.reduce((s, p) => s + p[1], 0) / n,
+  };
+}
+
+/** BFS step-distance over all territories (aircraft ignore ground ownership). */
+export function airDistance(from: string, to: string): number {
+  if (from === to) return 0;
+  const dist: Record<string, number> = { [from]: 0 };
+  const queue = [from];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    for (const n of neighborsOf(cur)) {
+      if (dist[n] === undefined) {
+        dist[n] = dist[cur] + 1;
+        if (n === to) return dist[n];
+        queue.push(n);
+      }
+    }
+  }
+  return Infinity;
+}
+
+/**
+ * Land paths of up to `maxSteps` from `from`, where each intermediate stop is
+ * friendly-owned or blitzable (enemy-owned with zero units). Used for tanks.
+ */
+export function landPaths(
+  from: string,
+  maxSteps: number,
+  isFriendly: (id: string) => boolean,
+  isEmptyEnemy: (id: string) => boolean,
+): string[][] {
+  const paths: string[][] = [];
+  const walk = (cur: string, stepsLeft: number, path: string[]) => {
+    if (stepsLeft === 0) return;
+    for (const n of neighborsOf(cur)) {
+      if (path.includes(n)) continue;
+      if (!isFriendly(n) && !isEmptyEnemy(n)) continue;
+      const next = [...path, n];
+      paths.push(next);
+      walk(n, stepsLeft - 1, next);
+    }
+  };
+  walk(from, maxSteps, [from]);
+  return paths;
+}

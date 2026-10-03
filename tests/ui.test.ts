@@ -60,6 +60,27 @@ describe('browser UI playthrough', () => {
     expect(document.querySelectorAll('#roster .p')).toHaveLength(2);
   });
 
+  it('renders Tier 1 map chrome: groups, badges, icons, zoom controls', () => {
+    const groups = document.querySelectorAll('#map g[data-terr]');
+    expect(groups).toHaveLength(26);
+    for (const g of groups) {
+      expect(g.querySelector('title')?.textContent).toMatch(/IPC \d/);
+    }
+    expect(document.querySelectorAll('#map .ipcbadge')).toHaveLength(26);
+    expect(document.querySelectorAll('#map .uicon').length).toBeGreaterThan(0);
+    // 2p capitals (california, new_york) start with star badges + factories.
+    expect(document.querySelectorAll('#map .capbadge')).toHaveLength(2);
+    expect(document.querySelectorAll('#map .facbadge').length).toBeGreaterThanOrEqual(2);
+    // Zoom controls rescale the viewport group.
+    const vport = (): string =>
+      document.getElementById('vport')?.getAttribute('transform') ?? '';
+    expect(vport()).toContain('scale(1)');
+    el('zin').click();
+    expect(vport()).toContain('scale(1.25)');
+    el('zreset').click();
+    expect(vport()).toContain('scale(1)');
+  });
+
   it('refuses unaffordable carts and shows the remaining balance live', () => {
     const bank = parseInt(banner().match(/bank (\d+) IPCs/)![1], 10);
     clickButton('Buy units…');
@@ -110,10 +131,11 @@ describe('browser UI playthrough', () => {
   it('declares an attack through the map and fights it in the combat panel', () => {
     const me = banner().match(/(Player \d+)'s turn/)![1];
     // Find an owned territory showing infantry, adjacent to a non-owned one.
-    const labels = [...document.querySelectorAll('#map text')].map((t) => t.textContent ?? '');
+    // Forces render as icons; each territory group carries the full unit
+    // summary in its <title> (native tooltip + accessible text).
     const unitsShown = (id: string): string => {
-      const i = MAP.territories.findIndex((t) => t.id === id);
-      return labels[i * 3 + 2] ?? '';
+      const g = document.querySelector(`#map g[data-terr="${id}"]`);
+      return g?.querySelector('title')?.textContent ?? '';
     };
     const owned = MAP.territories.map((t) => t.id).filter((id) => ownerOf(id) === me);
     expect(owned.length).toBeGreaterThan(0);

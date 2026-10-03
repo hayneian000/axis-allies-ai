@@ -3,22 +3,29 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Hot-seat Axis & Allies–style strategy game on a simplified map of the continental United States." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%94%3C/text%3E%3C/svg%3E" />
     <title>AI Axis &amp; Allies (America) — Phase 1</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <div id="setup">
-      <h1>Axis &amp; Allies — America (hot-seat)</h1>
-      <label>Players
-        <select id="numPlayers">
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4" selected>4</option>
-        </select>
-      </label>
-      <label>Seed <input id="seed" type="number" value="1" /></label>
-      <button id="startBtn">Start game</button>
-      <p class="hint">Free-for-all. Control every capital in play to win. 20-round cap, then highest income wins.</p>
+      <p class="kicker">Adversarial evals · Phase 1</p>
+      <h1>Axis &amp; Allies — America</h1>
+      <p class="lede">Hot-seat strategy on a simplified 26-territory map of the continental United States.</p>
+      <div class="setup-row">
+        <label>Players
+          <select id="numPlayers">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+          </select>
+        </label>
+        <label>Seed <input id="seed" type="number" value="1" /></label>
+      </div>
+      <button id="startBtn" class="btn-primary btn-large">Start game</button>
+      <p class="hint"><strong>Free-for-all.</strong> Control every capital in play to win. 20-round cap, then highest income wins.</p>
     </div>
 
     <div id="game" hidden>
@@ -54,7 +61,7 @@
         <span id="fb-phase"></span>
         <span id="error"></span>
         <span class="spacer"></span>
-        <button id="endPhaseBtn">End phase</button>
+        <button id="endPhaseBtn" class="btn-primary">End phase</button>
         <button id="saveBtn">Save</button>
         <label id="loadLabel">Load <input id="loadInput" type="file" accept="application/json" hidden /></label>
         <button id="newBtn">New game</button>

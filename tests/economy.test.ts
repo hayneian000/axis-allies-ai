@@ -20,7 +20,7 @@ describe('mobilize and factories', () => {
     const s = freshGame(2, 61);
     const pid = s.currentPlayer;
     const cap = s.players[pid].capital;
-    const capIpc = { california: 5, texas: 5, great_lakes: 5, 'new_york': 4 }[cap] ?? 3;
+    const capIpc = { california: 8, texas: 5, great_lakes: 7, 'new_york': 5 }[cap] ?? 3;
     s.players[pid].ipcs = 100;
     expect(purchase(s, pid, [{ type: 'infantry', count: capIpc + 2 }]).ok).toBe(true);
     gotoMobilize(s);

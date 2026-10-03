@@ -422,17 +422,17 @@ describe('mobilize and turn edges', () => {
     purchase(s, pid, [{ type: 'infantry', count: 4 }]);
     gotoMobilize(s);
     const cap = s.players[pid].capital;
-    // Over cap in one territory fails (Arizona IPC 2 < 3); split works.
-    expect(
-      mobilize(s, pid, [
-        { territory: cap, units: { infantry: 3 } },
-        { territory: 'arizona', units: { infantry: 3 } },
-      ]).code,
-    ).toBe('capacity');
+    // Over cap in one territory fails (Arizona IPC 1 < 2); split works.
     expect(
       mobilize(s, pid, [
         { territory: cap, units: { infantry: 2 } },
         { territory: 'arizona', units: { infantry: 2 } },
+      ]).code,
+    ).toBe('capacity');
+    expect(
+      mobilize(s, pid, [
+        { territory: cap, units: { infantry: 1 } },
+        { territory: 'arizona', units: { infantry: 1 } },
       ]).ok,
     ).toBe(true);
   });

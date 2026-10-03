@@ -185,13 +185,57 @@ try {
   console.warn('lakes: skipped —', e.message);
 }
 
+// --------------------------------------------------------------------- IPC ---
+// Derive IPCs from real economic data (BEA state GDP). Each territory's IPC
+// is proportional to its share of total GDP, floored at 1, normalized via
+// largest-remainder to TOTAL_IPC so the game-economy invariant holds.
+const TOTAL_IPC = 61;
+const gdp = JSON.parse(fs.readFileSync(path.join(HERE, 'gdp.json'), 'utf8'));
+const gdpByTerritory = new Map();
+let gdpTotal = 0;
+for (const t of config.territories) {
+  let g = 0;
+  for (const name of t.states) {
+    const v = gdp.values[name];
+    if (v == null) throw new Error(`GDP missing for ${name}`);
+    g += v;
+  }
+  gdpByTerritory.set(t.id, g);
+  gdpTotal += g;
+}
+const ipcExact = new Map();
+for (const [id, g] of gdpByTerritory) ipcExact.set(id, (g / gdpTotal) * TOTAL_IPC);
+// floor at 1, then largest remainder to hit TOTAL_IPC exactly
+const ipcFloor = new Map();
+let assigned = 0;
+for (const [id, exact] of ipcExact) {
+  const f = Math.max(1, Math.floor(exact));
+  ipcFloor.set(id, f);
+  assigned += f;
+}
+let remainder = TOTAL_IPC - assigned;
+if (remainder !== 0) {
+  const byFrac = [...ipcExact.entries()]
+    .map(([id, exact]) => [id, exact - Math.floor(exact)])
+    .sort((a, b) => remainder > 0 ? b[1] - a[1] : a[1] - b[1]);
+  for (let i = 0; i < Math.abs(remainder); i++) {
+    const id = byFrac[i % byFrac.length][0];
+    ipcFloor.set(id, ipcFloor.get(id) + Math.sign(remainder));
+  }
+}
+for (const [id, ipc] of ipcFloor) {
+  console.log(`  ipc ${id}: ${ipc} (gdp $${(gdpByTerritory.get(id) / 1000).toFixed(1)}B)`);
+}
+const ipcSum = [...ipcFloor.values()].reduce((a, b) => a + b, 0);
+if (ipcSum !== TOTAL_IPC) throw new Error(`IPC sum ${ipcSum} != ${TOTAL_IPC}`);
+
 // ------------------------------------------------------------------- emit ---
 const prev = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/map.json'), 'utf8'));
 const prevById = new Map(prev.territories.map((t) => [t.id, t]));
 const territories = built.map((b) => {
   const p = prevById.get(b.id);
   if (!p) throw new Error(`no metadata for ${b.id}`);
-  return { ...p, points: b.points, label: b.label };
+  return { ...p, points: b.points, label: b.label, ipc: ipcFloor.get(b.id) };
 });
 const out = { ...prev, territories, lakes };
 fs.writeFileSync(path.join(ROOT, 'data/map.json'), JSON.stringify(out, null, 2) + '\n');

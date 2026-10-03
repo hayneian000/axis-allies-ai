@@ -46,7 +46,7 @@
         "oregon",
         "idaho"
       ],
-      "ipc": 2,
+      "ipc": 1,
       "domain": "land",
       "points": [
         [
@@ -213,7 +213,7 @@
         "nevada_utah",
         "arizona"
       ],
-      "ipc": 5,
+      "ipc": 8,
       "domain": "land",
       "points": [
         [
@@ -549,7 +549,7 @@
         "colorado",
         "arizona"
       ],
-      "ipc": 2,
+      "ipc": 1,
       "domain": "land",
       "points": [
         [
@@ -618,7 +618,7 @@
         "oklahoma",
         "plains"
       ],
-      "ipc": 2,
+      "ipc": 1,
       "domain": "land",
       "points": [
         [
@@ -657,7 +657,7 @@
         "nevada_utah",
         "new_mexico"
       ],
-      "ipc": 2,
+      "ipc": 1,
       "domain": "land",
       "points": [
         [
@@ -1121,7 +1121,7 @@
         "dakotas",
         "heartland"
       ],
-      "ipc": 2,
+      "ipc": 1,
       "domain": "land",
       "points": [
         [
@@ -1347,7 +1347,7 @@
         "arkansas",
         "oklahoma"
       ],
-      "ipc": 2,
+      "ipc": 1,
       "domain": "land",
       "points": [
         [
@@ -1475,7 +1475,7 @@
         "appalachia",
         "pa_nj"
       ],
-      "ipc": 5,
+      "ipc": 7,
       "domain": "land",
       "points": [
         [
@@ -1684,7 +1684,7 @@
         "southeast",
         "florida"
       ],
-      "ipc": 2,
+      "ipc": 1,
       "domain": "land",
       "points": [
         [
@@ -2210,7 +2210,7 @@
         "appalachia",
         "mid_atlantic"
       ],
-      "ipc": 3,
+      "ipc": 4,
       "domain": "land",
       "points": [
         [
@@ -2643,7 +2643,7 @@
         "pa_nj",
         "new_england"
       ],
-      "ipc": 4,
+      "ipc": 5,
       "domain": "land",
       "points": [
         [

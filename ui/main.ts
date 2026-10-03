@@ -173,6 +173,73 @@ function boot(): void {
       render();
     }
   });
+  // Map pan/zoom. View state lives in `view` and survives re-renders.
+  const map = svg();
+  map.addEventListener(
+    'wheel',
+    (e) => {
+      e.preventDefault();
+      const w = e as WheelEvent;
+      zoomOnPoint(svgPoint(w.clientX, w.clientY), w.deltaY > 0 ? 1 / 1.15 : 1.15);
+    },
+    { passive: false },
+  );
+  let panning = false;
+  let panMoved = false;
+  let panX = 0;
+  let panY = 0;
+  let panSuppress = false;
+  map.addEventListener('pointerdown', (e) => {
+    panning = true;
+    panMoved = false;
+    panX = (e as PointerEvent).clientX;
+    panY = (e as PointerEvent).clientY;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!panning) return;
+    const dx = e.clientX - panX;
+    const dy = e.clientY - panY;
+    if (!panMoved && Math.abs(dx) + Math.abs(dy) < 4) return;
+    panMoved = true;
+    const r = map.getBoundingClientRect();
+    const px = r.width > 0 ? Math.min(r.width / VB_W, r.height / VB_H) * view.k : 1;
+    view.x += dx / px;
+    view.y += dy / px;
+    panX = e.clientX;
+    panY = e.clientY;
+    applyView();
+  });
+  window.addEventListener('pointerup', () => {
+    if (panMoved) {
+      panSuppress = true;
+      window.setTimeout(() => {
+        panSuppress = false;
+      }, 0);
+    }
+    panning = false;
+  });
+  // A drag-pan must not also fire the territory click underneath it.
+  map.addEventListener(
+    'click',
+    (e) => {
+      if (panSuppress) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    },
+    true,
+  );
+  map.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    view = { x: 0, y: 0, k: 1 };
+    applyView();
+  });
+  $('zin').addEventListener('click', () => zoomOnPoint({ x: VB_W / 2, y: VB_H / 2 }, 1.25));
+  $('zout').addEventListener('click', () => zoomOnPoint({ x: VB_W / 2, y: VB_H / 2 }, 1 / 1.25));
+  $('zreset').addEventListener('click', () => {
+    view = { x: 0, y: 0, k: 1 };
+    applyView();
+  });
 }
 
 function ownerColor(state: GameState, owner: number | null): string {
@@ -321,6 +388,192 @@ function unitSummary(s: GameState, tid: string): string {
   return parts.join(' ') || '—';
 }
 
+// ------------------------------------------------------------ map view ---
+// Pan/zoom state persists across renders; applied to the #vport group.
+const VB_W = 1000;
+const VB_H = 470;
+let view = { x: 0, y: 0, k: 1 };
+
+function svgEl(tag: string, attrs: Record<string, string> = {}): SVGElement {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  return e;
+}
+
+function bboxOf(points: Array<[number, number]>): {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+} {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const [x, y] of points) {
+    x0 = Math.min(x0, x);
+    y0 = Math.min(y0, y);
+    x1 = Math.max(x1, x);
+    y1 = Math.max(y1, y);
+  }
+  return { x0, y0, x1, y1 };
+}
+
+// NATO-style unit frames in a 15x11 box at the origin. Strokes use <path>,
+// never <line>: `#map line` is reserved for draft-move arrows.
+const ICON_W = 15;
+const ICON_H = 11;
+
+function drawUnitIcon(g: SVGElement, t: UnitType): void {
+  g.appendChild(
+    svgEl('rect', {
+      x: '0',
+      y: '0',
+      width: String(ICON_W),
+      height: String(ICON_H),
+      rx: '2',
+      class: 'uframe',
+    }),
+  );
+  if (t === 'infantry') {
+    g.appendChild(svgEl('path', { d: 'M2.5,2.5 L12.5,8.5 M12.5,2.5 L2.5,8.5', class: 'uink' }));
+  } else if (t === 'artillery') {
+    g.appendChild(svgEl('circle', { cx: '7.5', cy: '5.5', r: '2.6', class: 'uinkfill' }));
+  } else if (t === 'tank') {
+    g.appendChild(svgEl('ellipse', { cx: '7.5', cy: '5.5', rx: '4.6', ry: '3', class: 'uink' }));
+  } else if (t === 'fighter') {
+    g.appendChild(svgEl('path', { d: 'M7.5,1.5 L12.5,9.5 L7.5,7.2 L2.5,9.5 Z', class: 'uinkfill' }));
+  } else if (t === 'bomber') {
+    g.appendChild(svgEl('path', { d: 'M1.5,8.5 L7.5,2 L13.5,8.5 L7.5,6.6 Z', class: 'uinkfill' }));
+  } else {
+    // aa: flak dome + barrel
+    g.appendChild(svgEl('path', { d: 'M2.5,9.5 A5,5 0 0 1 12.5,9.5 M7.5,9.5 L11,2.5', class: 'uink' }));
+  }
+}
+
+// Classic factory silhouette in a 15x11 box at the origin.
+function drawFactory(g: SVGElement, fresh: boolean): void {
+  g.appendChild(
+    svgEl('path', {
+      d: 'M1,10 L1,4 L4,4 L4,1.5 L6.5,1.5 L6.5,4 L9.5,4 L9.5,2 L12,2 L12,4 L14,4 L14,10 Z',
+      class: fresh ? 'facglyph fresh' : 'facglyph',
+    }),
+  );
+}
+
+/** One territory: tile + sheen + labels + badges + unit icons, in MAP order. */
+function terrGroup(s: GameState, tid: string, inBattle: boolean, isDest: boolean): SVGElement {
+  const t = MAP.territories.find((x) => x.id === tid)!;
+  const st = s.territories[tid];
+  const bb = bboxOf(t.points);
+  const [lx, ly] = t.label;
+  const g = svgEl('g', { class: 'tgroup', 'data-terr': tid });
+
+  // Native tooltip + accessible summary + test hook for force contents.
+  const tip = document.createElementNS(SVGNS, 'title');
+  tip.textContent =
+    `${DISPLAY_NAME[tid] ?? t.name} — ${st.owner === null ? 'neutral' : s.players[st.owner].name}` +
+    ` — IPC ${ipcOf(tid)} — ${unitSummary(s, tid)}`;
+  g.appendChild(tip);
+
+  const pts = t.points.map((p) => p.join(',')).join(' ');
+  // NOTE: `fill` stays the exact owner color (tests + roster legend key off it);
+  // depth comes from the translucent gradient overlay below.
+  const poly = svgEl('polygon', { points: pts, fill: ownerColor(s, st.owner) });
+  let cls = 'terr';
+  if (tid === sel) cls += ' selfrom';
+  else if (isDest) cls += ' dest';
+  if (inBattle) cls += ' battle';
+  poly.setAttribute('class', cls);
+  const isCap = s.players.some((p) => p.capital === tid);
+  if (isCap) {
+    poly.setAttribute('stroke', '#ffd700');
+    poly.setAttribute('stroke-width', '3');
+  }
+  poly.addEventListener('click', (e) => onTerrClick(tid, e as MouseEvent));
+  poly.addEventListener('mousemove', moveTip);
+  poly.addEventListener('mouseleave', hideTip);
+  g.appendChild(poly);
+  g.appendChild(
+    svgEl('polygon', { points: pts, fill: 'url(#sheen)', class: 'sheen', 'pointer-events': 'none' }),
+  );
+
+  // Name + owner stacked on the label anchor.
+  const name = svgEl('text', {
+    x: String(lx),
+    y: String(ly - 12),
+    'text-anchor': 'middle',
+    'font-size': '12',
+    class: 'tname',
+  });
+  name.textContent = `${DISPLAY_NAME[tid] ?? t.name}${isCap ? ' ★' : ''}${inBattle ? ' ⚔' : ''}`;
+  g.appendChild(name);
+  const owner = svgEl('text', {
+    x: String(lx),
+    y: String(ly + 1),
+    'text-anchor': 'middle',
+    'font-size': '10',
+    class: 'towner',
+  });
+  owner.textContent = st.owner === null ? 'neutral' : s.players[st.owner].name;
+  g.appendChild(owner);
+
+  // IPC value pill heading the label stack (bbox pinning collided with
+  // names on short tiles like Oklahoma).
+  const badge = svgEl('g', { class: 'ipcbadge', transform: `translate(${lx} ${ly - 27})` });
+  badge.appendChild(svgEl('rect', { x: '-21', y: '-7', width: '42', height: '14', rx: '7', class: 'ipcpill' }));
+  const bt = svgEl('text', { x: '0', y: '3.5', 'text-anchor': 'middle', 'font-size': '9.5', class: 'ipctext' });
+  bt.textContent = `IPC ${ipcOf(tid)}`;
+  badge.appendChild(bt);
+  g.appendChild(badge);
+
+  // Capital star pinned to the top-right corner.
+  if (isCap) {
+    const cap = svgEl('g', { class: 'capbadge', transform: `translate(${bb.x1 - 9} ${bb.y0 + 10})` });
+    cap.appendChild(svgEl('circle', { cx: '0', cy: '0', r: '7.5', class: 'capring' }));
+    const star = svgEl('text', { x: '0', y: '3.5', 'text-anchor': 'middle', 'font-size': '10', class: 'capstar' });
+    star.textContent = '★';
+    cap.appendChild(star);
+    g.appendChild(cap);
+  }
+
+  const present = UNIT_ORDER.filter((u) => st.units[u] > 0);
+
+  // Factory silhouette centered below the icon row (bbox corners often fall
+  // outside organic shapes, leaving the glyph floating off-tile).
+  if (st.factory) {
+    const fy = present.length > 0 ? ly + 22 : ly + 8;
+    const fac = svgEl('g', { class: 'facbadge', transform: `translate(${lx - 7.5} ${fy})` });
+    drawFactory(fac, st.factoryFresh);
+    g.appendChild(fac);
+  }
+
+  // Unit icon row, centered under the owner line, shrunk to fit narrow tiles.
+  if (present.length > 0) {
+    const gap = 5;
+    const slots = present.map((u) => ({ u, w: ICON_W + 3 + String(st.units[u]).length * 6 }));
+    const rowW = slots.reduce((sum, x) => sum + x.w, 0) + gap * (slots.length - 1);
+    const avail = Math.max(30, bb.x1 - bb.x0 - 6);
+    const sc = Math.min(1, avail / rowW);
+    const row = svgEl('g', {
+      class: 'uicons',
+      transform: `translate(${(lx - (rowW * sc) / 2).toFixed(1)} ${ly + 8}) scale(${sc.toFixed(3)})`,
+    });
+    let cx = 0;
+    for (const sl of slots) {
+      const ig = svgEl('g', { class: 'uicon', 'data-unit': sl.u, transform: `translate(${cx} 0)` });
+      drawUnitIcon(ig, sl.u);
+      const count = svgEl('text', { x: String(ICON_W + 2.5), y: '9.5', 'font-size': '9', class: 'ucount' });
+      count.textContent = String(st.units[sl.u]);
+      ig.appendChild(count);
+      row.appendChild(ig);
+      cx += sl.w + gap;
+    }
+    g.appendChild(row);
+  }
+  return g;
+}
+
 function renderMap(s: GameState): void {
   const m = svg();
   m.innerHTML = '';
@@ -339,28 +592,64 @@ function renderMap(s: GameState): void {
     marker.appendChild(path);
     defs.appendChild(marker);
   }
+  // Top-light sheen for territory tiles; ocean backdrop gradient.
+  const sheen = svgEl('linearGradient', { id: 'sheen', x1: '0', y1: '0', x2: '0', y2: '1' });
+  sheen.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#ffffff', 'stop-opacity': '.26' }));
+  sheen.appendChild(svgEl('stop', { offset: '.45', 'stop-color': '#ffffff', 'stop-opacity': '.05' }));
+  sheen.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#000000', 'stop-opacity': '.16' }));
+  defs.appendChild(sheen);
+  const ocean = svgEl('linearGradient', { id: 'ocean', x1: '0', y1: '0', x2: '1', y2: '1' });
+  ocean.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#262c38' }));
+  ocean.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#1b1f28' }));
+  defs.appendChild(ocean);
   m.appendChild(defs);
+
+  // Static ocean backdrop (outside pan/zoom).
+  m.appendChild(
+    svgEl('rect', {
+      x: '0',
+      y: '0',
+      width: String(VB_W),
+      height: String(VB_H),
+      fill: 'url(#ocean)',
+      class: 'ocean',
+    }),
+  );
+
+  const vport = svgEl('g', {
+    id: 'vport',
+    transform: `translate(${view.x} ${view.y}) scale(${view.k})`,
+  });
+  m.appendChild(vport);
 
   const battles = new Set(openBattles(s).map((b) => b.territoryId));
   const dests = legalDestinations(s);
   for (const t of MAP.territories) {
-    const st = s.territories[t.id];
-    const poly = document.createElementNS(SVGNS, 'polygon');
-    poly.setAttribute('points', t.points.map((p) => p.join(',')).join(' '));
-    poly.setAttribute('fill', ownerColor(s, st.owner));
-    let cls = 'terr';
-    if (t.id === sel) cls += ' selfrom';
-    else if (dests.has(t.id)) cls += ' dest';
-    poly.setAttribute('class', cls);
-    if (s.players.some((p) => p.capital === t.id)) {
-      poly.setAttribute('stroke', '#ffd700');
-      poly.setAttribute('stroke-width', '3');
-    }
-    poly.addEventListener('click', () => onTerrClick(t.id));
-    m.appendChild(poly);
+    vport.appendChild(terrGroup(s, t.id, battles.has(t.id), dests.has(t.id)));
   }
 
-  // Draft-move arrows under the labels.
+  // Great Lakes water overlays: drawn above land, below labels/arrows;
+  // pointer-events none so territory clicks pass through.
+  for (const lake of MAP.lakes ?? []) {
+    const tip = document.createElementNS(SVGNS, 'title');
+    tip.textContent = lake.name;
+    const el = svgEl('ellipse', {
+      cx: String(lake.cx),
+      cy: String(lake.cy),
+      rx: String(lake.rx),
+      ry: String(lake.ry),
+      fill: '#3d6a8f',
+      stroke: '#7fb3d9',
+      'stroke-width': '1.5',
+      'pointer-events': 'none',
+      class: 'lake',
+      transform: `rotate(${lake.rotate} ${lake.cx} ${lake.cy})`,
+    });
+    el.appendChild(tip);
+    vport.appendChild(el);
+  }
+
+  // Draft-move arrows above the tiles.
   const drafts: Array<{ from: string; to: string; hostile: boolean }> = [
     ...draftMoves.map((d) => ({
       from: d.from,
@@ -381,27 +670,57 @@ function renderMap(s: GameState): void {
     line.setAttribute('stroke-width', '3');
     line.setAttribute('marker-end', d.hostile ? 'url(#arr-red)' : 'url(#arr-green)');
     line.setAttribute('pointer-events', 'none');
-    m.appendChild(line);
+    vport.appendChild(line);
   }
+}
 
-  for (const t of MAP.territories) {
-    const st = s.territories[t.id];
-    const [lx, ly] = t.label;
-    const isCap = s.players.some((p) => p.capital === t.id);
-    const label = (text: string, dy: number, size: number, bold = false): void => {
-      const el = document.createElementNS(SVGNS, 'text');
-      el.setAttribute('x', String(lx));
-      el.setAttribute('y', String(ly + dy));
-      el.setAttribute('text-anchor', 'middle');
-      el.setAttribute('font-size', String(size));
-      if (bold) el.setAttribute('font-weight', 'bold');
-      el.textContent = text;
-      m.appendChild(el);
+// ------------------------------------------------------------ map chrome ---
+function moveTip(e: Event): void {
+  const me = e as MouseEvent;
+  const tip = document.getElementById('maptip');
+  const host = document.getElementById('mapcol');
+  if (!tip || !host) return;
+  const g = (me.currentTarget as Element | null)?.parentNode as Element | null;
+  tip.textContent = g?.querySelector('title')?.textContent ?? '';
+  tip.hidden = false;
+  const r = host.getBoundingClientRect();
+  tip.style.left = `${me.clientX - r.left + 14}px`;
+  tip.style.top = `${me.clientY - r.top + 12}px`;
+}
+
+function hideTip(): void {
+  const tip = document.getElementById('maptip');
+  if (tip) tip.hidden = true;
+}
+
+function applyView(): void {
+  document
+    .getElementById('vport')
+    ?.setAttribute('transform', `translate(${view.x} ${view.y}) scale(${view.k})`);
+}
+
+/** Client-pixel point mapped into viewBox units (letterboxed `meet` fit). */
+function svgPoint(clientX: number, clientY: number): { x: number; y: number } {
+  const r = svg().getBoundingClientRect();
+  if (r.width < 1 || r.height < 1) return { x: VB_W / 2, y: VB_H / 2 };
+  const sc = Math.min(r.width / VB_W, r.height / VB_H);
+  const ox = r.left + (r.width - VB_W * sc) / 2;
+  const oy = r.top + (r.height - VB_H * sc) / 2;
+  return { x: (clientX - ox) / sc, y: (clientY - oy) / sc };
+}
+
+function zoomOnPoint(p: { x: number; y: number }, factor: number): void {
+  const k2 = Math.min(6, Math.max(1, view.k * factor));
+  if (k2 === 1) {
+    view = { x: 0, y: 0, k: 1 };
+  } else {
+    view = {
+      x: p.x - ((p.x - view.x) * k2) / view.k,
+      y: p.y - ((p.y - view.y) * k2) / view.k,
+      k: k2,
     };
-    label(`${DISPLAY_NAME[t.id] ?? t.name}${isCap ? ' ★' : ''}${battles.has(t.id) ? ' ⚔' : ''}`, -8, 12, true);
-    label(`IPC ${ipcOf(t.id)} · ${st.owner === null ? 'neutral' : s.players[st.owner].name}`, 6, 10);
-    label(unitSummary(s, t.id), 20, 10.5);
   }
+  applyView();
 }
 
 /** Territories to highlight as legal destinations for the current selection. */
@@ -419,9 +738,18 @@ function legalDestinations(s: GameState): Set<string> {
   return out;
 }
 
-function onTerrClick(tid: string): void {
+function onTerrClick(tid: string, e?: MouseEvent): void {
   if (!S || S.phase === 'gameover') return;
   const s = S;
+  // Sample the ripple point before render() rebuilds the map.
+  let ripple: { x: number; y: number } | null = null;
+  if (e) {
+    const r = svg().getBoundingClientRect();
+    if (r.width > 0) {
+      const p = svgPoint(e.clientX, e.clientY);
+      ripple = { x: (p.x - view.x) / view.k, y: (p.y - view.y) / view.k };
+    }
+  }
   // Clicking your own territory in a move phase plans the move in a dialog.
   if (
     (s.phase === 'combatMove' || s.phase === 'nonCombat') &&
@@ -430,11 +758,21 @@ function onTerrClick(tid: string): void {
     sel = tid;
     modal = 'move';
     showError('');
-    render();
-    return;
+  } else {
+    sel = sel === tid ? null : tid;
   }
-  sel = sel === tid ? null : tid;
   render();
+  if (ripple) {
+    const c = svgEl('circle', {
+      cx: ripple.x.toFixed(1),
+      cy: ripple.y.toFixed(1),
+      r: '6',
+      class: 'ripple',
+      'pointer-events': 'none',
+    });
+    document.getElementById('vport')?.appendChild(c);
+    window.setTimeout(() => c.remove(), 650);
+  }
 }
 
 function stageMoveFromInspector(from: string, to: string): void {

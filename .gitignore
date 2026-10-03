@@ -8,6 +8,9 @@ dist/
 dist-ssr/
 *.local
 
+# Local screenshot harness output (reviewed sets live in docs/screenshots/)
+screenshots/
+
 # Logs
 logs/
 *.log

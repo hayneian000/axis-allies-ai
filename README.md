@@ -1,98 +1,133 @@
-# AI Axis & Allies — America (Phase 1)
+# AI Axis & Allies — America
 
-Hot-seat Axis & Allies–style strategy game on a simplified 26-territory map of
-the continental United States. 2–4 player free-for-all. No backend; state lives
-in the browser with JSON export/import.
+Hot-seat Axis & Allies–style strategy game on a simplified **26-territory map of
+the continental United States**. 2–4 player free-for-all, no backend — game
+state lives in the browser with JSON export/import.
 
-## Prerequisites
+This is **Phase 1** of a larger project: in Phase 2, LLM agents will replace some
+or all human players and negotiate with each other via chat. The engine and UI
+are built so Phase 2 is an additive layer, not a rewrite — the action API the
+UI drives is the same tool set agents will use.
 
-- [Node.js](https://nodejs.org/) 18 or newer (20 LTS recommended)
-- npm 9+ (ships with Node)
-- A modern browser (Chrome, Edge, Firefox, or Safari)
-- Git, if you want to clone / contribute
+![UI overview — setup, board, purchase modal, move dialog](docs/screenshots/ui-polish-sheet1.svg)
 
-Check yours:
+## Quickstart
 
-```bash
-node --version   # want v18+
-npm --version
-```
-
-## Getting set up
+Prerequisites: [Node.js](https://nodejs.org/) 18+ (20 LTS recommended), npm 9+,
+a modern browser.
 
 ```bash
-# 1. Clone the repo
-git clone https://github.com/<you>/ai-axis-and-allies.git
-cd ai-axis-and-allies
-
-# 2. Install dependencies
+git clone https://github.com/hayneian000/axis-allies-ai.git
+cd axis-allies-ai
 npm install
-
-# 3. Start the dev server, then open the printed URL
-#    (usually http://localhost:5173) in a browser
-npm run dev
+npm run dev      # open the printed URL (usually http://localhost:5173)
 ```
 
-Production build + preview:
+Production build:
 
 ```bash
-npm run build
-npm run preview  # serves dist/ at http://localhost:4173
+npm run build     # type-checks (tsc --noEmit), then builds to dist/
+npm run preview   # serves dist/ at http://localhost:4173
 ```
 
-## Scripts
+## Playing the game
 
-| Command            | What it does                                  |
-|--------------------|-----------------------------------------------|
-| `npm run dev`      | Start the Vite dev server (`ui/`, port 5173)  |
-| `npm run build`    | Type-check (`tsc --noEmit`) + build to `dist/`|
-| `npm run preview`  | Serve the production build locally            |
-| `npm test`         | Full test suite (engine, data, sim, UI)       |
-| `npm run simulate` | Headless bot games played to an ending        |
+Each turn runs the same six phases — the stepper at the top tracks where you are:
 
-## Test it
+**Buy → Attack → Battle → Move → Deploy → (income)**
+
+1. **Buy** — spend IPCs from your bank on units (they arrive at Deploy).
+2. **Attack** — click one of your territories, dial units in the dialog, pick a
+   destination. Staged moves preview as arrows (red = attack, green = move).
+3. **Battle** — open each battle, roll rounds, assign casualties (or Auto),
+   retreat or fight on.
+4. **Move** — reposition within your own ground; aircraft must end on ground
+   held since turn start or they're lost.
+5. **Deploy** — click a factory territory, dial units from your purchase pool,
+   stage, then deploy all.
+6. **Income** — collect IPCs for territories you hold; capturing a capital
+   transfers the victim's bank to you.
+
+**Winning:** hold every capital in play. 20-round cap — then highest income
+wins (tie: bank). Lose your capital and you get no purchases and no income
+until you take it back.
+
+Click any territory to inspect it: owner, IPC value, units, factory status.
+
+## Project structure
+
+| Path        | What it is |
+|-------------|------------|
+| `engine/`   | Pure headless rules engine (`engine.ts`, `types.ts`). No DOM, no I/O. Every state change goes through one validated action function; failures return `{ ok: false, code, error }` and never mutate state. |
+| `data/`     | All tunable content as JSON: `map.json` (territories, IPC, adjacency, SVG layout), `units.json` (cost/attack/defense/move), `scenario-2p/3p/4p.json` (starting setups), plus the `data.ts` loader. Balance changes are JSON edits. |
+| `ui/`       | Plain DOM + SVG front end (`index.html`, `main.ts`, `style.css`) driving the engine through the action API. |
+| `tests/`    | Per-phase unit tests, headless simulation bot, jsdom UI playthrough. |
+| `scripts/`  | Dev tooling — currently the real-browser screenshot harness. |
+| `docs/`     | Guides. Screenshots from UI reviews live in `docs/screenshots/`. |
+
+See [`docs/architecture.md`](docs/architecture.md) for the action API and exactly how a
+Phase 2 agent drives a turn.
+
+## Documentation
+
+All guides live in [`docs/`](docs/) — see [`docs/README.md`](docs/README.md)
+for the index and how to add one.
+
+| Doc | Covers |
+|-----|--------|
+| [`docs/architecture.md`](docs/architecture.md) | Engine design, game state, the action API (also the Phase 2 tool set) |
+| [`docs/testing.md`](docs/testing.md) | Test suite guide: per-phase suites, the sim bot, conventions |
+| [`docs/browser-testing.md`](docs/browser-testing.md) | Real-browser screenshot harness: setup, the deterministic playthrough, the `single.html` trick, adding scenarios |
+| [`docs/ui-guide.md`](docs/ui-guide.md) | UI conventions: design tokens, DOM contract, theming, review workflow |
+| [`docs/phase2-agents.md`](docs/phase2-agents.md) | Phase 2 sketch: how LLM agents will drive turns (roadmap, not spec) |
+| [`docs/history/`](docs/history/) | Superseded specs — currently the original Phase 1 build prompt |
+
+## Testing
+
+### Unit / integration — `npm test`
 
 ```bash
 npm test                          # full suite (engine, data, simulation, UI)
-npx vitest run tests/purchase.test.ts    # one phase at a time:
-npx vitest run tests/movement.test.ts    # combat-move + non-combat
-npx vitest run tests/combat.test.ts      # rounds, AA, casualties, retreat, SBR
-npx vitest run tests/economy.test.ts     # mobilize, income, capitals, turn cap
-npx vitest run tests/edge.test.ts        # boundary/invalid inputs for every action
-npx vitest run tests/map.test.ts         # map + scenario data
-npx vitest run tests/simulation.test.ts  # headless bot games to an ending
-npx vitest run tests/ui.test.ts          # real DOM playthrough (jsdom)
-npm run simulate                  # shorthand for the headless full-game sim
+npx vitest run tests/combat.test.ts     # one file at a time, e.g.:
+npx vitest run tests/ui.test.ts        # jsdom UI playthrough
+npm run simulate                  # headless bot games played to an ending
 ```
 
-## Layout
+| Test file | Covers |
+|-----------|--------|
+| `purchase` / `movement` / `combat` / `economy` / `edge` | One phase group each, incl. boundary and invalid inputs |
+| `map` | Map + scenario data validation (coverage, contiguous holdings, factory on every capital) |
+| `simulation` | Headless random-policy bot plays seeded 2/3/4-player games to `gameover`, asserting invariants every turn |
+| `ui` | jsdom playthrough: start game, buy, declare an attack through the SVG map, fight it in the combat panel, finish the turn, chat |
 
-- `engine/` — pure headless rules engine (`engine.ts`, `types.ts`). No UI, no I/O.
-- `data/` — `map.json` (territories, IPC, adjacency, SVG layout), `units.json`
-  (cost/attack/defense/move), `scenario-2p/3p/4p.json`, `data.ts` loader.
-- `ui/` — plain DOM + SVG front end driving the engine through the action API.
-- `tests/` — per-phase unit tests, headless simulation bot, jsdom UI playthrough.
+### Browser testing — `npm run screenshots`
 
-See `ARCHITECTURE.md` for the action API and how a Phase 2 agent drives a turn.
+Drives the real UI in headless Chromium through a deterministic scripted
+playthrough (2 players, seed 7) and captures PNGs of all 8 major screens:
+setup, board, purchase modal, move dialog, staged moves, battle dialog, chat,
+mobilize. Full setup documented in
+[`docs/browser-testing.md`](docs/browser-testing.md).
 
-## Rules (short)
+```bash
+npm run screenshots            # needs a Chromium; set CHROME_PATH if not found
+```
 
-Turn: purchase → combat move → combat → non-combat → mobilize → collect income.
-Win by holding every capital in play; 20-round cap, then highest income
-(tie: bank) wins. Capturing a capital transfers the victim's bank. No capital =
-no purchases, no income. Aircraft must end non-combat on ground held since turn
-start or they are lost. New or captured factories produce from next turn.
+## Rules notes
 
-UI model (TripleA-inspired): the map shows US-shaped territories with owner
-color, IPC, and units. A phase stepper tracks the turn. Click a territory to
-inspect it; dial units with +/- steppers, then click a highlighted destination
-to stage a move — staged moves preview as arrows (red = attack, green = move).
-The purchase shop and battle resolution open as popup dialogs; End phase, Save,
-and Load stay pinned in a bottom bar. The layout fills the viewport without
-page scrolling, from laptop to ultrawide.
+- Turn: purchase → combat move → combat → non-combat → mobilize → collect income.
+- Capturing a capital transfers the victim's bank. No capital = no purchases, no income.
+- Aircraft must end non-combat on ground held since turn start or they are lost.
+- New or captured factories produce from next turn.
+- The IPC table in the spec sums to **61**, not 64 — values kept as specified.
+- Four Corners point-contacts (CO–AZ, NM–UT) are not adjacency.
 
-Note: the IPC table in the spec sums to **61**, not 64 — values kept as
-specified. Four Corners point-contacts (CO–AZ, NM–UT) are not adjacency.
+## Roadmap
+
+- **Phase 2:** LLM agents drive turns through the action API
+  (`summarizeState` for prompts, `sendMessage`/`chatLog` for negotiation,
+  `autoCasualties` to skip casualty choice). See [`docs/architecture.md`](docs/architecture.md)
+  ("How a Phase 2 agent drives one turn").
+- **Later:** tournament harness, Elo-style ratings, cost/latency tracking.
 
 ## Troubleshooting
 

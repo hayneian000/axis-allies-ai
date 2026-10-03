@@ -628,6 +628,27 @@ function renderMap(s: GameState): void {
     vport.appendChild(terrGroup(s, t.id, battles.has(t.id), dests.has(t.id)));
   }
 
+  // Great Lakes water overlays: drawn above land, below labels/arrows;
+  // pointer-events none so territory clicks pass through.
+  for (const lake of MAP.lakes ?? []) {
+    const tip = document.createElementNS(SVGNS, 'title');
+    tip.textContent = lake.name;
+    const el = svgEl('ellipse', {
+      cx: String(lake.cx),
+      cy: String(lake.cy),
+      rx: String(lake.rx),
+      ry: String(lake.ry),
+      fill: '#3d6a8f',
+      stroke: '#7fb3d9',
+      'stroke-width': '1.5',
+      'pointer-events': 'none',
+      class: 'lake',
+      transform: `rotate(${lake.rotate} ${lake.cx} ${lake.cy})`,
+    });
+    el.appendChild(tip);
+    vport.appendChild(el);
+  }
+
   // Draft-move arrows above the tiles.
   const drafts: Array<{ from: string; to: string; hostile: boolean }> = [
     ...draftMoves.map((d) => ({

@@ -44,6 +44,12 @@ describe('map data', () => {
     expect(neighborsOf('arizona')).toContain('new_mexico');
   });
 
+  it('uses organic polygons (5+ points) for recognizable coastlines', () => {
+    for (const t of MAP.territories) {
+      expect(t.points.length, `${t.id} needs 5+ points`).toBeGreaterThanOrEqual(5);
+    }
+  });
+
   it('lays every polygon and label inside the viewBox', () => {
     for (const t of MAP.territories) {
       expect(t.points.length).toBeGreaterThanOrEqual(3);

@@ -21,6 +21,8 @@ export interface MapData {
   name: string;
   viewBox: { width: number; height: number };
   territories: TerritoryDef[];
+  /** Decorative water overlays (Great Lakes); purely visual, never clickable. */
+  lakes?: Array<{ name: string; cx: number; cy: number; rx: number; ry: number; rotate: number }>;
 }
 
 export type UnitType =

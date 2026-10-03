@@ -197,10 +197,11 @@ function render(): void {
 }
 
 function renderFooter(s: GameState): void {
-  $('fb-phase').textContent =
+  const dot = (c: string): string => `<span class="pdot" style="background:${c}"></span>`;
+  $('fb-phase').innerHTML =
     s.phase === 'gameover'
-      ? `Game over — ${s.players[s.winner!].name} wins`
-      : `Round ${s.round} — ${s.players[s.currentPlayer].name} — ${s.phase}`;
+      ? `${dot(s.players[s.winner!].color)}Game over — ${s.players[s.winner!].name} wins`
+      : `${dot(s.players[s.currentPlayer].color)}Round ${s.round} — ${s.players[s.currentPlayer].name} — ${s.phase}`;
 }
 
 // ------------------------------------------------------------ modal ---
@@ -250,10 +251,16 @@ function renderModal(s: GameState): void {
 
 function renderBanner(s: GameState): void {
   const me = s.players[s.currentPlayer];
-  $('banner').textContent =
+  // Chips are pure styling: textContent stays byte-identical to before.
+  const sep = '<span class="bsep"> — </span>';
+  $('banner').innerHTML =
     s.phase === 'gameover'
-      ? `Game over — ${s.players[s.winner!].name} wins (${s.winReason})`
-      : `Round ${s.round} — ${me.name}'s turn — phase: ${s.phase} — bank ${me.ipcs} IPCs — income ${incomeOf(s, s.currentPlayer)}`;
+      ? `<span class="bstat">Game over</span>${sep}<span class="bstat turn">${s.players[s.winner!].name} wins (${s.winReason})</span>`
+      : `<span class="bstat">Round ${s.round}</span>${sep}` +
+        `<span class="bstat turn">${me.name}'s turn</span>${sep}` +
+        `<span class="bstat">phase: ${s.phase}</span>${sep}` +
+        `<span class="bstat econ">bank ${me.ipcs} IPCs</span>${sep}` +
+        `<span class="bstat econ">income ${incomeOf(s, s.currentPlayer)}</span>`;
 }
 
 function renderSteps(s: GameState): void {
@@ -276,8 +283,12 @@ function renderRoster(s: GameState): void {
   for (const p of s.players) {
     const d = document.createElement('div');
     d.className = 'p' + (p.id === s.currentPlayer && s.phase !== 'gameover' ? ' cur' : '');
-    d.style.borderLeft = `6px solid ${p.color}`;
-    d.textContent = `${p.name}${p.alive ? '' : ' (OUT)'} — ${ownedTerritories(s, p.id).length} terr, ${p.ipcs} IPCs${ownsCapital(s, p.id) ? '' : ', NO CAPITAL'}`;
+    d.innerHTML =
+      `<span class="pdot" style="background:${p.color}"></span>` +
+      `<span class="pinfo"><strong>${p.name}</strong>` +
+      `<span class="dim">${ownedTerritories(s, p.id).length} terr · ${p.ipcs} IPCs` +
+      `${ownsCapital(s, p.id) ? '' : ' · NO CAPITAL'}</span></span>` +
+      (p.alive ? '' : '<span class="out">OUT</span>');
     el.appendChild(d);
   }
 }
@@ -526,6 +537,7 @@ function renderInspector(s: GameState): void {
   const def = MAP.territories.find((x) => x.id === sel)!;
   const mine = t.owner === s.currentPlayer;
   const head = document.createElement('div');
+  head.className = 'insp-head';
   const isCap = s.players.some((p) => p.capital === sel);
   head.innerHTML =
     `<strong>${DISPLAY_NAME[sel] ?? def.name}</strong> ` +
@@ -533,12 +545,14 @@ function renderInspector(s: GameState): void {
     `<span>IPC ${ipcOf(sel)}</span>${isCap ? ' ★capital' : ''}${t.factory ? ' ⚙factory' : ''}`;
   el.appendChild(head);
   const units = document.createElement('div');
+  units.className = 'insp-units';
   units.textContent = `Units here: ${describeUnits(t.units)}`;
   el.appendChild(units);
 
   const pid = s.currentPlayer;
   if (!mine) {
     const p = document.createElement('p');
+    p.className = 'insp-hint';
     p.textContent =
       s.phase === 'combatMove'
         ? 'Enemy ground — dial units at one of your territories, then click here to attack.'
@@ -549,6 +563,7 @@ function renderInspector(s: GameState): void {
   }
   if (s.phase === 'combatMove' || s.phase === 'nonCombat') {
     const p = document.createElement('p');
+    p.className = 'insp-hint';
     p.textContent =
       s.phase === 'combatMove'
         ? 'Attack or reposition from here.'
@@ -573,6 +588,7 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
   const t = s.territories[tid];
   const def = MAP.territories.find((x) => x.id === tid)!;
   const head = document.createElement('p');
+  head.className = 'insp-head';
   head.innerHTML =
     `<strong>${DISPLAY_NAME[tid] ?? def.name}</strong> — ${describeUnits(t.units)}` +
     (t.factory ? ' ⚙factory' : '');
@@ -727,8 +743,10 @@ function renderPhasePanel(s: GameState): void {
   el.oninput = null;
   el.innerHTML = '';
   const h = document.createElement('h3');
-  h.textContent =
-    s.phase === 'gameover' ? 'Game over' : `${s.players[s.currentPlayer].name} — ${s.phase}`;
+  h.innerHTML =
+    s.phase === 'gameover'
+      ? 'Game over'
+      : `<span class="pdot" style="background:${s.players[s.currentPlayer].color}"></span>${s.players[s.currentPlayer].name} — ${s.phase}`;
   el.appendChild(h);
   if (s.phase === 'purchase') purchasePanel(s, el);
   else if (s.phase === 'combatMove') combatMovePanel(s, el);
@@ -760,6 +778,7 @@ function purchasePanel(s: GameState, el: HTMLElement): void {
   }
   const open = document.createElement('button');
   open.textContent = 'Buy units…';
+  open.className = 'btn-primary';
   open.addEventListener('click', () => {
     modal = 'shop';
     render();
@@ -770,9 +789,6 @@ function purchasePanel(s: GameState, el: HTMLElement): void {
 function purchaseShopBody(s: GameState, el: HTMLElement): void {
   const pid = s.currentPlayer;
   const bank = s.players[pid].ipcs;
-  const remainingLine = document.createElement('p');
-  remainingLine.id = 'buy-remaining';
-  el.appendChild(remainingLine);
   const costs: Record<string, number> = {
     infantry: 3,
     artillery: 4,
@@ -793,10 +809,11 @@ function purchaseShopBody(s: GameState, el: HTMLElement): void {
   };
   const types = [...UNIT_ORDER, 'factory'] as const;
   const table = document.createElement('table');
+  table.className = 'shop-table';
   for (const t of types) {
     const tr = document.createElement('tr');
     const td1 = document.createElement('td');
-    td1.innerHTML = `<strong>${t}</strong> <span class="dim">${costs[t]} IPC · ${notes[t]}</span>`;
+    td1.innerHTML = `<span class="uname">${t}</span><span class="ucost">${costs[t]} IPC</span><span class="dim">${notes[t]}</span>`;
     const td2 = document.createElement('td');
     if (t === 'factory') {
       const inp = document.createElement('input');
@@ -813,9 +830,16 @@ function purchaseShopBody(s: GameState, el: HTMLElement): void {
     table.appendChild(tr);
   }
   el.appendChild(table);
-  const total = document.createElement('p');
+  const cartbar = document.createElement('div');
+  cartbar.className = 'cartbar';
+  const total = document.createElement('span');
+  const remainingLine = document.createElement('span');
+  remainingLine.id = 'buy-remaining';
+  remainingLine.className = 'remaining';
+  cartbar.append(total, remainingLine);
   const btn = document.createElement('button');
   btn.textContent = 'Buy';
+  btn.className = 'btn-primary';
   const cartValue = (t: string): number =>
     parseInt((document.getElementById(`buy-${t}`) as HTMLInputElement)?.value, 10) || 0;
   const cartTotal = (): number => types.reduce((sum, t) => sum + cartValue(t) * costs[t], 0);
@@ -844,7 +868,7 @@ function purchaseShopBody(s: GameState, el: HTMLElement): void {
     }
     btn.disabled = sum === 0;
   };
-  el.appendChild(total);
+  el.appendChild(cartbar);
   // Assigned (not added): renderPhasePanel rebuilds this panel's contents on
   // every render, and addEventListener would stack stale closures with old
   // bank snapshots on the persistent panel node.
@@ -903,6 +927,7 @@ function combatMovePanel(s: GameState, el: HTMLElement): void {
   });
   const confirm = document.createElement('button');
   confirm.textContent = 'Launch moves';
+  confirm.className = 'btn-primary';
   confirm.addEventListener('click', () => {
     const r = combatMove(S!, pid, draftMoves);
     if (!r.ok) showError(`${r.code}: ${r.error}`);
@@ -957,6 +982,7 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
     return;
   }
   const list = document.createElement('div');
+  list.className = 'battle-list';
   for (const b of battles) {
     const btn = document.createElement('button');
     const defName = b.defenderId === null ? 'neutral' : s.players[b.defenderId].name;
@@ -1000,6 +1026,7 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
 
   const roll = document.createElement('button');
   roll.textContent = 'Roll one round';
+  roll.className = 'btn-primary';
   roll.disabled = b.pendingAttacker > 0 || b.pendingDefender > 0;
   roll.addEventListener('click', () => {
     const r = resolveCombatRound(S!, pid, tid);
@@ -1155,6 +1182,7 @@ function nonCombatPanel(s: GameState, el: HTMLElement): void {
   });
   const confirm = document.createElement('button');
   confirm.textContent = 'Fly / march';
+  confirm.className = 'btn-primary';
   confirm.addEventListener('click', () => {
     const r = nonCombatMove(S!, pid, draftNonCombat);
     if (!r.ok) showError(`${r.code}: ${r.error}`);
@@ -1195,6 +1223,7 @@ function mobilizePanel(s: GameState, el: HTMLElement): void {
   el.appendChild(d);
   const confirm = document.createElement('button');
   confirm.textContent = 'Deploy';
+  confirm.className = 'btn-primary';
   confirm.addEventListener('click', () => {
     const r = mobilize(
       S!,

@@ -22,9 +22,14 @@ node scripts/build-map/build.mjs
    farthest from edges) so labels land inside their territory.
 6. **Lakes** — Great Lakes polygons from Natural Earth (cached in `cache/`),
    projected identically. Real shapes, real positions.
-7. **Emit** — merges geometry into `data/map.json`, preserving game metadata
-   (ids, neighbors, IPC, regions, domain) from the existing file. Only
-   `points`, `label`, and `lakes` are replaced.
+7. **IPCs from GDP** — `gdp.json` holds BEA nominal GDP by state (2025
+   vintage). Each territory's IPC is proportional to its share of total GDP,
+   floored at 1, normalized by largest-remainder to exactly 61 (the
+   game-economy invariant the tests pin). Refresh the BEA vintage to update
+   the economy.
+8. **Emit** — merges geometry + IPCs into `data/map.json`, preserving game
+   metadata (ids, neighbors, regions). Only `points`, `label`, `lakes`, and
+   `ipc` are replaced.
 
 ## Retargeting
 

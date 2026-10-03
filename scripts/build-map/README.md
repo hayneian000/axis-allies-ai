@@ -1,10 +1,11 @@
 # Map build pipeline
 
 Derives `data/map.json` from **real US boundary data** instead of hand-drawn
-coordinates. Run with:
+coordinates. One-time setup, then run:
 
 ```
-npm run build:map
+npm i -D us-atlas topojson-client @turf/turf d3-geo
+node scripts/build-map/build.mjs
 ```
 
 ## How it works

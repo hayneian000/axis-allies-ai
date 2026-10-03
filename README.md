@@ -65,16 +65,22 @@ Click any territory to inspect it: owner, IPC value, units, factory status.
 | `scripts/`  | Dev tooling — currently the real-browser screenshot harness. |
 | `docs/`     | Guides. Screenshots from UI reviews live in `docs/screenshots/`. |
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the action API and exactly how a
+See [`docs/architecture.md`](docs/architecture.md) for the action API and exactly how a
 Phase 2 agent drives a turn.
 
 ## Documentation
 
+All guides live in [`docs/`](docs/) — see [`docs/README.md`](docs/README.md)
+for the index and how to add one.
+
 | Doc | Covers |
 |-----|--------|
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Engine design, game state, the action API (also the Phase 2 tool set), testing hooks |
+| [`docs/architecture.md`](docs/architecture.md) | Engine design, game state, the action API (also the Phase 2 tool set) |
+| [`docs/testing.md`](docs/testing.md) | Test suite guide: per-phase suites, the sim bot, conventions |
 | [`docs/browser-testing.md`](docs/browser-testing.md) | Real-browser screenshot harness: setup, the deterministic playthrough, the `single.html` trick, adding scenarios |
-| [`ai-axis-and-allies-phase1-prompt.md`](ai-axis-and-allies-phase1-prompt.md) | The original Phase 1 build spec — historical reference |
+| [`docs/ui-guide.md`](docs/ui-guide.md) | UI conventions: design tokens, DOM contract, theming, review workflow |
+| [`docs/phase2-agents.md`](docs/phase2-agents.md) | Phase 2 sketch: how LLM agents will drive turns (roadmap, not spec) |
+| [`docs/history/`](docs/history/) | Superseded specs — currently the original Phase 1 build prompt |
 
 ## Testing
 
@@ -119,7 +125,7 @@ npm run screenshots            # needs a Chromium; set CHROME_PATH if not found
 
 - **Phase 2:** LLM agents drive turns through the action API
   (`summarizeState` for prompts, `sendMessage`/`chatLog` for negotiation,
-  `autoCasualties` to skip casualty choice). See `ARCHITECTURE.md`
+  `autoCasualties` to skip casualty choice). See [`docs/architecture.md`](docs/architecture.md)
   ("How a Phase 2 agent drives one turn").
 - **Later:** tournament harness, Elo-style ratings, cost/latency tracking.
 

@@ -9,13 +9,15 @@ import {
 import { freshGame } from '../helpers';
 
 /**
- * FFA Decisions (Ian, Oct 3 2026):
- * - Neutral territories have 2-infantry garrisons, must be defeated
+ * FFA Decisions (Ian, Oct 3-4 2026):
+ * - Neutral territories have 3-infantry garrisons by default (map-configurable
+ *   via scenario neutralGarrison / per-territory neutrals); must be defeated
  * - Full IPC steal on capital capture (1942 2e)
- * - Victory: majority of capitals held simultaneously (3/4)
+ * - Victory: majority of capitals held simultaneously (3/4); scenario may
+ *   override via capitalsToWin
  */
 describe('neutral territories', () => {
-  it('neutrals have 2-infantry garrisons', () => {
+  it('neutrals have 3-infantry garrisons by default', () => {
     const s = freshGame(2, 1);
     // Find a neutral territory
     const neutralTid = Object.entries(s.territories).find(
@@ -23,7 +25,7 @@ describe('neutral territories', () => {
     )?.[0];
     expect(neutralTid).toBeDefined();
     const t = s.territories[neutralTid!];
-    expect(t.units.infantry).toBe(2);
+    expect(t.units.infantry).toBe(3);
   });
 
   it('must defeat garrison before capturing neutral', () => {
@@ -38,7 +40,7 @@ describe('neutral territories', () => {
       ([, t]) => t.owner === pid && t.units.infantry > 0,
     )?.[0];
     // (Simplified: verify garrison exists and blocks)
-    expect(s.territories[neutralTid].units.infantry).toBe(2);
+    expect(s.territories[neutralTid].units.infantry).toBe(3);
     expect(s.territories[neutralTid].owner).toBe(null);
   });
 

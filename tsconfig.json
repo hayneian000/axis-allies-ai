@@ -7,8 +7,20 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"]
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "vite/client"
+    ]
   },
-  "include": ["engine", "data", "ui", "tests"]
+  "include": [
+    "engine",
+    "data",
+    "ui",
+    "tests",
+    "agents"
+  ]
 }

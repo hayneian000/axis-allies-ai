@@ -157,7 +157,7 @@ function botCombatMove(s: GameState, pid: number, rng: () => number, stats: BotS
 
 function botCombat(s: GameState, pid: number): void {
   let guard = 2000;
-  while (openBattles(s).length > 0 && guard-- > 0) {
+  while (openBattles(s).length > 0 && guard-- > 0 && s.phase !== 'gameover') {
     const b = openBattles(s)[0];
     if (b.pendingAttacker > 0) {
       expect(autoCasualties(s, pid, b.territoryId, 'attacker').ok).toBe(true);
@@ -170,7 +170,10 @@ function botCombat(s: GameState, pid: number): void {
     const r = resolveCombatRound(s, pid, b.territoryId);
     expect(r.ok, `bot resolve ${b.territoryId}: ${r.code} ${r.error}`).toBe(true);
   }
-  expect(openBattles(s)).toHaveLength(0);
+  // Game may end via majority victory with battles unresolved — that's fine
+  if (s.phase !== 'gameover') {
+    expect(openBattles(s)).toHaveLength(0);
+  }
 }
 
 function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
@@ -268,17 +271,22 @@ function botTurn(s: GameState, stats: BotStats, seed: number): void {
   const rng = makeRng(seed + s.round * 7919 + pid * 131);
   expect(s.phase).toBe('purchase');
   botPurchase(s, pid);
+  if (s.phase === 'gameover') return;
   expect(endPhase(s, pid).ok).toBe(true); // -> combatMove
   botCombatMove(s, pid, rng, stats);
+  if (s.phase === 'gameover') return;
   expect(endPhase(s, pid).ok).toBe(true); // -> combat
   const before = s.battles.filter((b) => b.over && b.result === 'captured').length;
   botCombat(s, pid);
   stats.battles += s.battles.length;
   stats.captures += s.battles.filter((b) => b.over && b.result === 'captured').length - before;
+  if (s.phase === 'gameover') return;
   expect(endPhase(s, pid).ok).toBe(true); // -> nonCombat
   botNonCombat(s, pid, stats);
+  if (s.phase === 'gameover') return;
   expect(endPhase(s, pid).ok).toBe(true); // -> mobilize
   botMobilize(s, pid);
+  if (s.phase === 'gameover') return;
   expect(endPhase(s, pid).ok).toBe(true); // -> income + next
   assertValidUnits(s);
   stats.rounds = s.round;

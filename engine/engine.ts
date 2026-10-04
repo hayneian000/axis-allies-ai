@@ -572,17 +572,24 @@ export function resolveCapture(
 }
 
 function checkWinByCapitals(state: GameState): void {
-  const holders = new Set<number>();
+  // FFA Decision (Ian, Oct 3 2026): Majority of capitals held simultaneously wins.
+  // For 4 players: 3 of 4. Map-specific victory conditions going forward.
+  const holders = new Map<number, number>();
   for (const p of state.players) {
     const holder = state.territories[p.capital]?.owner;
-    if (holder !== null && holder !== undefined) holders.add(holder);
+    if (holder !== null && holder !== undefined) {
+      holders.set(holder, (holders.get(holder) ?? 0) + 1);
+    }
   }
-  if (holders.size === 1) {
-    const winner = [...holders][0];
-    state.winner = winner;
-    state.winReason = 'all_capitals';
-    state.phase = 'gameover';
-    log(state, 'game_over', `${state.players[winner].name} controls all capitals and wins!`);
+  const majority = Math.floor(state.players.length / 2) + 1;
+  for (const [holder, count] of holders) {
+    if (count >= majority) {
+      state.winner = holder;
+      state.winReason = 'majority_capitals';
+      state.phase = 'gameover';
+      log(state, 'game_over', `${state.players[holder].name} controls ${count} capitals and wins!`);
+      return;
+    }
   }
 }
 

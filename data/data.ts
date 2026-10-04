@@ -13,6 +13,8 @@ export interface TerritoryDef {
   neighbors: string[];
   /** Stylized polygon approximating the real geography. */
   points: Array<[number, number]>;
+  /** Additional disjoint polygons (e.g. Michigan's Upper Peninsula). */
+  extraPolygons?: Array<Array<[number, number]>>;
   /** Label anchor for name/units text. */
   label: [number, number];
 }

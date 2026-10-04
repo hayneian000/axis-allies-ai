@@ -14,7 +14,8 @@ function setNum(id: string, v: number): void {
 }
 
 function clickButton(text: string): void {
-  const btns = [...document.querySelectorAll('button')].filter((b) => b.textContent === text);
+  const norm = (s: string) => s.replace(/\s+/g, '');
+  const btns = [...document.querySelectorAll('button')].filter((b) => norm(b.textContent ?? '') === norm(text));
   expect(btns, `button "${text}"`).toHaveLength(1);
   btns[0].click();
 }
@@ -53,9 +54,9 @@ beforeAll(async () => {
 
 describe('browser UI playthrough', () => {
   it('starts a game and renders 26 territories', () => {
-    (el<HTMLSelectElement>('numPlayers').value = '2');
+    document.querySelector<HTMLButtonElement>('.dogtag[data-players="2"]')!.click();
     (el<HTMLInputElement>('seed').value = '7');
-    clickButton('Start game');
+    clickButton('CommenceWargame');
     expect(el('game').hidden).toBe(false);
     expect(banner()).toContain('purchase');
     // 26 territory groups (great_lakes has an extra UP polygon, so 27 .terr polygons total).
@@ -106,9 +107,9 @@ describe('browser UI playthrough', () => {
 
   it('updates the cart live when stepper [+] is clicked', () => {
     clickButton('New game');
-    (el<HTMLSelectElement>('numPlayers').value = '2');
+    document.querySelector<HTMLButtonElement>('.dogtag[data-players="2"]')!.click();
     (el<HTMLInputElement>('seed').value = '7');
-    clickButton('Start game');
+    clickButton('CommenceWargame');
     const bank = parseInt(banner().match(/bank (\d+) IPCs/)![1], 10);
     clickButton('Buy units…');
     const inp = el<HTMLInputElement>('buy-infantry');
@@ -235,9 +236,9 @@ describe('browser UI playthrough', () => {
 
   it('only offers deployment controls at usable factories', () => {
     clickButton('New game');
-    (el<HTMLSelectElement>('numPlayers').value = '2');
+    document.querySelector<HTMLButtonElement>('.dogtag[data-players="2"]')!.click();
     (el<HTMLInputElement>('seed').value = '11');
-    clickButton('Start game');
+    clickButton('CommenceWargame');
     const me = banner().match(/(Player \d+)'s turn/)![1];
     const myId = parseInt(me.split(' ')[1], 10) - 1;
     const cap = ['california', 'new_york'][myId];

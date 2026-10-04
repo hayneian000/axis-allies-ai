@@ -18,21 +18,80 @@
   </head>
   <body>
     <div id="setup">
-      <p class="kicker">Adversarial evals · Phase 1</p>
-      <h1>Axis &amp; Allies — America</h1>
-      <p class="lede">Hot-seat strategy on a simplified 26-territory map of the continental United States.</p>
-      <div class="setup-row">
-        <label>Players
-          <select id="numPlayers">
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4" selected>4</option>
-          </select>
-        </label>
-        <label>Seed <input id="seed" type="number" value="1" /></label>
+      <div class="war-room-bg" aria-hidden="true"></div>
+      <div class="setup-dossier">
+        <div class="title-block">
+          <svg class="gear-star" viewBox="0 0 100 100" aria-hidden="true">
+            <g fill="none" stroke="#c9a227" stroke-width="3">
+              <circle cx="50" cy="50" r="38"/>
+              <circle cx="50" cy="50" r="28"/>
+              <path d="M50 12 L50 22 M50 78 L50 88 M12 50 L22 50 M78 50 L88 50 M23 23 L30 30 M70 70 L77 77 M77 23 L70 30 M30 70 L23 77"/>
+            </g>
+            <path d="M50 32 L54 44 L67 44 L57 52 L60 65 L50 57 L40 65 L43 52 L33 44 L46 44 Z"
+                  fill="#c9a227" opacity="0.9"/>
+          </svg>
+          <h1>Axis &amp; Allies</h1>
+          <p class="subtitle">Adversarial Intelligence</p>
+          <div class="eval-stamp" aria-hidden="true">Eval in<br/>Progress</div>
+        </div>
+
+        <div class="mode-row" role="group" aria-label="Game mode">
+          <button type="button" class="mode-plaque active" data-mode="hotseat"
+                  data-tip="Humans take turns on one screen.">
+            <span class="plaque-title">Hot-Seat</span>
+            <span class="plaque-desc">Humans, one screen</span>
+          </button>
+          <button type="button" class="mode-plaque locked" disabled
+                  data-tip="Face an AI commander. Coming in Phase 2.">
+            <span class="plaque-title">VS AI</span>
+            <span class="phase-tag">Phase 2</span>
+          </button>
+          <button type="button" class="mode-plaque locked" disabled
+                  data-tip="AI commanders battle for benchmarking. Coming in Phase 2.">
+            <span class="plaque-title">AI vs AI</span>
+            <span class="phase-tag">Phase 2</span>
+          </button>
+        </div>
+
+        <div class="map-row" role="group" aria-label="Theater of war">
+          <button type="button" class="map-folio active" data-map="america"
+                  data-tip="26-territory continental US map. More theaters coming.">
+            <span class="folio-title">American Theater</span>
+            <span class="folio-desc">26 territories · FFA</span>
+          </button>
+          <button type="button" class="map-folio locked" disabled
+                  data-tip="Future theater, not yet declassified.">
+            <span class="folio-title">Classified</span>
+            <span class="folio-desc">???</span>
+          </button>
+          <button type="button" class="map-folio locked" disabled
+                  data-tip="Future theater, not yet declassified.">
+            <span class="folio-title">Classified</span>
+            <span class="folio-desc">???</span>
+          </button>
+        </div>
+
+        <div class="setup-controls">
+          <div class="commanders">
+            <span class="control-label" data-tip="Number of human players sharing this screen.">Commanders</span>
+            <div class="dogtags" role="group" aria-label="Number of players">
+              <button type="button" class="dogtag" data-players="2">2</button>
+              <button type="button" class="dogtag" data-players="3">3</button>
+              <button type="button" class="dogtag active" data-players="4">4</button>
+            </div>
+          </div>
+          <div class="op-code">
+            <label class="control-label" for="seed" data-tip="Random seed. Same code = same starting setup.">Operation Code</label>
+            <input id="seed" type="number" value="1" min="1" />
+          </div>
+        </div>
+
+        <button id="startBtn" class="wax-seal-btn">
+          <span class="seal-text">Commence<br/>Wargame</span>
+        </button>
+
+        <p class="hint"><strong>Free-for-all.</strong> Control every capital in play to win. 20-round cap, then highest income wins.</p>
       </div>
-      <button id="startBtn" class="btn-primary btn-large">Start game</button>
-      <p class="hint"><strong>Free-for-all.</strong> Control every capital in play to win. 20-round cap, then highest income wins.</p>
     </div>
 
     <div id="game" hidden>

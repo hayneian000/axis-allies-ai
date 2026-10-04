@@ -254,7 +254,7 @@ describe('meta adapter', () => {
     choices: [
       {
         message: {
-          content: 'Llama response.',
+          content: 'Meta response.',
           tool_calls: [
             { id: 'call_9', type: 'function', function: { name: 'mobilize', arguments: '{"placements":[]}' } },
           ],
@@ -269,7 +269,7 @@ describe('meta adapter', () => {
     responder = () => jsonResponse(canned);
     const res = await metaAdapter.complete(makeRequest());
 
-    expect(lastUrl).toBe('https://api.llama.com/compat/v1/chat/completions');
+    expect(lastUrl).toBe('https://api.meta.ai/v1/chat/completions');
     expect(lastHeaders['Authorization']).toBe(`Bearer ${API_KEY}`);
 
     const body = JSON.parse(lastBodyText) as Record<string, unknown>;
@@ -277,7 +277,7 @@ describe('meta adapter', () => {
     expect(tools[0].type).toBe('function');
     expect(body['tool_choice']).toBe('auto');
 
-    expect(res.text).toBe('Llama response.');
+    expect(res.text).toBe('Meta response.');
     expect(res.toolCalls).toEqual([{ id: 'call_9', name: 'mobilize', arguments: { placements: [] } }]);
     expect(res.usage).toEqual({ inputTokens: 30, outputTokens: 9 });
     expect(res.stopReason).toBe('stop');
@@ -306,13 +306,13 @@ describe('provider registry', () => {
   it('resolves the curated defaults', () => {
     expect(defaultModel('anthropic')).toBe('claude-sonnet-5');
     expect(defaultModel('openai')).toBe('gpt-5.6');
-    expect(defaultModel('meta')).toBe('Llama-4-Maverick-17B-128E-Instruct-FP8');
+    expect(defaultModel('meta')).toBe('muse-spark-1.3');
   });
 
   it('lists curated models', () => {
     expect(listModels('anthropic').map((m) => m.id)).toContain('claude-opus-5');
     expect(listModels('openai').map((m) => m.id)).toContain('gpt-4.1');
-    expect(listModels('meta').map((m) => m.id)).toContain('Llama-3.3-70B-Instruct');
+    expect(listModels('meta').map((m) => m.id)).toContain('muse-spark-1.2');
   });
 
   it('throws on unknown provider ids', () => {

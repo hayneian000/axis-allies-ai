@@ -565,6 +565,28 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
   base.addEventListener('mousemove', moveTip);
   base.addEventListener('mouseleave', hideTip);
   g.appendChild(base);
+  // Extra disjoint polygons (e.g. Michigan's Upper Peninsula) — same styling, no separate click handling.
+  for (const extra of t.extraPolygons ?? []) {
+    const epts = extra.map((p) => p.join(',')).join(' ');
+    g.appendChild(
+      svgEl('polygon', {
+        points: epts,
+        fill: 'var(--paper, #c9b98a)',
+        stroke: ownerHex,
+        'stroke-width': '2',
+        class: cls,
+        'data-owner': st.owner === null ? 'null' : String(st.owner),
+      }),
+    );
+    g.appendChild(
+      svgEl('polygon', {
+        points: epts,
+        fill: ownerHex,
+        'fill-opacity': '0.35',
+        'pointer-events': 'none',
+      }),
+    );
+  }
   // Control tint wash — player color at ~35% over parchment.
   g.appendChild(
     svgEl('polygon', {

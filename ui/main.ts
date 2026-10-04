@@ -15,6 +15,7 @@ import {
   openBattles,
   ownedTerritories,
   ownsCapital,
+  PLAYER_COLORS,
   purchase,
   resolveCombatRound,
   retreat,
@@ -68,6 +69,14 @@ let lastLaunchMsg: string | null = null;
 
 const $ = (id: string): HTMLElement => document.getElementById(id)!;
 const svg = (): SVGSVGElement => $('map') as unknown as SVGSVGElement;
+
+/** Design-system button factory. variant: 'brass' (primary) or 'steel' (default). */
+function mkButton(label: string, variant: 'brass' | 'steel' = 'steel'): HTMLButtonElement {
+  const b = document.createElement('button');
+  b.textContent = label;
+  if (variant === 'brass') b.classList.add('btn-brass');
+  return b;
+}
 
 function showError(msg: string): void {
   $('error').textContent = msg;
@@ -245,7 +254,7 @@ function boot(): void {
 }
 
 function ownerColor(state: GameState, owner: number | null): string {
-  if (owner === null) return '#8a8f98';
+  if (owner === null) return '#6e6e6a';
   return state.players[owner].color;
 }
 
@@ -508,7 +517,8 @@ function layoutLabels(): Map<string, { x: number; y: number }> {
   return pos;
 }
 
-/** Land tile: polygon + sheen + interactions. Labels live in terrLabels (own layer). */
+/** Land tile: parchment base + control tint wash + player-colored boundary.
+ *  War-map look per docs/style-guide.md; ownership via `data-owner`. */
 function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean): SVGElement {
   const t = MAP.territories.find((x) => x.id === tid)!;
   const st = s.territories[tid];
@@ -522,25 +532,31 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
   g.appendChild(tip);
 
   const pts = t.points.map((p) => p.join(',')).join(' ');
-  // NOTE: `fill` stays the exact owner color (tests + roster legend key off it);
-  // depth comes from the translucent gradient overlay below.
-  const poly = svgEl('polygon', { points: pts, fill: ownerColor(s, st.owner) });
+  const ownerHex = st.owner === null ? '#6e6e6a' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
+  const base = svgEl('polygon', {
+    points: pts,
+    fill: 'var(--paper, #c9b98a)',
+    stroke: ownerHex,
+    'stroke-width': '2',
+  });
   let cls = 'terr';
   if (tid === sel) cls += ' selfrom';
   else if (isDest) cls += ' dest';
   if (inBattle) cls += ' battle';
-  poly.setAttribute('class', cls);
-  const isCap = s.players.some((p) => p.capital === tid);
-  if (isCap) {
-    poly.setAttribute('stroke', '#ffd700');
-    poly.setAttribute('stroke-width', '3');
-  }
-  poly.addEventListener('click', (e) => onTerrClick(tid, e as MouseEvent));
-  poly.addEventListener('mousemove', moveTip);
-  poly.addEventListener('mouseleave', hideTip);
-  g.appendChild(poly);
+  base.setAttribute('class', cls);
+  base.setAttribute('data-owner', st.owner === null ? 'null' : String(st.owner));
+  base.addEventListener('click', (e) => onTerrClick(tid, e as MouseEvent));
+  base.addEventListener('mousemove', moveTip);
+  base.addEventListener('mouseleave', hideTip);
+  g.appendChild(base);
+  // Control tint wash — player color at ~35% over parchment.
   g.appendChild(
-    svgEl('polygon', { points: pts, fill: 'url(#sheen)', class: 'sheen', 'pointer-events': 'none' }),
+    svgEl('polygon', {
+      points: pts,
+      fill: ownerHex,
+      'fill-opacity': '0.35',
+      'pointer-events': 'none',
+    }),
   );
   return g;
 }
@@ -575,23 +591,23 @@ function terrLabels(
   owner.textContent = st.owner === null ? 'neutral' : s.players[st.owner].name;
   g.appendChild(owner);
 
-  // IPC value pill heading the label stack.
+  // IPC lozenge heading the label stack: brass value on umber.
   const badge = svgEl('g', { class: 'ipcbadge', transform: `translate(${lx} ${ly - 27})` });
-  badge.appendChild(svgEl('rect', { x: '-21', y: '-7', width: '42', height: '14', rx: '7', class: 'ipcpill' }));
+  badge.appendChild(svgEl('rect', { x: '-21', y: '-7', width: '42', height: '14', rx: '0', class: 'ipcpill' }));
   const bt = svgEl('text', { x: '0', y: '3.5', 'text-anchor': 'middle', 'font-size': '9.5', class: 'ipctext' });
   bt.textContent = `IPC ${ipcOf(tid)}`;
   badge.appendChild(bt);
   g.appendChild(badge);
 
-  // Capital star: beside the IPC pill, verified inside the tile
-  // (bbox corners can hang over neighbors on irregular shapes).
+  // Capital roundel: player-colored disc with brass star.
   if (isCap) {
+    const ownerHex = st.owner === null ? '#6e6e6a' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
     const candidates: Array<[number, number]> = [
       [lx + 32, ly - 27], [lx - 32, ly - 27], [lx + 32, ly - 10], [lx - 32, ly - 10],
     ];
     const spot = candidates.find(([cx, cy]) => pointInPolygon([cx, cy], t.points)) ?? [lx, ly - 27];
     const cap = svgEl('g', { class: 'capbadge', transform: `translate(${spot[0]} ${spot[1]})` });
-    cap.appendChild(svgEl('circle', { cx: '0', cy: '0', r: '7.5', class: 'capring' }));
+    cap.appendChild(svgEl('circle', { cx: '0', cy: '0', r: '7.5', fill: ownerHex, class: 'capring' }));
     const star = svgEl('text', { x: '0', y: '3.5', 'text-anchor': 'middle', 'font-size': '10', class: 'capstar' });
     star.textContent = '★';
     cap.appendChild(star);
@@ -652,15 +668,10 @@ function renderMap(s: GameState): void {
     marker.appendChild(path);
     defs.appendChild(marker);
   }
-  // Top-light sheen for territory tiles; ocean backdrop gradient.
-  const sheen = svgEl('linearGradient', { id: 'sheen', x1: '0', y1: '0', x2: '0', y2: '1' });
-  sheen.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#ffffff', 'stop-opacity': '.26' }));
-  sheen.appendChild(svgEl('stop', { offset: '.45', 'stop-color': '#ffffff', 'stop-opacity': '.05' }));
-  sheen.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#000000', 'stop-opacity': '.16' }));
-  defs.appendChild(sheen);
+  // Slate-navy ocean backdrop gradient.
   const ocean = svgEl('linearGradient', { id: 'ocean', x1: '0', y1: '0', x2: '1', y2: '1' });
-  ocean.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#262c38' }));
-  ocean.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#1b1f28' }));
+  ocean.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#22303e' }));
+  ocean.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#1a2530' }));
   defs.appendChild(ocean);
   m.appendChild(defs);
 

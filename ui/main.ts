@@ -1,4 +1,5 @@
 import { MAP, UNITS, centroid, ipcOf, neighborsOf, pointInPolygon, type UnitType } from '../data/data';
+import { playIntro } from './intro';
 import {
   autoCasualties,
   chooseCasualties,
@@ -96,8 +97,11 @@ function boot(): void {
     lastCombat = null;
     sel = null;
     $('setup').hidden = true;
-    $('game').hidden = false;
-    render();
+    // Fog-of-war cinematic, then reveal the game UI.
+    playIntro(S, () => {
+      $('game').hidden = false;
+      render();
+    });
   });
   $('newBtn').addEventListener('click', () => {
     S = null;

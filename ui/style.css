@@ -628,3 +628,130 @@ input::placeholder { color: var(--faint); }
   #banner { font-size: 0.85em; }
   #steps { margin-left: 0; }
 }
+
+/* ---------------------------------------------------------- intro cinematic ---
+   Fog-of-war opening sequence, vintage war-table edition.
+   Aged parchment, spreading ink, wax seals. Positions come from the map data,
+   reveal order from BFS distances. All animation via CSS classes toggled
+   from ui/intro.ts.
+   Responsive: viewport-relative units throughout; SVG scales to fit. */
+
+#intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  /* Aged parchment: solid fallback + layered mottling */
+  background-color: #dcc394;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(255, 250, 235, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(120, 90, 50, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(160, 120, 70, 0.15) 0%, transparent 70%),
+    linear-gradient(135deg, #e6d3a8 0%, #dcc394 30%, #d4b483 60%, #c9a876 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+#intro-overlay.intro-parchment {
+  opacity: 1;
+}
+#intro-overlay.intro-done {
+  opacity: 0;
+  pointer-events: none;
+}
+#intro-map {
+  /* Scale to viewport: fits any desktop monitor */
+  width: min(1400px, 96vw);
+  height: auto;
+  max-height: 92vh;
+  /* Slight sepia tone to blend with parchment */
+  filter: sepia(0.15);
+}
+/* Paper grain: fine noise overlay */
+#intro-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.3 0 0 0 0 0.24 0 0 0 0 0.15 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Vignette: lamplight pooling in the center, darkened edges */
+#intro-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(60, 35, 15, 0.45) 100%);
+}
+#intro-text {
+  position: absolute;
+  bottom: 10%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  /* Typewriter serif, scales with viewport */
+  font-family: 'Courier New', 'Special Elite', monospace;
+  font-size: clamp(16px, 2.5vmin + 8px, 36px);
+  letter-spacing: 0.25em;
+  color: #3a2e1f;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(255, 250, 235, 0.5);
+}
+#intro-text.intro-complete-text {
+  color: #5e0f0f;
+  animation: intro-text-settle 1s ease-out;
+}
+@keyframes intro-text-settle {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+#intro-skip {
+  position: absolute;
+  bottom: 3%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(10px, 1.2vmin + 6px, 14px);
+  letter-spacing: 0.2em;
+  color: #8a7355;
+  text-transform: uppercase;
+}
+
+/* Territory reveal: blank parchment -> inked, with organic roughened edges.
+   The SVG filter (feTurbulence displacement) gives the hand-inked look. */
+.intro-terr {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.intro-terr.intro-revealed {
+  opacity: 1;
+}
+
+/* Wax seal: stamps onto the capital with a quick press and slight rotation */
+.intro-seal {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.intro-seal.intro-seal-stamp {
+  animation: intro-seal-stamp 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+@keyframes intro-seal-stamp {
+  0% { transform: scale(1.6) rotate(-12deg); opacity: 0; }
+  60% { transform: scale(0.94) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Ink wash: soft sepia bloom expanding from the capital, like ink in water */
+.intro-wash {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.intro-wash.intro-wash-expand {
+  animation: intro-wash-expand 2.8s ease-out forwards;
+}
+@keyframes intro-wash-expand {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(45); opacity: 0; }
+}

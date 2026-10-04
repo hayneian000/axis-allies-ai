@@ -144,7 +144,7 @@ function boot(): void {
     a.click();
     URL.revokeObjectURL(a.href);
   });
-  ($('loadInput') as HTMLInputElement).addEventListener('change', (e) => {
+  ($('setupLoadInput') as HTMLInputElement).addEventListener('change', (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
     file.text().then((text) => {

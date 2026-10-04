@@ -90,6 +90,13 @@
           <span class="seal-text">Commence<br/>Wargame</span>
         </button>
 
+        <div class="setup-alt-actions">
+          <label class="load-plaque" data-tip="Resume a saved wargame from a file.">
+            Load Wargame
+            <input id="setupLoadInput" type="file" accept="application/json" hidden />
+          </label>
+        </div>
+
         <p class="hint"><strong>Free-for-all.</strong> Control every capital in play to win. 20-round cap, then highest income wins.</p>
       </div>
     </div>
@@ -135,7 +142,6 @@
         <span class="spacer"></span>
         <button id="endPhaseBtn" class="btn-primary">End phase</button>
         <button id="saveBtn">Save</button>
-        <label id="loadLabel">Load <input id="loadInput" type="file" accept="application/json" hidden /></label>
         <button id="newBtn">New game</button>
       </footer>
     </div>

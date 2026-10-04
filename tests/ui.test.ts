@@ -46,6 +46,8 @@ function ownerOf(tid: string): string | null {
 beforeAll(async () => {
   const body = (indexHtml as string).match(/<body>([\s\S]*)<\/body>/)![1].replace(/<script[\s\S]*?<\/script>/, '');
   document.body.innerHTML = body;
+  // Skip the fog-of-war intro cinematic in tests.
+  (window as unknown as Record<string, unknown>).__SKIP_INTRO__ = true;
   await import('../ui/main');
 });
 

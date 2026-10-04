@@ -451,6 +451,11 @@ describe('amphibious assaults (1942 2e p.15)', () => {
       bombardDoomed: 0,
       damagedAttackBB: 0,
       damagedDefBB: 0,
+      subPhase: 'attacker',
+      submergedA: 0,
+      submergedD: 0,
+      pendAtkAir: 0,
+      pendDefAir: 0,
     });
     gotoCombat(s);
     const b = s.battles.find((x) => x.territoryId === 'florida')!;

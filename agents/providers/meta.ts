@@ -1,26 +1,41 @@
-// Meta Llama API adapter (OpenAI-compatible endpoint). Model IDs verified 2026-10-03.
+// Meta Model API adapter (OpenAI-compatible endpoint).
+//
+// NOTE: this is the Meta *Model API* (https://api.meta.ai), which serves Muse
+// Spark models and is what Meta's current developer console (dev.meta.ai)
+// issues API keys for — NOT the Llama API (https://api.llama.com), a separate
+// product with separate keys. A dev.meta.ai key 401s on api.llama.com.
+//
+// Endpoint, model catalog, and tool calling verified live 2026-10-04:
+// GET /v1/models with a dev.meta.ai key lists muse-spark-1.3 (default),
+// muse-spark-1.3-contributor, muse-spark-1.2, muse-spark-1.2-contributor,
+// muse-spark-1.1, sam-3.1, muse-image-1.0, muse-voice-transcribe-1.0, and a
+// tool-calling chat/completions round-trip succeeded on muse-spark-1.3.
 
 import type { CompleteRequest, CompleteResponse, ModelInfo, ProviderAdapter } from '../types';
 import { openAiCompatComplete } from './openai';
 
-// Use the OpenAI-compatible endpoint: the native /v1 endpoint returns a different
-// `completion_message` response shape, while /compat/v1 returns the standard `choices` shape.
-export const LLAMA_BASE_URL = 'https://api.llama.com/compat/v1';
+export const META_BASE_URL = 'https://api.meta.ai/v1';
 
 const MODELS: ModelInfo[] = [
-  { id: 'Llama-4-Maverick-17B-128E-Instruct-FP8', label: 'Llama 4 Maverick', default: true },
-  { id: 'Llama-4-Scout-17B-16E-Instruct-FP8', label: 'Llama 4 Scout' },
-  { id: 'Llama-3.3-70B-Instruct', label: 'Llama 3.3 70B' },
+  { id: 'muse-spark-1.3', label: 'Muse Spark 1.3', default: true },
+  { id: 'muse-spark-1.2', label: 'Muse Spark 1.2' },
+  { id: 'muse-spark-1.1', label: 'Muse Spark 1.1' },
+  // Deliberately skipped for v1: contributor variants (Meta may train on
+  // them), voice/image models (not chat), sam-3.1 (segmentation, not chat).
 ];
 
 export const metaAdapter: ProviderAdapter = {
   id: 'meta',
   label: 'Meta',
-  endpoint: `${LLAMA_BASE_URL}/chat/completions`,
+  endpoint: `${META_BASE_URL}/chat/completions`,
   models: MODELS,
   complete(req: CompleteRequest): Promise<CompleteResponse> {
-    // NOTE: Llama tool-calling quality varies by model; live-key verification of
-    // tool-call round-trips against this endpoint is still needed before relying on it.
-    return openAiCompatComplete(LLAMA_BASE_URL, req);
+    // Dialect notes (verified live 2026-10-04):
+    // - If a token cap is ever sent, prefer max_completion_tokens over
+    //   max_tokens on this API.
+    // - Meta ends long *non-streaming* requests with HTTP 504; streaming is
+    //   exempt. Non-streaming is fine for MVP turn sizes, but a streaming
+    //   adapter will be needed before long games or tournaments.
+    return openAiCompatComplete(META_BASE_URL, req);
   },
 };

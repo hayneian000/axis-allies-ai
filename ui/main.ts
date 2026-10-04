@@ -1,4 +1,4 @@
-import { MAP, UNITS, centroid, ipcOf, neighborsOf, pointInPolygon, type UnitType } from '../data/data';
+import { MAP, NAVAL_UNIT_TYPES, UNITS, centroid, ipcOf, neighborsOf, pointInPolygon, type TerritoryDef, type UnitType } from '../data/data';
 import {
   autoCasualties,
   chooseCasualties,
@@ -22,10 +22,23 @@ import {
   sendMessage,
   serialize,
 } from '../engine/engine';
-import type { CombatMove, GameState, NonCombatMove, UnitCounts } from '../engine/types';
+import type { CombatMove, GameState, NonCombatMove, TerritoryState, UnitCounts } from '../engine/types';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
-const UNIT_ORDER: UnitType[] = ['infantry', 'artillery', 'tank', 'fighter', 'bomber', 'aa'];
+const UNIT_ORDER: UnitType[] = [
+  'infantry',
+  'artillery',
+  'tank',
+  'fighter',
+  'bomber',
+  'aa',
+  'transport',
+  'submarine',
+  'destroyer',
+  'cruiser',
+  'carrier',
+  'battleship',
+];
 const SHORT: Record<UnitType, string> = {
   infantry: 'inf',
   artillery: 'art',
@@ -33,6 +46,12 @@ const SHORT: Record<UnitType, string> = {
   fighter: 'ftr',
   bomber: 'bmb',
   aa: 'aa',
+  transport: 'trn',
+  submarine: 'sub',
+  destroyer: 'dd',
+  cruiser: 'ca',
+  carrier: 'cv',
+  battleship: 'bb',
 };
 const DISPLAY_NAME: Record<string, string> = {
   pa_nj: 'PA+NJ',
@@ -61,7 +80,7 @@ let sel: string | null = null;
 let selClick: { x: number; y: number } | null = null;
 let draftMoves: CombatMove[] = [];
 let draftNonCombat: NonCombatMove[] = [];
-let draftMob: Array<{ territory: string; units: Partial<UnitCounts>; buildFactory?: boolean }> = [];
+let draftMob: Array<{ territory: string; units: Partial<UnitCounts>; buildFactory?: boolean; seaZone?: string }> = [];
 let selectedBattle: string | null = null;
 let lastCombat: import('../engine/types').CombatRoundResult | null = null;
 let modal: 'shop' | 'battle' | 'move' | null = null;
@@ -378,6 +397,12 @@ const UNIT_NAMES: Record<UnitType, string> = {
   fighter: 'Fighter',
   bomber: 'Bomber',
   aa: 'AA gun',
+  transport: 'Transport',
+  submarine: 'Submarine',
+  destroyer: 'Destroyer',
+  cruiser: 'Cruiser',
+  carrier: 'Carrier',
+  battleship: 'Battleship',
 };
 
 /** Full force table (both sides always visible in the battle dialog). */
@@ -456,6 +481,29 @@ function drawUnitIcon(g: SVGElement, t: UnitType): void {
     g.appendChild(svgEl('path', { d: 'M7.5,1.5 L12.5,9.5 L7.5,7.2 L2.5,9.5 Z', class: 'uinkfill' }));
   } else if (t === 'bomber') {
     g.appendChild(svgEl('path', { d: 'M1.5,8.5 L7.5,2 L13.5,8.5 L7.5,6.6 Z', class: 'uinkfill' }));
+  } else if (t === 'transport') {
+    // hull with deck line
+    g.appendChild(svgEl('path', { d: 'M2,7 L13,7 L11,10 L4,10 Z M2,7 L2,4 L13,4 L13,7', class: 'uink' }));
+  } else if (t === 'submarine') {
+    // submerged ellipse + conning tower
+    g.appendChild(svgEl('ellipse', { cx: '7.5', cy: '7', rx: '5.5', ry: '2.4', class: 'uink' }));
+    g.appendChild(svgEl('rect', { x: '6', y: '2.6', width: '3', height: '2.6', class: 'uinkfill' }));
+  } else if (t === 'destroyer') {
+    // sleek hull with bow
+    g.appendChild(svgEl('path', { d: 'M1.5,8.5 L11,8.5 L13.5,6 L11,3.5 L1.5,3.5 Z M4,3.5 L4,1.8 M8,3.5 L8,1.8', class: 'uink' }));
+  } else if (t === 'cruiser') {
+    // hull with twin turrets
+    g.appendChild(svgEl('path', { d: 'M1.5,9 L12,9 L13.5,6.5 L12,4 L1.5,4 Z', class: 'uink' }));
+    g.appendChild(svgEl('circle', { cx: '5', cy: '6.5', r: '1.4', class: 'uinkfill' }));
+    g.appendChild(svgEl('circle', { cx: '9.5', cy: '6.5', r: '1.4', class: 'uinkfill' }));
+  } else if (t === 'carrier') {
+    // flat flight deck
+    g.appendChild(svgEl('path', { d: 'M1.5,5.5 L13.5,5.5 L12,9.5 L3,9.5 Z M7.5,5.5 L7.5,2.5', class: 'uink' }));
+  } else if (t === 'battleship') {
+    // heavy hull with twin turrets
+    g.appendChild(svgEl('path', { d: 'M1,9.5 L12.5,9.5 L14,6.5 L12.5,3.5 L1,3.5 Z', class: 'uink' }));
+    g.appendChild(svgEl('circle', { cx: '4.5', cy: '6.5', r: '1.5', class: 'uinkfill' }));
+    g.appendChild(svgEl('circle', { cx: '8.5', cy: '6.5', r: '1.5', class: 'uinkfill' }));
   } else {
     // aa: flak dome + barrel
     g.appendChild(svgEl('path', { d: 'M2.5,9.5 A5,5 0 0 1 12.5,9.5 M7.5,9.5 L11,2.5', class: 'uink' }));
@@ -480,7 +528,9 @@ function layoutLabels(): Map<string, { x: number; y: number }> {
   const bbOf = (tid: string) => bboxOf(MAP.territories.find((t) => t.id === tid)!.points);
 
   // Keep the label stack (IPC pill spans ~39px above anchor) inside the tile.
+  // Sea zones use compact labels and keep their authored anchors.
   for (const t of MAP.territories) {
+    if (t.domain === 'sea') continue;
     const bb = bbOf(t.id);
     const p = pos.get(t.id)!;
     if (p.y - 39 < bb.y0) p.y = bb.y0 + 39;
@@ -533,11 +583,65 @@ function layoutLabels(): Map<string, { x: number; y: number }> {
   return pos;
 }
 
+/** Embarked land units aboard transports in a sea zone, as a short string. */
+function cargoSummary(s: GameState, tid: string): string {
+  const loads = s.territories[tid].cargo ?? [];
+  if (loads.length === 0) return '';
+  const agg: Partial<UnitCounts> = {};
+  for (const l of loads) {
+    for (const u of UNIT_ORDER) {
+      if (l.units[u] > 0) agg[u] = (agg[u] ?? 0) + l.units[u];
+    }
+  }
+  const parts = UNIT_ORDER.filter((u) => (agg[u] ?? 0) > 0).map((u) => `${agg[u]}${SHORT[u]}`);
+  return `cargo: ${parts.join(' ')}`;
+}
+
+/** Sea zone tile: deep-water fill, dashed outline when uncontrolled, solid
+ *  player-colored outline when a fleet holds it. Clickable like land. */
+function seaTile(
+  s: GameState,
+  tid: string,
+  t: TerritoryDef,
+  st: TerritoryState,
+  inBattle: boolean,
+  isDest: boolean,
+): SVGElement {
+  const g = svgEl('g', { class: 'tgroup', 'data-terr': tid });
+  const tip = document.createElementNS(SVGNS, 'title');
+  const ctrl = st.owner === null ? 'open waters' : `${s.players[st.owner].name} waters`;
+  const cargo = cargoSummary(s, tid);
+  tip.textContent = `${t.name} (sea zone) — ${ctrl} — ${unitSummary(s, tid)}${cargo ? ` — ${cargo}` : ''}`;
+  g.appendChild(tip);
+  const pts = t.points.map((p) => p.join(',')).join(' ');
+  const ownerHex = st.owner === null ? '#7fb3d9' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
+  let cls = 'terr sea';
+  if (tid === sel) cls += ' selfrom';
+  else if (isDest) cls += ' dest';
+  if (inBattle) cls += ' battle';
+  const attrs: Record<string, string> = {
+    points: pts,
+    fill: '#2e5a7d',
+    stroke: ownerHex,
+    'stroke-width': st.owner === null ? '1.5' : '2.5',
+  };
+  if (st.owner === null) attrs['stroke-dasharray'] = '7 4';
+  const base = svgEl('polygon', attrs);
+  base.setAttribute('class', cls);
+  base.setAttribute('data-owner', st.owner === null ? 'null' : String(st.owner));
+  base.addEventListener('click', (e) => onTerrClick(tid, e as MouseEvent));
+  base.addEventListener('mousemove', moveTip);
+  base.addEventListener('mouseleave', hideTip);
+  g.appendChild(base);
+  return g;
+}
+
 /** Land tile: parchment base + control tint wash + player-colored boundary.
  *  War-map look per docs/style-guide.md; ownership via `data-owner`. */
 function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean): SVGElement {
   const t = MAP.territories.find((x) => x.id === tid)!;
   const st = s.territories[tid];
+  if (t.domain === 'sea') return seaTile(s, tid, t, st, inBattle, isDest);
   const g = svgEl('g', { class: 'tgroup', 'data-terr': tid });
 
   // Native tooltip + accessible summary + test hook for force contents.
@@ -599,12 +703,80 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
   return g;
 }
 
+/** Compact sea-zone label: name + controller + ship icons. No IPC pill —
+ *  sea zones produce nothing. Anchors are authored in open water, so the
+ *  land label stack-fit pass skips sea zones. */
+function seaLabels(
+  s: GameState,
+  tid: string,
+  t: TerritoryDef,
+  st: TerritoryState,
+  inBattle: boolean,
+  lx: number,
+  ly: number,
+): SVGElement {
+  const g = svgEl('g', { class: 'tlabels sealabels', 'data-terr': tid, 'pointer-events': 'none' });
+  const name = svgEl('text', {
+    x: String(lx),
+    y: String(ly - 8),
+    'text-anchor': 'middle',
+    'font-size': '12',
+    class: 'tname seafont',
+  });
+  name.textContent = `${t.name}${inBattle ? ' ⚔' : ''}`;
+  g.appendChild(name);
+  const ctrl = svgEl('text', {
+    x: String(lx),
+    y: String(ly + 4),
+    'text-anchor': 'middle',
+    'font-size': '10',
+    class: 'towner seafont',
+  });
+  ctrl.textContent = st.owner === null ? 'open waters' : s.players[st.owner].name;
+  g.appendChild(ctrl);
+  const present = UNIT_ORDER.filter((u) => st.units[u] > 0);
+  if (present.length > 0) {
+    const gap = 5;
+    const slots = present.map((u) => ({ u, w: ICON_W + 3 + String(st.units[u]).length * 6 }));
+    const rowW = slots.reduce((sum, x) => sum + x.w, 0) + gap * (slots.length - 1);
+    const row = svgEl('g', {
+      class: 'uicons',
+      transform: `translate(${(lx - rowW / 2).toFixed(1)} ${ly + 10})`,
+    });
+    let cx = 0;
+    for (const sl of slots) {
+      const ig = svgEl('g', { class: 'uicon', 'data-unit': sl.u, transform: `translate(${cx} 0)` });
+      drawUnitIcon(ig, sl.u);
+      const count = svgEl('text', { x: String(ICON_W + 2.5), y: '9.5', 'font-size': '9', class: 'ucount' });
+      count.textContent = String(st.units[sl.u]);
+      ig.appendChild(count);
+      row.appendChild(ig);
+      cx += sl.w + gap;
+    }
+    g.appendChild(row);
+  }
+  const cargo = cargoSummary(s, tid);
+  if (cargo) {
+    const ct = svgEl('text', {
+      x: String(lx),
+      y: String(ly + 34),
+      'text-anchor': 'middle',
+      'font-size': '9',
+      class: 'seafont dim',
+    });
+    ct.textContent = `(${cargo})`;
+    g.appendChild(ct);
+  }
+  return g;
+}
+
 /** Labels, badges, unit icons — drawn in a layer above water. */
 function terrLabels(
   s: GameState, tid: string, inBattle: boolean, lx: number, ly: number,
 ): SVGElement {
   const t = MAP.territories.find((x) => x.id === tid)!;
   const st = s.territories[tid];
+  if (t.domain === 'sea') return seaLabels(s, tid, t, st, inBattle, lx, ly);
   const bb = bboxOf(t.points);
   const g = svgEl('g', { class: 'tlabels', 'data-terr': tid, 'pointer-events': 'none' });
   const isCap = s.players.some((p) => p.capital === tid);
@@ -856,11 +1028,18 @@ function legalDestinations(s: GameState): Set<string> {
   const out = new Set<string>();
   if (!sel || s.phase === 'gameover') return out;
   if (s.territories[sel].owner !== s.currentPlayer) return out;
+  const pid = s.currentPlayer;
   if (s.phase === 'combatMove') {
     for (const n of neighborsOf(sel)) out.add(n);
   } else if (s.phase === 'nonCombat') {
     for (const n of neighborsOf(sel)) {
-      if (s.territories[n].owner === s.currentPlayer) out.add(n);
+      const o = s.territories[n].owner;
+      // Friendly waters (empty or yours) are legal naval destinations.
+      if (s.territories[n] && MAP.territories.find((t) => t.id === n)?.domain === 'sea') {
+        if (o === null || o === pid) out.add(n);
+      } else if (o === pid) {
+        out.add(n);
+      }
     }
   }
   return out;
@@ -904,8 +1083,14 @@ function onTerrClick(tid: string, e?: MouseEvent): void {
   }
 }
 
-function stageMoveFromInspector(from: string, to: string): void {
+function stageMoveFromInspector(
+  from: string,
+  to: string,
+  unitPrefix: string,
+  opts?: { embark?: boolean; disembark?: boolean },
+): void {
   if (!S) return;
+  const units = readUnits(unitPrefix);
   if (S.phase === 'combatMove') {
     const viaEl = document.getElementById('mv-via') as HTMLInputElement | null;
     const sbrEl = document.getElementById('mv-sbr') as HTMLInputElement | null;
@@ -913,12 +1098,20 @@ function stageMoveFromInspector(from: string, to: string): void {
     draftMoves.push({
       from,
       to,
-      units: readUnits('mv'),
+      units,
       ...(via.length > 0 ? { via } : {}),
       ...(sbrEl?.checked ? { sbr: true } : {}),
+      ...(opts?.embark ? { embark: true } : {}),
+      ...(opts?.disembark ? { disembark: true } : {}),
     });
   } else {
-    draftNonCombat.push({ from, to, units: readUnits('nc') });
+    draftNonCombat.push({
+      from,
+      to,
+      units,
+      ...(opts?.embark ? { embark: true } : {}),
+      ...(opts?.disembark ? { disembark: true } : {}),
+    });
   }
 }
 
@@ -1027,15 +1220,24 @@ function renderInspector(s: GameState): void {
   const head = document.createElement('div');
   head.className = 'insp-head';
   const isCap = s.players.some((p) => p.capital === sel);
+  const ownerLabel =
+    t.owner === null ? (def.domain === 'sea' ? 'open waters' : 'neutral') : s.players[t.owner].name;
   head.innerHTML =
     `<strong>${DISPLAY_NAME[sel] ?? def.name}</strong> ` +
-    `<span class="chip" style="background:${ownerColor(s, t.owner)}">${t.owner === null ? 'neutral' : s.players[t.owner].name}</span> ` +
-    `<span>IPC ${ipcOf(sel)}</span>${isCap ? ' ★capital' : ''}${t.factory ? ' ⚙factory' : ''}`;
+    `<span class="chip" style="background:${ownerColor(s, t.owner)}">${ownerLabel}</span> ` +
+    `<span>${def.domain === 'sea' ? 'sea zone' : `IPC ${ipcOf(sel)}`}</span>${isCap ? ' ★capital' : ''}${t.factory ? ' ⚙factory' : ''}`;
   el.appendChild(head);
   const units = document.createElement('div');
   units.className = 'insp-units';
   units.textContent = `Units here: ${describeUnits(t.units)}`;
   el.appendChild(units);
+  const cargo = cargoSummary(s, sel);
+  if (cargo) {
+    const c = document.createElement('div');
+    c.className = 'insp-units dim';
+    c.textContent = `Embarked — ${cargo}`;
+    el.appendChild(c);
+  }
 
   const pid = s.currentPlayer;
   if (!mine) {
@@ -1077,12 +1279,18 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
   const def = MAP.territories.find((x) => x.id === tid)!;
   const head = document.createElement('p');
   head.className = 'insp-head';
+  const cargo = cargoSummary(s, tid);
   head.innerHTML =
     `<strong>${DISPLAY_NAME[tid] ?? def.name}</strong> — ${describeUnits(t.units)}` +
-    (t.factory ? ' ⚙factory' : '');
+    (t.factory ? ' ⚙factory' : '') +
+    (cargo ? ` <span class="dim">(${cargo})</span>` : '');
   el.appendChild(head);
   const isCombat = s.phase === 'combatMove';
   const prefix = isCombat ? 'mv' : 'nc';
+  if (def.domain === 'sea') {
+    seaMoveDialogBody(s, el, tid, isCombat, prefix);
+    return;
+  }
   const grid = document.createElement('div');
   grid.className = 'stepgrid';
   let any = false;
@@ -1118,9 +1326,15 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
   const h = document.createElement('p');
   h.innerHTML = '<strong>Send to:</strong>';
   el.appendChild(h);
-  const dests = neighborsOf(tid).filter((n) =>
-    isCombat ? true : s.territories[n].owner === pid,
-  );
+  const dests = neighborsOf(tid).filter((n) => {
+    const dd = MAP.territories.find((x) => x.id === n)!;
+    if (isCombat) return true;
+    if (dd.domain === 'sea') {
+      const o = s.territories[n].owner;
+      return o === null || o === pid;
+    }
+    return s.territories[n].owner === pid;
+  });
   if (dests.length === 0) {
     const p = document.createElement('p');
     p.textContent = 'No destinations in range from here.';
@@ -1133,19 +1347,120 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     const btn = document.createElement('button');
     btn.dataset.dest = d;
     const owner = dt.owner === null ? 'neutral' : dt.owner === pid ? 'yours' : s.players[dt.owner].name;
-    btn.textContent = `${DISPLAY_NAME[d] ?? ddef.name} (${owner}, ${describeUnits(dt.units)}${dt.factory ? ', FAC' : ''})`;
+    const embarkTag = ddef.domain === 'sea' ? ' (embark)' : '';
+    btn.textContent = `${DISPLAY_NAME[d] ?? ddef.name}${embarkTag} (${owner}, ${describeUnits(dt.units)}${dt.factory ? ', FAC' : ''})`;
     btn.addEventListener('click', () => {
       const n = countUnits({ ...emptyUnits(), ...readUnits(s.phase === 'combatMove' ? 'mv' : 'nc') });
       if (n === 0) {
         showError('Dial at least one unit before picking a destination.');
         return;
       }
-      stageMoveFromInspector(tid, d);
+      stageMoveFromInspector(tid, d, s.phase === 'combatMove' ? 'mv' : 'nc', {
+        ...(ddef.domain === 'sea' ? { embark: true } : {}),
+      });
       modal = null;
       showError('');
       render();
     });
     el.appendChild(btn);
+  }
+}
+
+/** Move dialog for a sea zone you control: fleet movement plus cargo offload. */
+function seaMoveDialogBody(
+  s: GameState,
+  el: HTMLElement,
+  tid: string,
+  isCombat: boolean,
+  prefix: string,
+): void {
+  const pid = s.currentPlayer;
+  const t = s.territories[tid];
+  const grid = document.createElement('div');
+  grid.className = 'stepgrid';
+  let any = false;
+  for (const u of NAVAL_UNIT_TYPES) {
+    if (t.units[u] <= 0) continue;
+    any = true;
+    grid.appendChild(stepper(prefix, u, t.units[u]));
+  }
+  if (any) {
+    const h = document.createElement('p');
+    h.innerHTML = '<strong>Fleet — send to:</strong>';
+    el.appendChild(h);
+    el.appendChild(grid);
+    const dests = neighborsOf(tid).filter(
+      (n) => MAP.territories.find((x) => x.id === n)?.domain === 'sea',
+    );
+    for (const d of dests) {
+      const ddef = MAP.territories.find((x) => x.id === d)!;
+      const dt = s.territories[d];
+      const btn = document.createElement('button');
+      const owner = dt.owner === null ? 'open waters' : dt.owner === pid ? 'yours' : s.players[dt.owner].name;
+      const hostile = dt.owner !== null && dt.owner !== pid;
+      btn.textContent = `${ddef.name} (${owner}${hostile ? ', ATTACK' : ''}, ${describeUnits(dt.units)})`;
+      btn.addEventListener('click', () => {
+        const n = countUnits({ ...emptyUnits(), ...readUnits(prefix) });
+        if (n === 0) {
+          showError('Dial at least one ship before picking a destination.');
+          return;
+        }
+        stageMoveFromInspector(tid, d, prefix);
+        modal = null;
+        showError('');
+        render();
+      });
+      el.appendChild(btn);
+    }
+  } else {
+    const p = document.createElement('p');
+    p.textContent = 'No ships here.';
+    el.appendChild(p);
+  }
+  // Cargo ashore: offload embarked land units into adjacent coastal territory.
+  const loads = (t.cargo ?? []).filter((l) => l.owner === pid);
+  if (loads.length > 0) {
+    const h = document.createElement('p');
+    h.innerHTML = '<strong>Cargo ashore — offload to:</strong>';
+    el.appendChild(h);
+    const cgrid = document.createElement('div');
+    cgrid.className = 'stepgrid';
+    const agg: Partial<UnitCounts> = {};
+    for (const l of loads) {
+      for (const u of UNIT_ORDER) {
+        if (l.units[u] > 0) agg[u] = (agg[u] ?? 0) + l.units[u];
+      }
+    }
+    for (const u of UNIT_ORDER) {
+      if ((agg[u] ?? 0) <= 0) continue;
+      cgrid.appendChild(stepper('cg', u, agg[u]!));
+    }
+    el.appendChild(cgrid);
+    const lands = neighborsOf(tid).filter((n) => {
+      const dd = MAP.territories.find((x) => x.id === n)!;
+      if (dd.domain !== 'land') return false;
+      const o = s.territories[n].owner;
+      return isCombat ? o !== pid : o === pid;
+    });
+    for (const d of lands) {
+      const ddef = MAP.territories.find((x) => x.id === d)!;
+      const dt = s.territories[d];
+      const owner = dt.owner === null ? 'neutral' : dt.owner === pid ? 'yours' : s.players[dt.owner].name;
+      const btn = document.createElement('button');
+      btn.textContent = `${DISPLAY_NAME[d] ?? ddef.name} (${owner}${isCombat && owner !== 'yours' ? ', INVASION' : ''}, ${describeUnits(dt.units)})`;
+      btn.addEventListener('click', () => {
+        const units = readUnits('cg');
+        if (countUnits({ ...emptyUnits(), ...units }) === 0) {
+          showError('Dial cargo units before picking a landing.');
+          return;
+        }
+        stageMoveFromInspector(tid, d, 'cg', { disembark: true });
+        modal = null;
+        showError('');
+        render();
+      });
+      el.appendChild(btn);
+    }
   }
 }
 
@@ -1203,6 +1518,41 @@ function mobilizeInspector(s: GameState, el: HTMLElement, tid: string): void {
     facBox.id = 'mob-factory';
     facLab.append(' Build factory here ', facBox);
     el.appendChild(facLab);
+  }
+  // Fleet deployment: purchased naval units go to an adjacent sea zone
+  // (1942 2e p.21), counting against this factory's capacity.
+  if (usable) {
+    const navalPool = NAVAL_UNIT_TYPES.filter((u) => (s.purchased[u] ?? 0) > 0);
+    const seaDests = neighborsOf(tid).filter(
+      (n) => MAP.territories.find((x) => x.id === n)?.domain === 'sea',
+    );
+    if (navalPool.length > 0 && seaDests.length > 0) {
+      const fh = document.createElement('p');
+      fh.innerHTML = '<strong>Fleet — deploy dialed naval units to:</strong>';
+      el.appendChild(fh);
+      for (const z of seaDests) {
+        const zdef = MAP.territories.find((x) => x.id === z)!;
+        const zt = s.territories[z];
+        const zb = document.createElement('button');
+        const zowner = zt.owner === null ? 'open waters' : zt.owner === pid ? 'yours' : s.players[zt.owner].name;
+        zb.textContent = `${zdef.name} (${zowner})`;
+        zb.addEventListener('click', () => {
+          const units = readUnits('mob');
+          const naval: Partial<UnitCounts> = {};
+          for (const u of NAVAL_UNIT_TYPES) {
+            if ((units[u] ?? 0) > 0) naval[u] = units[u];
+          }
+          if (countUnits({ ...emptyUnits(), ...naval }) === 0) {
+            showError('Dial naval units above before picking a sea zone.');
+            return;
+          }
+          draftMob.push({ territory: tid, seaZone: z, units: naval });
+          showError('');
+          render();
+        });
+        el.appendChild(zb);
+      }
+    }
   }
   const add = document.createElement('button');
   add.textContent = 'Stage deployment';
@@ -1284,6 +1634,12 @@ function purchaseShopBody(s: GameState, el: HTMLElement): void {
     fighter: 10,
     bomber: 12,
     aa: 5,
+    transport: 7,
+    submarine: 6,
+    destroyer: 8,
+    cruiser: 12,
+    carrier: 14,
+    battleship: 20,
     factory: 15,
   };
   const notes: Record<string, string> = {
@@ -1293,6 +1649,12 @@ function purchaseShopBody(s: GameState, el: HTMLElement): void {
     fighter: 'A3 D4 M4',
     bomber: 'A4 D1 M6 SBR',
     aa: 'air defense, M1',
+    transport: 'M2 sea, carries 1 land + 1 inf',
+    submarine: 'A2 D1 M2 sea (abilities in phase 2)',
+    destroyer: 'A2 D2 M2 sea',
+    cruiser: 'A3 D3 M2 sea, bombards',
+    carrier: 'A1 D2 M2 sea (fighters in phase 2)',
+    battleship: 'A4 D4 M2 sea, 2 hits, bombards',
     factory: 'needs IPC 2+ land',
   };
   const types = [...UNIT_ORDER, 'factory'] as const;
@@ -1512,6 +1874,25 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
   forces.append(atkPanel, vs, defPanel);
   el.appendChild(forces);
 
+  // Amphibious bombardment status (1942 2e p.15).
+  if (b.amphibiousFrom && !b.bombardDone && b.bombard) {
+    const sh = b.bombard;
+    if (sh.battleship > 0 || sh.cruiser > 0) {
+      const bp = document.createElement('p');
+      bp.className = 'dim';
+      bp.textContent = `🚢 Bombardment ready: ${sh.battleship} battleship(s) + ${sh.cruiser} cruiser(s) shell the beach before the first land round.`;
+      el.appendChild(bp);
+    }
+  }
+  if (b.damagedAttackBB > 0 || b.damagedDefBB > 0) {
+    const dp = document.createElement('p');
+    dp.className = 'dim';
+    dp.textContent =
+      `Damaged battleships still fighting — attacker ${b.damagedAttackBB}, defender ${b.damagedDefBB}. ` +
+      `Dialing a battleship as a casualty damages it first; the 2nd hit in this combat sinks it (1942 2e p.27).`;
+    el.appendChild(dp);
+  }
+
   const roll = document.createElement('button');
   roll.textContent = 'Roll one round';
   roll.className = 'btn-primary';
@@ -1553,6 +1934,9 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
       dice.appendChild(row);
     };
     if (c.aaRolls.length > 0) show('AA flak', c.aaRolls, c.aaHits);
+    if (c.bombardRolls && c.bombardRolls.length > 0) {
+      show('🚢 Bombardment', c.bombardRolls, c.bombardHits ?? 0);
+    }
     if (c.sbrDamage !== undefined) {
       const p = document.createElement('div');
       p.className = 'sbrhit';
@@ -1571,10 +1955,12 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
     if (side === 'defender' && b.defenderId === null) continue;
     const force = side === 'attacker' ? b.attack : s.territories[tid].units;
     // You can only lose what you have: cap the total at min(hits, live units).
-    const required = Math.min(
-      pending,
-      force.infantry + force.artillery + force.tank + force.fighter + force.bomber,
-    );
+    let liveNoAA = 0;
+    for (const u of UNIT_ORDER) {
+      if (u === 'aa') continue; // AA is captured, never a casualty
+      liveNoAA += force[u];
+    }
+    const required = Math.min(pending, liveNoAA);
     const box = document.createElement('div');
     box.className = 'casualties';
     const title = document.createElement('strong');
@@ -1696,7 +2082,10 @@ function mobilizePanel(s: GameState, el: HTMLElement): void {
   d.appendChild(h);
   for (const m of draftMob) {
     const row = document.createElement('div');
-    row.textContent = `${describeUnits({ ...emptyUnits(), ...m.units })}${m.buildFactory ? ' +factory' : ''} @ ${m.territory}`;
+    const where = m.seaZone
+      ? `${m.seaZone} (via ${m.territory} factory)`
+      : m.territory;
+    row.textContent = `${describeUnits({ ...emptyUnits(), ...m.units })}${m.buildFactory ? ' +factory' : ''} @ ${where}`;
     d.appendChild(row);
   }
   if (draftMob.length > 0) {
@@ -1716,7 +2105,12 @@ function mobilizePanel(s: GameState, el: HTMLElement): void {
     const r = mobilize(
       S!,
       pid,
-      draftMob.map((x) => ({ territory: x.territory, units: x.units, ...(x.buildFactory ? { buildFactory: true as const } : {}) })),
+      draftMob.map((x) => ({
+        territory: x.territory,
+        units: x.units,
+        ...(x.buildFactory ? { buildFactory: true as const } : {}),
+        ...(x.seaZone ? { seaZone: x.seaZone } : {}),
+      })),
     );
     if (!r.ok) showError(`${r.code}: ${r.error}`);
     else {

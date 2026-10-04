@@ -5,6 +5,8 @@ import {
   endPhase,
   openBattles,
   resolveCombatRound,
+  submergeSubs,
+  submergeTurn,
   type CreateGameOptions,
 } from '../engine/engine';
 import type { GameState, Phase } from '../engine/types';
@@ -47,6 +49,15 @@ export function resolveBattleAuto(s: GameState, pid: number, tid: string, maxRou
     const b = s.battles.find((x) => x.territoryId === tid && !x.over);
     if (!b) return;
     if (guard-- <= 0) throw new Error(`Battle in ${tid} did not finish.`);
+    // Submerge decisions default to "stay and fight" unless the test decides
+    // otherwise via submergeSubs directly (1942 2e p.29).
+    const due = submergeTurn(s, tid);
+    if (due) {
+      const decider = due === 'attacker' ? b.attackerId : b.defenderId;
+      const r = submergeSubs(s, decider as number, tid, due, 0);
+      expect(r.ok, `submerge ${tid}: ${r.code} ${r.error}`).toBe(true);
+      continue;
+    }
     // Clear any pending casualties (including ones left by an earlier manual
     // resolve in the same test) before rolling the next round.
     if (b.pendingAttacker > 0) {

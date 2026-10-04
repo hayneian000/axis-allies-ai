@@ -36,14 +36,13 @@ adapters:
 |---|---|---|---|
 | Anthropic | `POST https://api.anthropic.com/v1/messages` | `x-api-key` + `anthropic-version: 2023-06-01` | Sends `anthropic-dangerous-direct-browser-access: true` for browser CORS. Never sends `temperature` (non-default 400s on current models). |
 | OpenAI | `POST https://api.openai.com/v1/chat/completions` | `Bearer` | Standard function-tools shape; browser CORS is fine. |
-| Meta | `POST https://api.llama.com/compat/v1/chat/completions` | `Bearer` | The **compat** endpoint (OpenAI shape). The native `/v1` endpoint returns a different `completion_message` shape — not used. |
+| Meta | `POST https://api.meta.ai/v1/chat/completions` | `Bearer` | The **Meta Model API** (Muse Spark models) — what dev.meta.ai issues keys for. Not the Llama API (`api.llama.com`), a separate product with separate keys. OpenAI-compatible shape; verified live 2026-10-04. |
 
-Curated v1 models (verified 2026-10-03 — **IDs roll forward, refresh periodically**):
+Curated v1 models (verified 2026-10-03/04 — **IDs roll forward, refresh periodically**):
 Anthropic `claude-sonnet-5` (default), `claude-opus-5`, `claude-haiku-4-5`,
 `claude-fable-5-1`; OpenAI `gpt-5.6` (default), `gpt-5.5`, `gpt-5.4-mini`,
-`gpt-5-mini`, `gpt-4.1`; Meta `Llama-4-Maverick-17B-128E-Instruct-FP8`
-(default), `Llama-4-Scout-17B-16E-Instruct-FP8`, `Llama-3.3-70B-Instruct`.
-Llama tool-calling quality varies — live-key verification still pending.
+`gpt-5-mini`, `gpt-4.1`; Meta `muse-spark-1.3` (default), `muse-spark-1.2`,
+`muse-spark-1.1` (live-verified 2026-10-04; contributor/voice/image variants skipped for v1).
 
 ## Per-player isolation
 
@@ -63,6 +62,12 @@ can see another's system prompt, reasoning, or history — this is structural
   `dispatchTool` (engine validation **is** the validation step — failed
   actions never mutate state). On rejection it re-prompts (max 3 retries),
   then falls back to a safe default (pass / no moves / forfeit unplaced).
+- After each batch, the driver records every tool call's outcome back into
+  the agent (`Agent.recordToolResults`) as `{role:'tool'}` history entries —
+  provider APIs require each assistant `tool_calls` entry to have a matching
+  tool response, and the feedback tells the model what was rejected and why
+  before its next attempt. `tests/agents/tool_results.test.ts` enforces the
+  transcript invariant.
 - Combat (MVP): the driver auto-resolves — `resolveCombatRound` +
   `autoCasualties` on both sides until every battle ends. The agent decides
   *where* to attack (`combat_move`), not casualty-by-casualty. `retreat` and
@@ -92,9 +97,12 @@ can see another's system prompt, reasoning, or history — this is structural
   scripted mock providers (`tests/agents/mock.ts`): full 4-player games to
   `gameover`, greedy-bot games with real combat, retry and fallback paths, and
   a human seat — all asserting engine invariants (`assertValidUnits`-style).
-- **Remaining gate:** live-key testing against the real provider APIs
-  (endpoints/headers are per current docs; nothing has been called with a real
-  key yet).
+- **Live-key testing:** done for Meta on 2026-10-04 — a real Model API seat
+  (`muse-spark-1.3`) played 3 full rounds vs 3 scripted seats through the real
+  driver: 19 provider calls, ~120K tokens, 8 engine-rejected tool calls all
+  handled by retry/fallback, no illegal state. That run caught the tool-result
+  history bug fixed above. Live testing still pending for Anthropic/OpenAI
+  (endpoints/headers are per current docs).
 
 ## Milestones
 

@@ -115,8 +115,10 @@ export function playIntro(state: GameState, onDone: () => void): void {
   const svg = overlay.querySelector<SVGSVGElement>('#intro-map')!;
   const textEl = overlay.querySelector<HTMLElement>('#intro-text')!;
 
-  // Draw all territories as blank parchment, initially invisible.
+  // Draw all territories as blank parchment, initially invisible via CSS.
   // On reveal they fade in with roughened ink edges.
+  // NOTE: do NOT set inline opacity here — the .intro-revealed CSS class
+  // must be able to override it, and inline styles beat classes.
   const terrEls = new Map<string, SVGGElement>();
   for (const t of MAP.territories) {
     const g = svgEl('g', {
@@ -140,7 +142,6 @@ export function playIntro(state: GameState, onDone: () => void): void {
         'stroke-width': '1.5',
       }));
     }
-    g.style.opacity = '0';
     svg.appendChild(g);
     terrEls.set(t.id, g);
   }

@@ -16,7 +16,7 @@
  * To retarget (new grouping, new region): edit territories.json.
  */
 import { feature } from 'topojson-client';
-import { union, simplify, area, booleanPointInPolygon, pointToLineDistance } from '@turf/turf';
+import { union, simplify, area, booleanPointInPolygon } from '@turf/turf';
 import { geoAlbers } from 'd3-geo';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -73,7 +73,16 @@ function largestPolygon(geom) {
   }
   return best; // [exterior, ...holes]
 }
-/** Pole of inaccessibility: grid search for the interior point farthest from edges. */
+/** Pole of inaccessibility: grid search for the interior point farthest from edges.
+ *  All in pixel space (Euclidean). */
+function distToSegment(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  let t = len2 > 0 ? ((px - ax) * dx + (py - ay) * dy) / len2 : 0;
+  t = Math.max(0, Math.min(1, t));
+  const cx = ax + t * dx, cy = ay + t * dy;
+  return Math.hypot(px - cx, py - cy);
+}
 function polylabel(ring) {
   let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
   for (const [x, y] of ring) {
@@ -83,10 +92,8 @@ function polylabel(ring) {
   const poly = { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } };
   const distToEdge = (x, y) => {
     let d = 1e9;
-    const pt = { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [x, y] } };
     for (let i = 0; i < ring.length - 1; i++) {
-      const seg = { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [ring[i], ring[i + 1]] } };
-      const dd = pointToLineDistance(pt, seg, { units: 'degrees' });
+      const dd = distToSegment(x, y, ring[i][0], ring[i][1], ring[i + 1][0], ring[i + 1][1]);
       if (dd < d) d = dd;
     }
     return d;

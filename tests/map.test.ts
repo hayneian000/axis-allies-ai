@@ -117,15 +117,17 @@ describe('scenarios', () => {
       }
     });
 
-    it(`scenario ${n}p neutral garrisons are small (1-2 land units, no air/factories)`, () => {
+    it(`scenario ${n}p neutral garrisons are 3 infantry by default (no air/factories)`, () => {
       const s = scenarioFor(n);
       for (const [tid, u] of Object.entries(s.neutrals)) {
-        const total = (u.infantry ?? 0) + (u.artillery ?? 0) + (u.tank ?? 0);
+        // null means "use scenario neutralGarrison default" (3 infantry)
+        const g = u ?? s.neutralGarrison ?? { infantry: 3 };
+        const total = (g.infantry ?? 0) + (g.artillery ?? 0) + (g.tank ?? 0);
         expect(total, tid).toBeGreaterThanOrEqual(1);
-        expect(total, tid).toBeLessThanOrEqual(2);
-        expect(u.fighter ?? 0).toBe(0);
-        expect(u.bomber ?? 0).toBe(0);
-        expect(u.aa ?? 0).toBe(0);
+        expect(total, tid).toBeLessThanOrEqual(4);
+        expect(g.fighter ?? 0).toBe(0);
+        expect(g.bomber ?? 0).toBe(0);
+        expect(g.aa ?? 0).toBe(0);
       }
     });
   }

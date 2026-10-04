@@ -36,11 +36,11 @@ function clickTerr(tid: string): void {
 
 function ownerOf(tid: string): string | null {
   const rects = document.querySelectorAll('#map .terr');
-  const fill = (rects[rectIndexFor(tid)] as SVGRectElement).getAttribute('fill');
-  if (fill === '#8a8f98') return null;
-  const players = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
-  const idx = players.indexOf(fill ?? '');
-  return idx >= 0 ? `Player ${idx + 1}` : `unknown:${fill}`;
+  const r = rects[rectIndexFor(tid)] as SVGPolygonElement;
+  const owner = r.getAttribute('data-owner');
+  if (owner === 'null') return null;
+  const idx = Number(owner);
+  return Number.isInteger(idx) && idx >= 0 ? `Player ${idx + 1}` : `unknown:${owner}`;
 }
 
 beforeAll(async () => {

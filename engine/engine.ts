@@ -26,7 +26,7 @@ import type {
   UnitCounts,
 } from './types';
 
-export const PLAYER_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12'];
+export const PLAYER_COLORS = ['#6b7a3f', '#3e5a78', '#7e3b3b', '#b49b62'];
 export const MAX_CHAT_LENGTH = 500;
 export const DEFAULT_TURN_CAP = 20;
 export const LAND_UNIT_TYPES: UnitType[] = ['infantry', 'artillery', 'tank'];

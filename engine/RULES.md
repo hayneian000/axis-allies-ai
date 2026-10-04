@@ -37,9 +37,9 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 | 1942 2e Rule | Project Implementation |
 |---|---|
 | 5 powers, Axis vs Allies teams | 2–4 players, free-for-all |
-| World map, sea zones, naval units | 26-territory continental US, land + air only |
+| World map, sea zones, naval units | 26-territory continental US + 3 sea zones (Pacific, Gulf, Atlantic); full 1942 2e naval roster |
 | 6-phase turn (purchase, combat move, combat, noncombat, mobilize, income) | Same 6 phases |
-| Unit roster: inf, art, tank, fighter, bomber, AA, sub, destroyer, carrier, battleship, transport | inf, art, tank, fighter, bomber, AA only |
+| Unit roster: inf, art, tank, fighter, bomber, AA, sub, destroyer, carrier, battleship, transport | Full roster: inf, art, tank, fighter, bomber, AA + transport, submarine, destroyer, cruiser, carrier, battleship |
 | IPC income from territories | Same, GDP-weighted (61 total) |
 | Victory: 9/10 victory cities | Majority of capitals held simultaneously (scenario-overridable via capitalsToWin), or highest income at 20-round cap |
 | Research & technology | Omitted (not in 1942 2e base rules either) |
@@ -54,11 +54,62 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 - **Artillery support**: Boosts paired infantry attack
 - **Factory placement**: New units placed at owned factories, limited by territory IPC value
 - **Strategic bombing raids**: Bombers may raid factory territories; AA fires first; 1d6 IPC damage to victim bank
+- **Naval warfare (phase 1)**: Sea zones, transports/cargo, amphibious assaults, surface sea combat, battleship 2-hit tracking — see Naval appendix below
 
 ### FFA Adaptations (Ian's decisions)
 - **Neutral territories**: Have garrisons that must be defeated before capture (blocks tank blitz). Default: 3 infantry; each map/scenario may customize via `neutralGarrison` or per-territory `neutrals`.
 - **Capital capture**: Captor steals the victim's entire saved IPC bank (1942 2e p.20).
 - **Victory**: Hold a majority of capitals simultaneously (3 of 4 on the current map). Scenarios may override via `capitalsToWin`.
+
+---
+
+## Appendix: Naval Rules (Navy Phase 1)
+
+All citations are to the Axis & Allies 1942 Second Edition rulebook (2012).
+
+### Sea zones
+- The US map has three sea zones — **Pacific** (west coast), **Atlantic** (east coast), **Gulf of Mexico** (south) — linked Pacific↔Gulf↔Atlantic (the Gulf link is a Panama-canal abstraction).
+- Sea zones are never owned, worth 0 IPCs, hold no garrisons, and are exempt from scenario coverage checks. Only sea units (and aircraft) operate in them.
+
+### Unit profiles (p.27–30)
+| Unit | Cost | A/D/M | Notes |
+|---|---|---|---|
+| Transport | 7 | 0/0/2 | No combat value; chosen as casualty last; cargo destroyed with it (p.30) |
+| Submarine | 6 | 2/1/2 | Phase 2: data only in phase 1 |
+| Destroyer | 8 | 2/2/2 | |
+| Cruiser | 12 | 3/3/2 | Offshore bombardment (p.28) |
+| Carrier | 14 | 1/2/2 | Phase 2/3: data only in phase 1 |
+| Battleship | 20 | 4/4/2 | Two hits to destroy; offshore bombardment (p.27) |
+
+### Movement (p.27)
+- All sea units move 2 sea zones.
+- A sea zone is **hostile** if it contains enemy surface warships (battleship, carrier, cruiser, destroyer). Lone submarines and transports neither make a zone hostile nor block movement.
+- Ships may not transit hostile zones; aircraft fly over anything within range.
+
+### Transports (pp.13, 30)
+- Capacity: any **one** land unit plus one additional infantry (2 infantry, or infantry + tank/artillery/AA).
+- May load in any friendly sea zone along the route (including the starting zone). Loading/offloading counts as the land unit's entire move.
+- Cannot load or offload in a hostile sea zone; cannot offload into two territories in one turn; "bridging" (load + offload without the ship moving) is allowed.
+- Combat-move loads must amphibiously assault; transports may not attack a hostile zone without an escorting warship.
+- AA guns embark only in the noncombat phase (project rule, consistent with p.30's "only phase in which AA can move").
+
+### Amphibious assaults (p.15)
+Sequence: 1. sea combat (only if defending surface warships are present; lone subs/transports may be ignored), 2. battleship/cruiser bombardment — **only if no sea battle occurred** in the launch zone, at most one ship per offloaded land unit (battleships hit on 4-, cruisers on 3-; victims defend the first land round, then die), 3. land combat. Seaborne units cannot retreat.
+- **Phase-1 simplification**: assaults launch from friendly sea zones only (the full sea-battle-then-assault sequencing arrives in phase 2).
+
+### Battleship damage (p.27)
+- First hit in a combat = damaged; second hit in the **same** combat = destroyed. A battleship that survives the combat is repaired immediately. Damage is tracked on the Battle object, never on persistent map state.
+
+### Mobilization (p.21)
+- Sea units mobilize into a sea zone adjacent to a territory with an eligible factory.
+- **Phase-1 simplification**: into friendly or empty waters only (p.21 allows hostile waters; deferred).
+
+### Phase-2 follow-ons (not in phase 1)
+- Submarine abilities (surprise strikes, submerging, convoy disruption)
+- Carrier fighter operations (launch/recover, carrier as landing spot)
+- Full p.27 hostile-zone transit nuances for subs
+- Sea-battle-then-amphibious-assault sequencing in a single turn
+- Mobilization into hostile waters
 
 ---
 

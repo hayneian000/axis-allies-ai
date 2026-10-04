@@ -175,16 +175,17 @@ describe('combat movement — air units (1942 2e p.13)', () => {
   });
 
   it('fighter cannot exceed range 4', () => {
-    // 1942 2e p.13: fighter move allowance is 4; california->southeast is 5 hops.
+    // 1942 2e p.13: fighter move allowance is 4; montana->florida is 5 hops
+    // (air counts sea zones as steps).
     const s = freshGame(2, 111);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    s.territories['california'].owner = pid;
-    setUnits(s, 'california', { fighter: 1 });
-    s.territories['southeast'].owner = foe;
-    setUnits(s, 'southeast', { infantry: 1 });
+    s.territories['montana'].owner = pid;
+    setUnits(s, 'montana', { fighter: 1 });
+    s.territories['florida'].owner = foe;
+    setUnits(s, 'florida', { infantry: 1 });
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'california', to: 'southeast', units: { fighter: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'montana', to: 'florida', units: { fighter: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('range');
   });

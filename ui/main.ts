@@ -15,6 +15,7 @@ import {
   openBattles,
   ownedTerritories,
   ownsCapital,
+  PLAYER_COLORS,
   purchase,
   resolveCombatRound,
   retreat,
@@ -68,6 +69,14 @@ let lastLaunchMsg: string | null = null;
 
 const $ = (id: string): HTMLElement => document.getElementById(id)!;
 const svg = (): SVGSVGElement => $('map') as unknown as SVGSVGElement;
+
+/** Design-system button factory. variant: 'brass' (primary) or 'steel' (default). */
+function mkButton(label: string, variant: 'brass' | 'steel' = 'steel'): HTMLButtonElement {
+  const b = document.createElement('button');
+  b.textContent = label;
+  if (variant === 'brass') b.classList.add('btn-brass');
+  return b;
+}
 
 function showError(msg: string): void {
   $('error').textContent = msg;
@@ -245,7 +254,7 @@ function boot(): void {
 }
 
 function ownerColor(state: GameState, owner: number | null): string {
-  if (owner === null) return '#8a8f98';
+  if (owner === null) return '#6e6e6a';
   return state.players[owner].color;
 }
 
@@ -470,22 +479,26 @@ function layoutLabels(): Map<string, { x: number; y: number }> {
   for (const t of MAP.territories) pos.set(t.id, { x: t.label[0], y: t.label[1] });
   const bbOf = (tid: string) => bboxOf(MAP.territories.find((t) => t.id === tid)!.points);
 
-  // Keep the label stack (IPC pill sits ~30px above anchor) inside the tile.
+  // Keep the label stack (IPC pill spans ~39px above anchor) inside the tile.
   for (const t of MAP.territories) {
     const bb = bbOf(t.id);
     const p = pos.get(t.id)!;
-    if (p.y - 30 < bb.y0) p.y = bb.y0 + 30;
+    if (p.y - 39 < bb.y0) p.y = bb.y0 + 39;
     if (p.y + 34 > bb.y1 && bb.y1 - bb.y0 > 70) p.y = bb.y1 - 34;
   }
 
   // Push apart anchors that are closer than MIN_SEP, clamped to their tiles.
-  const MIN_SEP = 68;
+  // Northeast cluster (new_england, new_york, pa_nj) has tiny tiles; allow
+  // labels to overflow bounds slightly so they can achieve separation.
+  const MIN_SEP = 80;
   const clampToBb = (tid: string, p: { x: number; y: number }) => {
     const bb = bbOf(tid);
-    p.x = Math.min(bb.x1 - 8, Math.max(bb.x0 + 8, p.x));
-    p.y = Math.min(bb.y1 - 8, Math.max(bb.y0 + 8, p.y));
+    // Allow 16px overflow for small territories (< 120px wide) to de-conflict labels
+    const margin = (bb.x1 - bb.x0) < 120 ? -16 : 8;
+    p.x = Math.min(bb.x1 - margin, Math.max(bb.x0 + margin, p.x));
+    p.y = Math.min(bb.y1 - margin, Math.max(bb.y0 + margin, p.y));
   };
-  for (let iter = 0; iter < 4; iter++) {
+  for (let iter = 0; iter < 6; iter++) {
     let moved = false;
     for (let i = 0; i < MAP.territories.length; i++) {
       for (let j = i + 1; j < MAP.territories.length; j++) {
@@ -505,10 +518,23 @@ function layoutLabels(): Map<string, { x: number; y: number }> {
     }
     if (!moved) break;
   }
+
+  // Manual de-conflict for the northeast cluster: tiny tiles need explicit offsets.
+  const neNudges: Record<string, [number, number]> = {
+    new_england: [12, -8],  // push NE
+    new_york: [-10, 6],     // push SW
+    pa_nj: [-6, 10],        // push S
+  };
+  for (const [tid, [dx, dy]] of Object.entries(neNudges)) {
+    const p = pos.get(tid);
+    if (p) { p.x += dx; p.y += dy; }
+  }
+
   return pos;
 }
 
-/** Land tile: polygon + sheen + interactions. Labels live in terrLabels (own layer). */
+/** Land tile: parchment base + control tint wash + player-colored boundary.
+ *  War-map look per docs/style-guide.md; ownership via `data-owner`. */
 function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean): SVGElement {
   const t = MAP.territories.find((x) => x.id === tid)!;
   const st = s.territories[tid];
@@ -522,25 +548,31 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
   g.appendChild(tip);
 
   const pts = t.points.map((p) => p.join(',')).join(' ');
-  // NOTE: `fill` stays the exact owner color (tests + roster legend key off it);
-  // depth comes from the translucent gradient overlay below.
-  const poly = svgEl('polygon', { points: pts, fill: ownerColor(s, st.owner) });
+  const ownerHex = st.owner === null ? '#6e6e6a' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
+  const base = svgEl('polygon', {
+    points: pts,
+    fill: 'var(--paper, #c9b98a)',
+    stroke: ownerHex,
+    'stroke-width': '2',
+  });
   let cls = 'terr';
   if (tid === sel) cls += ' selfrom';
   else if (isDest) cls += ' dest';
   if (inBattle) cls += ' battle';
-  poly.setAttribute('class', cls);
-  const isCap = s.players.some((p) => p.capital === tid);
-  if (isCap) {
-    poly.setAttribute('stroke', '#ffd700');
-    poly.setAttribute('stroke-width', '3');
-  }
-  poly.addEventListener('click', (e) => onTerrClick(tid, e as MouseEvent));
-  poly.addEventListener('mousemove', moveTip);
-  poly.addEventListener('mouseleave', hideTip);
-  g.appendChild(poly);
+  base.setAttribute('class', cls);
+  base.setAttribute('data-owner', st.owner === null ? 'null' : String(st.owner));
+  base.addEventListener('click', (e) => onTerrClick(tid, e as MouseEvent));
+  base.addEventListener('mousemove', moveTip);
+  base.addEventListener('mouseleave', hideTip);
+  g.appendChild(base);
+  // Control tint wash — player color at ~35% over parchment.
   g.appendChild(
-    svgEl('polygon', { points: pts, fill: 'url(#sheen)', class: 'sheen', 'pointer-events': 'none' }),
+    svgEl('polygon', {
+      points: pts,
+      fill: ownerHex,
+      'fill-opacity': '0.35',
+      'pointer-events': 'none',
+    }),
   );
   return g;
 }
@@ -555,10 +587,10 @@ function terrLabels(
   const g = svgEl('g', { class: 'tlabels', 'data-terr': tid, 'pointer-events': 'none' });
   const isCap = s.players.some((p) => p.capital === tid);
 
-  // Name + owner stacked on the label anchor.
+  // Name + owner stacked on the label anchor, with breathing room below the IPC lozenge.
   const name = svgEl('text', {
     x: String(lx),
-    y: String(ly - 12),
+    y: String(ly - 10),
     'text-anchor': 'middle',
     'font-size': '12',
     class: 'tname',
@@ -575,23 +607,24 @@ function terrLabels(
   owner.textContent = st.owner === null ? 'neutral' : s.players[st.owner].name;
   g.appendChild(owner);
 
-  // IPC value pill heading the label stack.
-  const badge = svgEl('g', { class: 'ipcbadge', transform: `translate(${lx} ${ly - 27})` });
-  badge.appendChild(svgEl('rect', { x: '-21', y: '-7', width: '42', height: '14', rx: '7', class: 'ipcpill' }));
+  // IPC lozenge heading the label stack: brass value on umber.
+  // Positioned with clear gap above the name (badge spans ly-39 to ly-25, name at ly-10).
+  const badge = svgEl('g', { class: 'ipcbadge', transform: `translate(${lx} ${ly - 32})` });
+  badge.appendChild(svgEl('rect', { x: '-21', y: '-7', width: '42', height: '14', rx: '0', class: 'ipcpill' }));
   const bt = svgEl('text', { x: '0', y: '3.5', 'text-anchor': 'middle', 'font-size': '9.5', class: 'ipctext' });
   bt.textContent = `IPC ${ipcOf(tid)}`;
   badge.appendChild(bt);
   g.appendChild(badge);
 
-  // Capital star: beside the IPC pill, verified inside the tile
-  // (bbox corners can hang over neighbors on irregular shapes).
+  // Capital roundel: player-colored disc with brass star.
   if (isCap) {
+    const ownerHex = st.owner === null ? '#6e6e6a' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
     const candidates: Array<[number, number]> = [
-      [lx + 32, ly - 27], [lx - 32, ly - 27], [lx + 32, ly - 10], [lx - 32, ly - 10],
+      [lx + 32, ly - 32], [lx - 32, ly - 32], [lx + 32, ly - 10], [lx - 32, ly - 10],
     ];
-    const spot = candidates.find(([cx, cy]) => pointInPolygon([cx, cy], t.points)) ?? [lx, ly - 27];
+    const spot = candidates.find(([cx, cy]) => pointInPolygon([cx, cy], t.points)) ?? [lx, ly - 32];
     const cap = svgEl('g', { class: 'capbadge', transform: `translate(${spot[0]} ${spot[1]})` });
-    cap.appendChild(svgEl('circle', { cx: '0', cy: '0', r: '7.5', class: 'capring' }));
+    cap.appendChild(svgEl('circle', { cx: '0', cy: '0', r: '7.5', fill: ownerHex, class: 'capring' }));
     const star = svgEl('text', { x: '0', y: '3.5', 'text-anchor': 'middle', 'font-size': '10', class: 'capstar' });
     star.textContent = '★';
     cap.appendChild(star);
@@ -652,15 +685,10 @@ function renderMap(s: GameState): void {
     marker.appendChild(path);
     defs.appendChild(marker);
   }
-  // Top-light sheen for territory tiles; ocean backdrop gradient.
-  const sheen = svgEl('linearGradient', { id: 'sheen', x1: '0', y1: '0', x2: '0', y2: '1' });
-  sheen.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#ffffff', 'stop-opacity': '.26' }));
-  sheen.appendChild(svgEl('stop', { offset: '.45', 'stop-color': '#ffffff', 'stop-opacity': '.05' }));
-  sheen.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#000000', 'stop-opacity': '.16' }));
-  defs.appendChild(sheen);
+  // Slate-navy ocean backdrop gradient.
   const ocean = svgEl('linearGradient', { id: 'ocean', x1: '0', y1: '0', x2: '1', y2: '1' });
-  ocean.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#262c38' }));
-  ocean.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#1b1f28' }));
+  ocean.appendChild(svgEl('stop', { offset: '0', 'stop-color': '#22303e' }));
+  ocean.appendChild(svgEl('stop', { offset: '1', 'stop-color': '#1a2530' }));
   defs.appendChild(ocean);
   m.appendChild(defs);
 

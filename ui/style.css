@@ -26,42 +26,47 @@
 
 html, body { height: 100%; margin: 0; }
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-text);
   background: radial-gradient(1200px 700px at 50% -10%, #1d2330 0%, var(--bg) 60%) fixed, var(--bg);
   color: var(--text);
   overflow: hidden;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.45;
+  letter-spacing: 0.02em;
 }
 
 /* ---------- shared controls ---------- */
 
+/* Design-system button: metal plate. Variants: .btn-brass (primary), default steel. */
 button {
-  background: var(--panel2);
+  font-family: var(--font-text);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #39404f, #2a2f3b);
   color: var(--text);
   border: 1px solid var(--border);
-  padding: 6px 14px;
-  border-radius: 7px;
   cursor: pointer;
   white-space: nowrap;
-  font-size: 0.92em;
-  transition: background 0.12s, border-color 0.12s, transform 0.05s;
+  transition: filter 120ms ease;
 }
-button:hover { background: #303a52; border-color: #3d4a68; }
+button:hover { filter: brightness(1.12); }
 button:active { transform: translateY(1px); }
-button:disabled { opacity: 0.38; cursor: default; transform: none; }
+button:disabled { opacity: 0.45; cursor: default; transform: none; }
 button:focus-visible, input:focus-visible, select:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brass);
   outline-offset: 1px;
 }
-.btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  font-weight: 600;
+.btn-primary, .btn-brass {
+  background: linear-gradient(180deg, #d9b13b, var(--brass));
+  color: var(--ink);
+  border-color: #6e5a1e;
 }
-.btn-primary:hover { background: #6f9bff; border-color: #6f9bff; }
-.btn-large { padding: 10px 26px; font-size: 1.05em; border-radius: 9px; }
+.btn-primary:hover, .btn-brass:hover { filter: brightness(1.08); }
+.btn-large { padding: 10px 26px; font-size: 1.05em; }
 
 input, select {
   background: #12151d;
@@ -80,8 +85,8 @@ input::placeholder { color: var(--faint); }
   margin: 8vh auto 0;
   padding: 36px 40px 32px;
   background: linear-gradient(180deg, var(--panel2), var(--panel));
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  border: 1px solid var(--brass-deep);
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
 #setup .kicker {
@@ -92,7 +97,13 @@ input::placeholder { color: var(--faint); }
   color: var(--accent);
   font-weight: 700;
 }
-#setup h1 { margin: 0 0 4px; font-size: 1.7em; letter-spacing: -0.01em; }
+#setup h1 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 1.7em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 #setup .lede { margin: 0 0 20px; color: var(--muted); }
 #setup .setup-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
 #setup .setup-row label { display: flex; align-items: center; gap: 8px; color: var(--muted); }
@@ -210,18 +221,55 @@ input::placeholder { color: var(--faint); }
 @keyframes battlepulse { 50% { stroke-width: 5.5; } }
 #map .ocean { pointer-events: none; }
 #map polygon.sheen { pointer-events: none; }
-#map text.tname { fill: #fff; font-weight: bold; stroke: rgba(10,12,16,.7); stroke-width: 3px; }
-#map text.towner { fill: #fff; opacity: .88; stroke: rgba(10,12,16,.6); }
-#map .ipcpill { fill: #f5c542; stroke: #7a5c00; stroke-width: 1; opacity: .96; }
-#map .ipctext { fill: #241f00; font-weight: bold; stroke: none; }
-#map .capring { fill: #ffd700; stroke: #7a5c00; stroke-width: 1.2; }
-#map .capstar { fill: #5c4300; stroke: none; }
-#map .facglyph { fill: #2b2f36; stroke: #f5f5f5; stroke-width: 1; stroke-linejoin: round; }
-#map .facglyph.fresh { fill: #6b7280; stroke-dasharray: 2 1.5; }
-#map .uframe { fill: rgba(245,245,245,.94); stroke: #14161a; stroke-width: 1.2; }
-#map .uink { stroke: #14161a; stroke-width: 1.3; fill: none; stroke-linecap: round; }
-#map .uinkfill { fill: #14161a; }
-#map .ucount { fill: #fff; font-weight: bold; stroke: rgba(10,12,16,.7); }
+/* War-map labels: stencil names in umber ink on parchment. */
+#map text.tname {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  fill: var(--ink);
+  stroke: rgba(201, 185, 138, 0.85);
+  stroke-width: 3px;
+  paint-order: stroke;
+}
+#map text.towner {
+  font-family: var(--font-text);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--ink);
+  opacity: 0.85;
+  stroke: rgba(201, 185, 138, 0.7);
+  stroke-width: 2.5px;
+  paint-order: stroke;
+}
+/* IPC lozenge: brass value on umber. */
+#map .ipcpill { fill: var(--ink); stroke: var(--brass-deep); stroke-width: 1; opacity: 0.96; }
+#map .ipctext {
+  font-family: var(--font-text);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  fill: var(--brass);
+  stroke: none;
+}
+/* Capital roundel: player color with brass star. */
+#map .capring { stroke: var(--brass-deep); stroke-width: 1.2; }
+#map .capstar { fill: var(--brass); stroke: none; }
+/* Factory: dark bronze glyph on buff. */
+#map .facglyph { fill: #4a3f2a; stroke: var(--chit); stroke-width: 1; stroke-linejoin: round; }
+#map .facglyph.fresh { fill: #6b5f45; stroke-dasharray: 2 1.5; }
+/* Unit chits: buff counters with umber symbols. */
+#map .uframe { fill: var(--chit); stroke: var(--ink); stroke-width: 1.2; }
+#map .uink { stroke: var(--ink); stroke-width: 1.3; fill: none; stroke-linecap: round; }
+#map .uinkfill { fill: var(--ink); }
+#map .ucount {
+  font-family: var(--font-text);
+  font-weight: 600;
+  fill: var(--ink);
+  stroke: rgba(216, 201, 154, 0.8);
+  stroke-width: 2px;
+  paint-order: stroke;
+}
 #map .ripple { fill: none; stroke: #fff; stroke-width: 2; opacity: .9; animation: ripplefade .6s ease-out forwards; }
 @keyframes ripplefade { to { opacity: 0; stroke-width: 7; } }
 @media (prefers-reduced-motion: reduce) {
@@ -241,10 +289,11 @@ input::placeholder { color: var(--faint); }
   max-width: 320px;
   max-height: 70%;
   overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--chit);
+  color: var(--ink);
+  border: 1px solid var(--brass-deep);
   border-radius: var(--radius);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
   padding: 10px 14px;
   font-size: 0.92em;
 }
@@ -310,13 +359,22 @@ input::placeholder { color: var(--faint); }
 #phasepanel {
   flex: 0 0 auto;
   background: var(--panel);
-  border: 1px solid var(--border);
+  border: 1px solid var(--brass-deep);
   border-radius: var(--radius);
   padding: 10px 14px;
   max-height: 42%;
   overflow-y: auto;
 }
-#phasepanel h3 { margin: 0 0 8px; font-size: 1.05em; display: flex; align-items: center; gap: 8px; }
+#phasepanel h3 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 1em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 #phasepanel h3 .pdot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 #phasepanel p { margin: 6px 0; font-size: 0.92em; color: var(--muted); }
 #phasepanel button { margin: 4px 6px 4px 0; }
@@ -387,8 +445,8 @@ input::placeholder { color: var(--faint); }
 #modal[hidden] { display: none; }
 #modal-box {
   background: linear-gradient(180deg, var(--panel2), var(--panel));
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border: 1px solid var(--brass-deep);
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
   width: min(620px, 94vw);
   max-height: 88vh;
@@ -405,9 +463,14 @@ input::placeholder { color: var(--faint); }
   align-items: center;
   justify-content: space-between;
   padding: 12px 18px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--brass-deep);
 }
-#modal-title { font-size: 1.15em; }
+#modal-title {
+  font-family: var(--font-display);
+  font-size: 1.1em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 #modal-close {
   background: transparent;
   border: none;
@@ -440,8 +503,8 @@ input::placeholder { color: var(--faint); }
   margin: 12px 0 4px;
   padding: 10px 14px;
   background: rgba(0, 0, 0, 0.28);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 1px solid var(--brass-deep);
+  border-radius: var(--radius);
   font-weight: 600;
 }
 .cartbar .remaining { color: var(--ok); font-weight: 600; }

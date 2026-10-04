@@ -42,6 +42,18 @@ export interface ActResult {
   usage: PlayerUsage;
 }
 
+/**
+ * One tool-call outcome, recorded into the agent's history by the driver
+ * after it executes the batch from act().
+ */
+export interface ToolResultRecord {
+  /** Matches the `id` of the ToolCall this result answers. */
+  toolCallId: string;
+  ok: boolean;
+  /** Short human-readable summary, e.g. `ok: purchased 3 infantry`. */
+  summary: string;
+}
+
 /** Public chat messages visible to `playerName`: broadcast or addressed to them. */
 function visibleChat(state: GameState, playerName: string): string {
   const lines: string[] = [];
@@ -123,6 +135,22 @@ export class Agent {
     this.totalUsage.calls += delta.calls;
 
     return { toolCalls: resp.toolCalls, text: resp.text, usage: { ...delta } };
+  }
+
+  /**
+   * Record the outcomes of this seat's own tool calls into the private
+   * history as `{role:'tool'}` messages. The driver calls this after
+   * executing each batch returned from act().
+   *
+   * Two purposes: (1) provider APIs require every assistant `tool_calls`
+   * entry to have a matching tool response — without this, the second and
+   * later provider calls are rejected (HTTP 400); (2) the model sees what
+   * succeeded and why rejections happened before its next act().
+   */
+  recordToolResults(results: ToolResultRecord[]): void {
+    for (const r of results) {
+      this.history.push({ role: 'tool', toolCallId: r.toolCallId, content: r.summary });
+    }
   }
 
   /** Forget this seat's private conversation memory. */

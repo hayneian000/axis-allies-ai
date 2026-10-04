@@ -153,11 +153,11 @@ describe('combatMove edges', () => {
     gotoCombatMove(s);
     const pid = s.currentPlayer;
     const foe = (pid + 1) % 2;
-    s.territories['california'].owner = pid;
-    s.territories['california'].units.fighter = 1;
+    s.territories['montana'].owner = pid;
+    s.territories['montana'].units.fighter = 1;
     s.territories['florida'].owner = foe;
-    // California to Florida is 6 steps, beyond a fighter's 4.
-    expect(combatMove(s, pid, [{ from: 'california', to: 'florida', units: { fighter: 1 } }]).code).toBe('range');
+    // Montana to Florida is 5 steps via land and sea, beyond a fighter's 4.
+    expect(combatMove(s, pid, [{ from: 'montana', to: 'florida', units: { fighter: 1 } }]).code).toBe('range');
   });
 
   it('rejects air attacks with no reachable landing spot', () => {
@@ -208,18 +208,23 @@ describe('combatMove edges', () => {
         combatMove(s, pid, [{ from: 'pa_nj', to: 'montana', units: { bomber: 1 }, sbr: true }]).code,
       ).toBe('sbr_no_factory');
     }
-    // And it must be in range (California to New York is 8 > 6).
+    // Range still gates raids, but sea zones count as air steps (1942 2e: air
+    // flies over sea zones), so the map's air diameter is 6 — every factory
+    // is within bomber range. A max-distance raid (montana -> new_york, 5
+    // hops) clears the range check and fails only on the landing check
+    // that follows it, proving range is validated first.
     {
       const s = freshGame(2, 120);
       gotoCombatMove(s);
       const pid = s.currentPlayer;
       const foe = (pid + 1) % 2;
-      s.territories['california'].owner = pid;
-      s.territories['california'].units.bomber = 1;
-      expect(s.territories[s.players[foe].capital].factory).toBe(true);
+      expect(s.players[foe].capital).toBe('new_york');
+      expect(s.territories['new_york'].factory).toBe(true);
+      s.territories['montana'].owner = pid;
+      s.territories['montana'].units.bomber = 1;
       expect(
-        combatMove(s, pid, [{ from: 'california', to: s.players[foe].capital, units: { bomber: 1 }, sbr: true }]).code,
-      ).toBe('range');
+        combatMove(s, pid, [{ from: 'montana', to: 'new_york', units: { bomber: 1 }, sbr: true }]).code,
+      ).toBe('no_landing');
     }
   });
 });

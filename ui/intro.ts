@@ -154,12 +154,16 @@ export function playIntro(state: GameState, onDone: () => void): void {
   wash.style.opacity = '0';
   svg.appendChild(wash as unknown as SVGElement);
 
-  // Wax seal on the capital
+  // Wax seal on the capital.
+  // NOTE: the translate lives on the outer <g>; the stamp animation (CSS
+  // transform) lives on the inner <g>. A CSS transform would override the
+  // SVG transform attribute if they were on the same element, causing the
+  // seal to jump to the SVG origin mid-animation.
   const sealSize = 26;
-  const seal = svgEl('g', {
-    class: 'intro-seal',
+  const sealPos = svgEl('g', {
     transform: `translate(${cx},${cy})`,
   });
+  const seal = svgEl('g', { class: 'intro-seal' });
   seal.appendChild(svgEl('circle', {
     r: String(sealSize),
     fill: 'url(#intro-seal-grad)',
@@ -185,8 +189,9 @@ export function playIntro(state: GameState, onDone: () => void): void {
     opacity: '0.8',
   });
   seal.appendChild(star);
-  (seal as unknown as HTMLElement).style.opacity = '0';
-  svg.appendChild(seal);
+  sealPos.appendChild(seal);
+  (sealPos as unknown as HTMLElement).style.opacity = '0';
+  svg.appendChild(sealPos);
 
   let done = false;
   const timers: number[] = [];
@@ -219,7 +224,7 @@ export function playIntro(state: GameState, onDone: () => void): void {
   // --- Phase 2: Wax seal stamps onto the capital ---
   timers.push(window.setTimeout(() => {
     textEl.textContent = '';
-    (seal as unknown as HTMLElement).style.opacity = '1';
+    (sealPos as unknown as HTMLElement).style.opacity = '1';
     seal.classList.add('intro-seal-stamp');
   }, PARCHMENT_MS));
 

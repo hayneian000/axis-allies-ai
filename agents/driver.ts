@@ -2,7 +2,7 @@
 
 import { autoCasualties, endPhase, openBattles, resolveCombatRound } from '../engine/engine';
 import type { ActionResult, GameState, Phase } from '../engine/types';
-import type { Agent } from './agent';
+import type { Agent, ToolResultRecord } from './agent';
 import { dispatchTool } from './tools';
 import type { PlayerUsage, SeatConfig } from './types';
 
@@ -45,10 +45,55 @@ interface ErrorCounter {
  * dispatched, and the driver performs the single engine endPhase afterwards.
  * If every attempt fails, the fallback action runs instead.
  *
+ * After each batch, the driver records every tool call's outcome back into
+ * the agent via recordToolResults — provider APIs require each assistant
+ * tool_calls entry to have a matching tool response, and the feedback also
+ * tells the model what was rejected and why before its next attempt.
+ *
  * Note: a retry builds a fresh prompt from the updated state, so the model
- * implicitly sees what happened; feeding the error text back into the prompt
- * is a v2 improvement.
+ * implicitly sees what happened on top of the explicit tool results.
  */
+/**
+ * One-line human summary of a successful tool call, recorded into the
+ * agent's history alongside the outcome.
+ */
+function summarizeOk(name: string, args: Record<string, unknown>): string {
+  const listLen = (v: unknown): number => (Array.isArray(v) ? v.length : 0);
+  switch (name) {
+    case 'purchase': {
+      const items = args.items as Array<{ type: string; count: number }> | undefined;
+      if (!items || items.length === 0) return 'purchased nothing';
+      return `purchased ${items.map((i) => `${i.count} ${i.type}`).join(', ')}`;
+    }
+    case 'combat_move': {
+      const n = listLen(args.moves);
+      return n === 0 ? 'no combat moves' : `ordered ${n} combat move${n === 1 ? '' : 's'}`;
+    }
+    case 'non_combat_move': {
+      const n = listLen(args.moves);
+      return n === 0 ? 'no non-combat moves' : `made ${n} non-combat move${n === 1 ? '' : 's'}`;
+    }
+    case 'mobilize': {
+      const placements = args.placements as
+        | Array<{ territory: string; units: Record<string, number> }>
+        | undefined;
+      if (!placements || placements.length === 0) return 'mobilized nothing';
+      const parts = placements.map((p) => {
+        const units = Object.entries(p.units ?? {})
+          .filter(([, n]) => n > 0)
+          .map(([t, n]) => `${n} ${t}`)
+          .join(', ');
+        return `${units || 'nothing'} at ${p.territory}`;
+      });
+      return `mobilized ${parts.join('; ')}`;
+    }
+    case 'send_message':
+      return `sent message to ${String(args.recipients ?? 'all')}`;
+    default:
+      return `${name} ok`;
+  }
+}
+
 async function agentPhaseWithRetry(
   state: GameState,
   agent: Agent,
@@ -61,16 +106,47 @@ async function agentPhaseWithRetry(
 ): Promise<void> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const { toolCalls } = await agent.act(state, phase);
+    const results: ToolResultRecord[] = [];
     let failed: { name: string; result: ActionResult } | null = null;
-    for (const tc of toolCalls) {
-      if (tc.name === 'end_phase') break;
+    let i = 0;
+    for (; i < toolCalls.length; i++) {
+      const tc = toolCalls[i];
+      if (tc.name === 'end_phase') {
+        results.push({ toolCallId: tc.id, ok: true, summary: `ok: ending ${phase} phase` });
+        i++;
+        break;
+      }
       const r = dispatchTool(state, pid, tc.name, tc.arguments);
       events.onToolCall?.(pid, tc.name, r.ok, r.ok ? undefined : r.code);
+      results.push({
+        toolCallId: tc.id,
+        ok: r.ok,
+        summary: r.ok
+          ? `ok: ${summarizeOk(tc.name, tc.arguments)}`
+          : `rejected [${r.code}]: ${r.error}`,
+      });
       if (!r.ok) {
         failed = { name: tc.name, result: r };
+        i++;
         break;
       }
     }
+    // Tool calls after the break were never attempted; record them as
+    // skipped so the transcript stays valid (every tool_call needs a matching
+    // tool response) and the model knows they didn't happen.
+    for (; i < toolCalls.length; i++) {
+      results.push({
+        toolCallId: toolCalls[i].id,
+        ok: false,
+        summary: failed
+          ? `skipped: not attempted after "${failed.name}" was rejected`
+          : 'skipped: phase already ending',
+      });
+    }
+    // The driver owns tool results: feed them back into this seat's history
+    // so the next act() sends a provider-valid transcript and the model sees
+    // what succeeded and why rejections happened.
+    agent.recordToolResults(results);
     if (!failed) return;
     errors.count++;
   }

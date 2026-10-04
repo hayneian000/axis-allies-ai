@@ -1,54 +1,113 @@
-# Phase 2 agents — sketch
+# Phase 2 agents — BYOK design (implemented in `agents/`)
 
-> **Status: roadmap, not spec.** This is the working sketch for replacing
-> hot-seat players with LLM agents. Details will change when Phase 2 starts;
-> the engine's action API (see [architecture](architecture.md)) is the stable
-> part.
+> **Status: MVP implemented** on the `phase2-byok-mvp` branch. The engine's
+> action API (`purchase`, `combatMove`, `resolveCombatRound`, `autoCasualties`,
+> `nonCombatMove`, `mobilize`, `sendMessage`, `summarizeState`) is the LLM tool
+> set with no translation layer — see `agents/tools.ts` for the JSON-Schema
+> versions and `docs/architecture.md` ("How a Phase 2 agent drives one turn")
+> for the call order.
 
 ## The idea
 
-The action API the UI drives — `purchase`, `combatMove`,
-`resolveCombatRound`, `autoCasualties`, `nonCombatMove`, `mobilize`,
-`sendMessage`, `summarizeState` — was designed to be the LLM tool set with no
-translation layer. An agent's turn is the same sequence the UI walks a human
-through; [architecture.md](architecture.md) ("How a Phase 2 agent drives one
-turn") already spells out the call order.
+One browser tab hosts the whole game. Each seat is Human or AI; each AI seat
+is **its own LLM instance** (provider + model + the host's API key), driven by
+a local turn loop. No backend, no key server — visitors bring their own keys
+(BYOK) and pay for their own tokens.
 
-## Building blocks that exist today
+## Single-browser host model
 
-- **`summarizeState(pid)`** — <800-word board brief (owners, IPCs, units,
-  banks, capitals, factories, turn/phase) designed to paste into prompts.
-  Tested in `tests/economy.test.ts`.
-- **`sendMessage` / `chatLog`** — negotiation channel. `{ sender,
-  recipients, text, round }`, any phase, logged to events. The UI chat box is
-  the manual version.
-- **`autoCasualties(tid, side)`** — cheapest-first casualty policy so agents
-  can skip `chooseCasualties` unless they want their own policy.
-- **`tests/simulation.test.ts`** — the random-policy bot (`botTurn`,
-  `botCombatMove`) is the starting point for an agent driver: it already
-  sequences a full legal turn through the API.
+- The lobby (`agents/lobby.ts`) builds one `SeatConfig` per player:
+  `{ seatIndex, playerId, kind: 'human'|'ai', provider?, model?, keySlot? }`.
+- The driver (`agents/driver.ts`, `runGame`) walks the 6 phases in turn order.
+  Human seats yield through an `onHumanTurn` callback (the UI acts on the
+  state directly, then resolves); AI seats go through their `Agent`.
+- The host can spectate an all-AI game or take a seat in a mixed game.
+- Keys live only in the host's browser (`agents/keys.ts`, `localStorage`
+  `aaa.byok.<provider>`, memory-only when "remember" is off) and are sent only
+  to the chosen provider's API. Adapters never log or persist keys.
 
-## Open questions for Phase 2
+## Providers (v1): Anthropic, OpenAI, Meta
 
-1. **Turn driver.** A harness that maps agent → player, feeds
-   `summarizeState` + chat history as prompts, validates tool calls against
-   the action API, and advances phases. Probably a separate `agents/` package,
-   not `engine/` changes.
-2. **Negotiation protocol.** Free-text chat is there; do we need structured
-   proposals (offer/accept/reject) or does free text plus a deal-extraction
-   pass suffice? Undecided.
-3. **Mixed games.** Hot-seat humans + agents in one game should work if the
-   driver just treats "human" as a player it skips.
-4. **Cost/latency tracking.** Every model call logged per game — needed before
-   any tournament means anything.
-5. **Tournament harness.** Brackets, Elo-style ratings, replay export. The sim
-   bot's invariant assertions (`assertValidUnits`, event sequence) are the
-   template for game-integrity checks.
-6. **Determinism.** Engine RNG is seeded and replayable; agent decisions are
-   not. Record prompts + responses per game so results are auditable even when
-   not reproducible.
+`agents/providers/` implements one common interface —
+`complete({ apiKey, model, system, transcript, tools })` — with per-provider
+adapters:
+
+| Provider | Endpoint | Auth | Notes |
+|---|---|---|---|
+| Anthropic | `POST https://api.anthropic.com/v1/messages` | `x-api-key` + `anthropic-version: 2023-06-01` | Sends `anthropic-dangerous-direct-browser-access: true` for browser CORS. Never sends `temperature` (non-default 400s on current models). |
+| OpenAI | `POST https://api.openai.com/v1/chat/completions` | `Bearer` | Standard function-tools shape; browser CORS is fine. |
+| Meta | `POST https://api.llama.com/compat/v1/chat/completions` | `Bearer` | The **compat** endpoint (OpenAI shape). The native `/v1` endpoint returns a different `completion_message` shape — not used. |
+
+Curated v1 models (verified 2026-10-03 — **IDs roll forward, refresh periodically**):
+Anthropic `claude-sonnet-5` (default), `claude-opus-5`, `claude-haiku-4-5`,
+`claude-fable-5-1`; OpenAI `gpt-5.6` (default), `gpt-5.5`, `gpt-5.4-mini`,
+`gpt-5-mini`, `gpt-4.1`; Meta `Llama-4-Maverick-17B-128E-Instruct-FP8`
+(default), `Llama-4-Scout-17B-16E-Instruct-FP8`, `Llama-3.3-70B-Instruct`.
+Llama tool-calling quality varies — live-key verification still pending.
+
+## Per-player isolation
+
+Each AI seat gets its own `Agent` instance (`agents/agent.ts`). Prompts are
+built **only** from: the static rules digest (`agents/prompts.ts`), the seat's
+own name/persona, `summarizeState(ownPlayerId)`, its own private history, and
+`chatLog` messages actually addressed to it (broadcast or by name). No agent
+can see another's system prompt, reasoning, or history — this is structural
+(no shared state), and `tests/agents/isolation.test.ts` asserts it.
+
+## Tool parity and the turn loop
+
+- `agents/tools.ts` exposes the 9 canonical tools with a per-phase allowlist
+  (e.g. only `purchase` + `end_phase` during purchase). The UI harness uses
+  the same schemas — one tool surface for humans and LLMs.
+- Per phase the driver asks the agent for tool calls and applies them via
+  `dispatchTool` (engine validation **is** the validation step — failed
+  actions never mutate state). On rejection it re-prompts (max 3 retries),
+  then falls back to a safe default (pass / no moves / forfeit unplaced).
+- Combat (MVP): the driver auto-resolves — `resolveCombatRound` +
+  `autoCasualties` on both sides until every battle ends. The agent decides
+  *where* to attack (`combat_move`), not casualty-by-casualty. `retreat` and
+  `chooseCasualties` exist as tools for later sophistication.
+- `act()` is a single provider round-trip per phase by design (no blind ReAct
+  loop — tool results live with the driver, so looping without them would just
+  burn tokens). Multi-action phases are expressed as multiple tool calls in
+  one response; `end_phase` from the model means "I'm done".
+- Negotiation: `send_message` plumbing works end-to-end, but
+  agent-initiated chat is **disabled in the MVP** (v2).
+
+## Cost and safety
+
+- Every provider round-trip records `{inputTokens, outputTokens, calls}`;
+  engine-validation rejections increment `errors`. `runGame` returns
+  per-player usage — the raw material for per-game budgets and tournament
+  cost attribution.
+- `MaxRoundsExceeded` guards runaway games (default `max(turnCap + 5, 60)`).
+- Engine RNG stays seeded and replayable; prompts + responses should be
+  logged per game for audit (tournament harness work).
+
+## Testing
+
+- `tests/agents/`: adapter unit tests with mocked `fetch` (endpoints, headers,
+  tool payloads, error paths), key-store tests, tool-schema/allowlist tests,
+  the isolation test, and headless end-to-end games through the driver with
+  scripted mock providers (`tests/agents/mock.ts`): full 4-player games to
+  `gameover`, greedy-bot games with real combat, retry and fallback paths, and
+  a human seat — all asserting engine invariants (`assertValidUnits`-style).
+- **Remaining gate:** live-key testing against the real provider APIs
+  (endpoints/headers are per current docs; nothing has been called with a real
+  key yet).
+
+## Milestones
+
+- **M1** (this branch): headless-validated driver — mock providers play full
+  legal games; architecture + basic tools; no negotiation.
+- **M2**: mixed human+AI with a spectator UI (lobby screen, per-seat
+  provider/model/key inputs, rationale display).
+- **M3**: negotiation on, heterogeneous model matchups (Claude vs ChatGPT vs
+  Meta), Elo + replay export, per-game cost budgets.
+- **M4**: hosted runner (for players without keys / tournament play).
 
 ## Non-goals
 
-No engine redesign. If Phase 2 needs an engine change, that's a sign the
-abstraction leaked — fix the abstraction, not the caller.
+No engine redesign. If Phase 2 needs an engine change, the abstraction leaked —
+fix the abstraction, not the caller. `engine/`, `data/`, `.github/` are
+untouched by this branch.

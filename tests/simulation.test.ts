@@ -270,23 +270,24 @@ function botTurn(s: GameState, stats: BotStats, seed: number): void {
   const pid = s.currentPlayer;
   const rng = makeRng(seed + s.round * 7919 + pid * 131);
   expect(s.phase).toBe('purchase');
+  const isOver = () => (s.phase as string) === 'gameover';
   botPurchase(s, pid);
-  if (s.phase === 'gameover') return;
+  if (isOver()) return;
   expect(endPhase(s, pid).ok).toBe(true); // -> combatMove
   botCombatMove(s, pid, rng, stats);
-  if (s.phase === 'gameover') return;
+  if (isOver()) return;
   expect(endPhase(s, pid).ok).toBe(true); // -> combat
   const before = s.battles.filter((b) => b.over && b.result === 'captured').length;
   botCombat(s, pid);
   stats.battles += s.battles.length;
   stats.captures += s.battles.filter((b) => b.over && b.result === 'captured').length - before;
-  if (s.phase === 'gameover') return;
+  if (isOver()) return;
   expect(endPhase(s, pid).ok).toBe(true); // -> nonCombat
   botNonCombat(s, pid, stats);
-  if (s.phase === 'gameover') return;
+  if (isOver()) return;
   expect(endPhase(s, pid).ok).toBe(true); // -> mobilize
   botMobilize(s, pid);
-  if (s.phase === 'gameover') return;
+  if (isOver()) return;
   expect(endPhase(s, pid).ok).toBe(true); // -> income + next
   assertValidUnits(s);
   stats.rounds = s.round;

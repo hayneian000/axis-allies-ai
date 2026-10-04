@@ -448,6 +448,31 @@ input::placeholder { color: var(--faint); }
 }
 #setup .hint strong { color: #2a2018; }
 
+/* Alternative actions below the wax seal */
+.setup-alt-actions {
+  margin: 0 0 16px;
+  text-align: center;
+}
+.load-plaque {
+  display: inline-block;
+  padding: 10px 24px;
+  background: linear-gradient(180deg, #6b5a3e 0%, #4a3d28 100%);
+  border: 2px solid #8a7355;
+  border-radius: 6px;
+  color: #e8d5b5;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(12px, 1.8vmin, 15px);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.load-plaque:hover {
+  border-color: #c9a227;
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.3), 0 3px 8px rgba(0,0,0,0.3);
+}
+
 /* Tooltips: aged-paper notes on hover */
 [data-tip] {
   position: relative;

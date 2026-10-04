@@ -1,9 +1,1 @@
-{
-  "infantry": { "cost": 3, "attack": 1, "defense": 2, "move": 1, "air": false, "boostedAttack": 2 },
-  "artillery": { "cost": 4, "attack": 2, "defense": 2, "move": 1, "air": false },
-  "tank": { "cost": 6, "attack": 3, "defense": 3, "move": 2, "air": false, "blitz": true },
-  "fighter": { "cost": 10, "attack": 3, "defense": 4, "move": 4, "air": true },
-  "bomber": { "cost": 12, "attack": 4, "defense": 1, "move": 6, "air": true, "strategicBomb": true },
-  "aa": { "cost": 5, "attack": 0, "defense": 0, "move": 1, "air": false, "aaFire": true, "noCombatMove": true, "neverCasualty": true },
-  "factory": { "cost": 15, "attack": 0, "defense": 0, "move": 0, "air": false, "structure": true }
-}
+{"aa":{"aaFire":true,"air":false,"attack":0,"cost":5,"defense":0,"move":1,"neverCasualty":true,"noCombatMove":true},"artillery":{"air":false,"attack":2,"cost":4,"defense":2,"move":1},"battleship":{"attack":4,"bombard":true,"cost":20,"defense":4,"move":2,"sea":true,"twoHits":true},"bomber":{"air":true,"attack":4,"cost":12,"defense":1,"move":6,"strategicBomb":true},"carrier":{"attack":1,"cost":14,"defense":2,"isCarrier":true,"move":2,"sea":true},"cruiser":{"attack":3,"bombard":true,"cost":12,"defense":3,"move":2,"sea":true},"destroyer":{"antiSub":true,"attack":2,"cost":8,"defense":2,"move":2,"sea":true},"factory":{"air":false,"attack":0,"cost":15,"defense":0,"move":0,"structure":true},"fighter":{"air":true,"attack":3,"cost":10,"defense":4,"move":4},"infantry":{"air":false,"attack":1,"boostedAttack":2,"cost":3,"defense":2,"move":1},"submarine":{"attack":2,"cost":6,"defense":1,"isSub":true,"move":2,"sea":true,"submersible":true,"surpriseStrike":true},"tank":{"air":false,"attack":3,"blitz":true,"cost":6,"defense":3,"move":2},"transport":{"attack":0,"chosenLast":true,"cost":7,"defense":0,"isTransport":true,"move":2,"noCombatValue":true,"sea":true}}

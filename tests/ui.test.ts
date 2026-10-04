@@ -56,7 +56,8 @@ describe('browser UI playthrough', () => {
     clickButton('Start game');
     expect(el('game').hidden).toBe(false);
     expect(banner()).toContain('purchase');
-    expect(document.querySelectorAll('#map .terr')).toHaveLength(26);
+    // 26 territory groups (great_lakes has an extra UP polygon, so 27 .terr polygons total).
+    expect(document.querySelectorAll('#map g.tgroup[data-terr]')).toHaveLength(26);
     expect(document.querySelectorAll('#roster .p')).toHaveLength(2);
   });
 

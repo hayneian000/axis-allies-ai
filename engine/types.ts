@@ -135,6 +135,8 @@ export interface GameState {
   battles: Battle[];
   nextBattleId: number;
   turnCap: number;
+  /** Capitals a player must hold simultaneously to win (scenario-overridable, defaults to majority). */
+  capitalsToWin: number;
   winner: number | null;
   winReason: string | null;
   events: GameEvent[];

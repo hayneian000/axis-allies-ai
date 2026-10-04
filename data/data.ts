@@ -72,7 +72,11 @@ export interface ScenarioDef {
   capitals: string[];
   banks: number[];
   holdings: HoldingDef[];
-  neutrals: Record<string, Partial<Record<UnitType, number>>>;
+  neutrals: Record<string, Partial<Record<UnitType, number>> | null>;
+  /** Default garrison for neutral territories (null entries in `neutrals`). Defaults to 3 infantry. */
+  neutralGarrison?: Partial<Record<UnitType, number>>;
+  /** Capitals a player must hold simultaneously to win. Defaults to majority. */
+  capitalsToWin?: number;
 }
 
 export const MAP: MapData = mapJson as unknown as MapData;

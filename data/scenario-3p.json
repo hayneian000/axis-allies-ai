@@ -1,35 +1,185 @@
 {
   "players": 3,
-  "capitals": ["california", "texas", "great_lakes"],
-  "banks": [10, 10, 10],
+  "capitals": [
+    "california",
+    "texas",
+    "great_lakes"
+  ],
+  "banks": [
+    10,
+    10,
+    10
+  ],
   "holdings": [
-    { "territory": "washington", "owner": 0, "units": { "infantry": 1 } },
-    { "territory": "oregon", "owner": 0, "units": { "infantry": 1 } },
-    { "territory": "california", "owner": 0, "factory": true, "units": { "infantry": 3, "artillery": 1, "tank": 1, "fighter": 1 } },
-    { "territory": "idaho", "owner": 0, "units": { "infantry": 2 } },
-    { "territory": "nevada_utah", "owner": 0, "units": { "infantry": 2 } },
-    { "territory": "arizona", "owner": 0, "units": { "infantry": 2, "artillery": 1 } },
-    { "territory": "new_mexico", "owner": 1, "units": { "infantry": 2 } },
-    { "territory": "texas", "owner": 1, "factory": true, "units": { "infantry": 3, "artillery": 1, "tank": 1, "fighter": 1 } },
-    { "territory": "oklahoma", "owner": 1, "units": { "infantry": 2, "artillery": 1 } },
-    { "territory": "arkansas", "owner": 1, "units": { "infantry": 2 } },
-    { "territory": "gulf_south", "owner": 1, "units": { "infantry": 1 } },
-    { "territory": "florida", "owner": 1, "units": { "infantry": 1 } },
-    { "territory": "montana", "owner": 2, "units": { "infantry": 1 } },
-    { "territory": "dakotas", "owner": 2, "units": { "infantry": 1 } },
-    { "territory": "plains", "owner": 2, "units": { "infantry": 2 } },
-    { "territory": "upper_midwest", "owner": 2, "units": { "infantry": 1 } },
-    { "territory": "heartland", "owner": 2, "units": { "infantry": 2, "artillery": 1 } },
-    { "territory": "great_lakes", "owner": 2, "factory": true, "units": { "infantry": 3, "artillery": 1, "tank": 1, "fighter": 1 } }
+    {
+      "territory": "washington",
+      "owner": 0,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "oregon",
+      "owner": 0,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "california",
+      "owner": 0,
+      "factory": true,
+      "units": {
+        "infantry": 3,
+        "artillery": 1,
+        "tank": 1,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "idaho",
+      "owner": 0,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "nevada_utah",
+      "owner": 0,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "arizona",
+      "owner": 0,
+      "units": {
+        "infantry": 2,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "new_mexico",
+      "owner": 1,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "texas",
+      "owner": 1,
+      "factory": true,
+      "units": {
+        "infantry": 3,
+        "artillery": 1,
+        "tank": 1,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "oklahoma",
+      "owner": 1,
+      "units": {
+        "infantry": 2,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "arkansas",
+      "owner": 1,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "gulf_south",
+      "owner": 1,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "florida",
+      "owner": 1,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "montana",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "dakotas",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "plains",
+      "owner": 2,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "upper_midwest",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "heartland",
+      "owner": 2,
+      "units": {
+        "infantry": 2,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "great_lakes",
+      "owner": 2,
+      "factory": true,
+      "units": {
+        "infantry": 3,
+        "artillery": 1,
+        "tank": 1,
+        "fighter": 1
+      }
+    }
   ],
   "neutrals": {
-    "wyoming": { "infantry": 1 },
-    "colorado": { "infantry": 1 },
-    "appalachia": { "infantry": 2 },
-    "southeast": { "infantry": 2 },
-    "mid_atlantic": { "infantry": 2 },
-    "pa_nj": { "infantry": 2 },
-    "new_york": { "infantry": 2 },
-    "new_england": { "infantry": 2 }
+    "wyoming": {
+      "infantry": 3
+    },
+    "colorado": {
+      "infantry": 3
+    },
+    "appalachia": {
+      "infantry": 3
+    },
+    "southeast": {
+      "infantry": 3
+    },
+    "mid_atlantic": {
+      "infantry": 3
+    },
+    "pa_nj": {
+      "infantry": 3
+    },
+    "new_york": {
+      "infantry": 3
+    },
+    "new_england": {
+      "infantry": 3
+    }
+  },
+  "neutralGarrison": {
+    "infantry": 3
   }
 }

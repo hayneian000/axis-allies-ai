@@ -174,7 +174,7 @@ describe('income, capitals, elimination', () => {
     expect(s.players[pid].ipcs).toBe(pidBank + foeBank);
     expect(s.players[foe].ipcs).toBe(0);
     expect(s.players[foe].alive).toBe(false);
-    // pid now holds every capital in play -> immediate win.
+    // pid now holds 2/2 capitals (majority) -> immediate win.
     expect(s.phase).toBe('gameover');
     expect(s.winner).toBe(pid);
   });

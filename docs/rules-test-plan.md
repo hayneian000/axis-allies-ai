@@ -107,7 +107,9 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 ### Tests — Combat Declaration
 - [ ] Moving into hostile territory declares combat (adds to openBattles)
 - [ ] Moving into friendly territory does not declare combat
-- [ ] Moving into unowned/neutral declares combat (FFA: neutral has garrison?)
+- [ ] Moving into neutral territory declares combat vs 2-inf garrison
+- [ ] Neutral garrison must be fully defeated before capture
+- [ ] Tank cannot blitz through neutral (garrison blocks — occupied)
 - [ ] Multiple attackers to same territory (combined combat)
 - [ ] Attacker can choose order of combat resolution
 - [ ] Cannot combat move after combat phase begins (phase enforcement)
@@ -238,12 +240,13 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] Income = sum of owned territory IPC values
 - [ ] IPCs added to player's total
 - [ ] Saved IPCs carry over
-- [ ] Capturing capital: steal enemy's IPCs? (1942 2e: yes, take all)
+- [ ] Capturing capital: steal ALL enemy IPCs (full steal per 1942 2e)
 - [ ] Losing capital: cannot collect income? (1942 2e: still collect, but can't purchase? — verify)
 - [ ] Liberating capital: restore?
 
 ### Victory Check
-- [ ] Control all capitals in play → immediate victory
+- [ ] Control majority of capitals simultaneously → immediate victory (3/4 on current map)
+- [ ] Victory condition is map-specific (defined in map data, not hardcoded)
 - [ ] 20-round cap reached → highest income wins
 - [ ] Tiebreak: what if income tied? (define rule)
 
@@ -273,16 +276,17 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 
 ---
 
-## FFA-Specific Rules (Project Adaptation)
+## FFA-Specific Rules (Project Decisions — Locked Oct 3 2026)
 
-These are **not** in the 1942 2e rulebook — they are project decisions that need explicit tests:
-
-- [ ] No teams: every other player is hostile
-- [ ] Neutral territories have garrison? (define: 1 infantry? or empty?)
-- [ ] Capital capture in FFA: steal IPCs from that player only
-- [ ] Victory by capital control: must hold ALL capitals simultaneously?
-- [ ] Turn order: fixed rotation, no bidding
-- [ ] Diplomacy/chat has no mechanical effect (Phase 2 requirement)
+- **No teams:** Every other player is hostile.
+- **Neutral garrisons:** Each neutral territory defends with 2 infantry. Must be
+  defeated in combat before capture. Blocks tank blitzing.
+- **Capital IPC theft:** Full steal (1942 2e). Attacker takes all saved IPCs.
+- **Victory:** Majority of capitals held simultaneously (3/4 on current map).
+  Map-specific victory conditions going forward.
+- **AA movement:** Per 1942 2e — can reposition in combat phase, never fires offensively.
+- **Turn order:** Fixed rotation, no bidding.
+- **Diplomacy/chat** has no mechanical effect (Phase 2 requirement).
 
 ---
 
@@ -312,10 +316,26 @@ These are **not** in the 1942 2e rulebook — they are project decisions that ne
 
 ---
 
-## Open Questions (Need Ian's Decision)
+## Open Questions — RESOLVED (Ian, Oct 3 2026)
 
-1. **Neutral garrisons**: Do neutral territories defend? If so, with what?
-2. **Capital IPC theft**: Full steal (1942 2e) or partial?
-3. **Victory**: All capitals simultaneously, or cumulative captures?
-4. **AA movement**: Can AA move in combat phase? (1942 2e: yes, but cannot fire offensively)
-5. **Tank blitz through neutrals**: Allowed if unoccupied?
+1. **Neutral garrisons**: ~~Do neutral territories defend? If so, with what?~~  
+   **Decision:** Yes — neutrals are well defended. Each neutral territory has a
+   2-infantry garrison that must be defeated in combat before capture.
+   Blitzing through neutrals is not allowed (they are occupied).
+
+2. **Capital IPC theft**: ~~Full steal (1942 2e) or partial?~~  
+   **Decision:** Full steal, per 1942 2e rules. Capturing a capital transfers
+   all of the victim's saved IPCs to the attacker.
+
+3. **Victory**: ~~All capitals simultaneously, or cumulative captures?~~  
+   **Decision:** Majority of capitals held **simultaneously** wins.
+   For the current 4-capital map: 3 out of 4. Victory conditions will be
+   map-specific going forward.
+
+4. **AA movement**: ~~Can AA move in combat phase? (1942 2e: yes, but cannot fire offensively)~~  
+   **Decision:** Follow real rules — AA can reposition during combat movement
+   but never fires offensively.
+
+5. **Tank blitz through neutrals**: ~~Allowed if unoccupied?~~  
+   **Decision:** Moot — neutrals have garrisons (see #1), so they are occupied
+   and block blitzing. Tanks must defeat the garrison first.

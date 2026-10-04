@@ -60,10 +60,11 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 - **Neutral territories**: Have garrisons that must be defeated before capture (blocks tank blitz). Default: 3 infantry; each map/scenario may customize via `neutralGarrison` or per-territory `neutrals`.
 - **Capital capture**: Captor steals the victim's entire saved IPC bank (1942 2e p.20).
 - **Victory**: Hold a majority of capitals simultaneously (3 of 4 on the current map). Scenarios may override via `capitalsToWin`.
+- **No allied powers**: Every other player is hostile. All "friendly power" rules are ignored — no guest fighters on carriers, no shared transports, no allied destroyers cancelling sub abilities. A destroyer hostile to a submarine always cancels its abilities.
 
 ---
 
-## Appendix: Naval Rules (Navy Phase 1+2)
+## Appendix: Naval Rules (Navy Phases 1–3)
 
 All citations are to the Axis & Allies 1942 Second Edition rulebook (2012).
 
@@ -78,7 +79,7 @@ All citations are to the Axis & Allies 1942 Second Edition rulebook (2012).
 | Submarine | 6 | 2/1/2 | Surprise strike, submersible, see Submarines below (pp.28-29) |
 | Destroyer | 8 | 2/2/2 | Cancels all sub abilities (p.28) |
 | Cruiser | 12 | 3/3/2 | Offshore bombardment (p.28) |
-| Carrier | 14 | 1/2/2 | Phase 3: data only |
+| Carrier | 14 | 1/2/2 | Carries 2 fighters; see Carriers below (p.27) |
 | Battleship | 20 | 4/4/2 | Two hits to destroy; offshore bombardment (p.27) |
 
 ### Movement (p.27)
@@ -112,11 +113,22 @@ Sequence: 1. sea combat (if defending surface warships are present; lone subs/tr
 - Sea units mobilize into a sea zone adjacent to a territory with an eligible factory.
 - **Hostile waters**: New sea units may be placed even in a hostile sea zone; no combat occurs. Existing occupants become coexisting foreigners.
 
-### Phase-3 follow-ons (not in phase 1+2)
-- Carrier fighter operations (launch/recover, carrier as landing spot)
-- Convoy disruption (economic warfare)
-- Sea-battle-then-amphibious-assault sequencing in a single turn
-- Mobilization into hostile waters
+### Carriers (p.27; fighter "Land on Aircraft Carriers")
+- **Capacity**: Up to **2 fighters** per carrier. Enforced when fighters land (non-combat), when they are mobilized (p.21), and in the combat-move landing check. Bombers can never land on carriers.
+- **Launch independence**: A carrier owner's fighters move independently. They may launch before the carrier moves and attack from the carrier's **original** sea zone, or remain aboard until the non-combat phase.
+- **Launch rule**: A fighter must launch from the carrier's original position to participate in combat — a fighter that rode a ship into a sea zone earlier in the same combat move cannot attack from there.
+- **Landing**: Fighters may land on any friendly carrier with spare capacity (in addition to friendly land territories). The carrier must be able to be there; if it moves away, the fighter is stranded and lost, as in the board game.
+- **Fighter defense**: When a carrier is attacked, its fighters defend in the air and fight normally — even against submarines-only attacks (they cannot hit subs without a destroyer, and sub hits can never be assigned to them since subs hit sea units only).
+- **Carrier destroyed**: A fighter based on a defending carrier must land on the same carrier if possible. If it was destroyed, the fighter lands on a different friendly carrier in the same sea zone if one has capacity, else moves one space to a friendly territory or carrier, else is destroyed. Auto-resolved at battle end in priority order (documented simplification of the board game's non-combat landing sequence).
+- **Mobilization** (p.21): Fighters may be placed on a friendly carrier in an adjacent sea zone — an existing carrier or one mobilized in the same phase.
+- **Air attacks**: Fighters launch from carriers to strike coastal land; land-based fighters and bombers can strike enemy fleets at sea.
+
+### Phase-3 simplifications (deliberate)
+- Carrier-destruction landing is auto-resolved at battle end in rulebook priority order, rather than player-directed in the non-combat phase.
+- Surprise-strike hits auto-assign (the owner does not choose which units they hit).
+- One defender per sea battle.
+- Fighters moving with a fleet into a sea battle is the engine's established abstraction (phases 1–2); the launch rule is enforced for attacks launched from a zone the fighter arrived in this phase.
+- Convoy disruption (economic warfare) is not implemented.
 
 ---
 

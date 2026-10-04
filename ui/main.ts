@@ -3,6 +3,9 @@ import {
   autoCasualties,
   chooseCasualties,
   combatMove,
+  countAir,
+  countLand,
+  countSea,
   countUnits,
   createGame,
   describeUnits,
@@ -769,6 +772,18 @@ function seaLabels(
     ct.textContent = `(${cargo})`;
     g.appendChild(ct);
   }
+  // Carrier fighter capacity (1942 2e p.27: two fighters per carrier).
+  if (st.units.carrier > 0) {
+    const cap = svgEl('text', {
+      x: String(lx),
+      y: String(ly + 24),
+      'text-anchor': 'middle',
+      'font-size': '9',
+      class: 'seafont dim',
+    });
+    cap.textContent = `carriers ${st.units.carrier} — fighters ${st.units.fighter}/${2 * st.units.carrier}`;
+    g.appendChild(cap);
+  }
   // Coexisting foreign forces (ignored subs, mobilized-into-hostile ships).
   const co = st.coexist ?? [];
   if (co.length > 0) {
@@ -1367,13 +1382,17 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     const embarkTag = ddef.domain === 'sea' ? ' (embark)' : '';
     btn.textContent = `${DISPLAY_NAME[d] ?? ddef.name}${embarkTag} (${owner}, ${describeUnits(dt.units)}${dt.factory ? ', FAC' : ''})`;
     btn.addEventListener('click', () => {
-      const n = countUnits({ ...emptyUnits(), ...readUnits(s.phase === 'combatMove' ? 'mv' : 'nc') });
+      const units = readUnits(s.phase === 'combatMove' ? 'mv' : 'nc');
+      const full = { ...emptyUnits(), ...units };
+      const n = countUnits(full);
       if (n === 0) {
         showError('Dial at least one unit before picking a destination.');
         return;
       }
+      // Air-only moves to a sea zone are attacks (1942 2e), not embarkation.
+      const airOnly = countAir(full) > 0 && countSea(full) === 0 && countLand(full) === 0;
       stageMoveFromInspector(tid, d, s.phase === 'combatMove' ? 'mv' : 'nc', {
-        ...(ddef.domain === 'sea' ? { embark: true } : {}),
+        ...(ddef.domain === 'sea' && !airOnly ? { embark: true } : {}),
       });
       modal = null;
       showError('');
@@ -1444,6 +1463,57 @@ function seaMoveDialogBody(
     const p = document.createElement('p');
     p.textContent = 'No ships here.';
     el.appendChild(p);
+  }
+  // Fighters (1942 2e p.27): launch from the carrier to attack or reposition.
+  // Includes fighters aloft over a finished battle here — they must land.
+  const aloftF = s.battles
+    .filter((b) => b.territoryId === tid && b.attackerId === pid)
+    .reduce((sum, b) => sum + b.attack.fighter, 0);
+  const dialableF = t.units.fighter + aloftF;
+  if (dialableF > 0) {
+    const fh = document.createElement('p');
+    fh.innerHTML = '<strong>Fighters — launch:</strong>';
+    el.appendChild(fh);
+    const fgrid = document.createElement('div');
+    fgrid.className = 'stepgrid';
+    fgrid.appendChild(stepper(`${prefix}-air`, 'fighter', dialableF));
+    el.appendChild(fgrid);
+    const stageAir = (d: string) => {
+      const nF = readUnits(`${prefix}-air`).fighter ?? 0;
+      if (nF === 0) {
+        showError('Dial fighters before picking a target.');
+        return;
+      }
+      const mv = { from: tid, to: d, units: { fighter: nF } };
+      if (s.phase === 'combatMove') draftMoves.push(mv);
+      else draftNonCombat.push(mv);
+      modal = null;
+      showError('');
+      render();
+    };
+    const airDests = neighborsOf(tid).filter((n) => {
+      const dd = MAP.territories.find((x) => x.id === n)!;
+      if (dd.domain === 'sea') return true;
+      const o = s.territories[n].owner;
+      return isCombat ? o !== pid : o === pid;
+    });
+    for (const d of airDests) {
+      const ddef = MAP.territories.find((x) => x.id === d)!;
+      const dt = s.territories[d];
+      const btn = document.createElement('button');
+      const owner =
+        dt.owner === null
+          ? ddef.domain === 'sea'
+            ? 'open waters'
+            : 'neutral'
+          : dt.owner === pid
+            ? 'yours'
+            : s.players[dt.owner].name;
+      const tag = ddef.domain === 'sea' ? '' : isCombat && owner !== 'yours' ? ', STRIKE' : '';
+      btn.textContent = `✈ ${DISPLAY_NAME[d] ?? ddef.name} (${owner}${tag})`;
+      btn.addEventListener('click', () => stageAir(d));
+      el.appendChild(btn);
+    }
   }
   // Cargo ashore: offload embarked land units into adjacent coastal territory.
   const loads = (t.cargo ?? []).filter((l) => l.owner === pid);
@@ -1548,15 +1618,16 @@ function mobilizeInspector(s: GameState, el: HTMLElement, tid: string): void {
     el.appendChild(facLab);
   }
   // Fleet deployment: purchased naval units go to an adjacent sea zone
-  // (1942 2e p.21), counting against this factory's capacity.
+  // (1942 2e p.21), counting against this factory's capacity. Fighters may
+  // deploy onto a carrier there (existing or mobilized this phase).
   if (usable) {
-    const navalPool = NAVAL_UNIT_TYPES.filter((u) => (s.purchased[u] ?? 0) > 0);
+    const seaPool = [...NAVAL_UNIT_TYPES, 'fighter' as UnitType].filter((u) => (s.purchased[u] ?? 0) > 0);
     const seaDests = neighborsOf(tid).filter(
       (n) => MAP.territories.find((x) => x.id === n)?.domain === 'sea',
     );
-    if (navalPool.length > 0 && seaDests.length > 0) {
+    if (seaPool.length > 0 && seaDests.length > 0) {
       const fh = document.createElement('p');
-      fh.innerHTML = '<strong>Fleet — deploy dialed naval units to:</strong>';
+      fh.innerHTML = '<strong>Fleet — deploy dialed naval units (fighters need a carrier) to:</strong>';
       el.appendChild(fh);
       for (const z of seaDests) {
         const zdef = MAP.territories.find((x) => x.id === z)!;
@@ -1567,14 +1638,20 @@ function mobilizeInspector(s: GameState, el: HTMLElement, tid: string): void {
         zb.addEventListener('click', () => {
           const units = readUnits('mob');
           const naval: Partial<UnitCounts> = {};
-          for (const u of NAVAL_UNIT_TYPES) {
+          for (const u of [...NAVAL_UNIT_TYPES, 'fighter' as UnitType]) {
             if ((units[u] ?? 0) > 0) naval[u] = units[u];
           }
           if (countUnits({ ...emptyUnits(), ...naval }) === 0) {
-            showError('Dial naval units above before picking a sea zone.');
+            showError('Dial naval units (or fighters for a carrier) above before picking a sea zone.');
             return;
           }
           draftMob.push({ territory: tid, seaZone: z, units: naval });
+          // Clear the deployed steppers so a later "Stage deployment" can't
+          // double-count the same purchased units.
+          for (const u of [...NAVAL_UNIT_TYPES, 'fighter' as UnitType]) {
+            const inp = document.getElementById(`mob-${u}`) as HTMLInputElement | null;
+            if (inp) inp.value = '0';
+          }
           showError('');
           render();
         });
@@ -1678,10 +1755,10 @@ function purchaseShopBody(s: GameState, el: HTMLElement): void {
     bomber: 'A4 D1 M6 SBR',
     aa: 'air defense, M1',
     transport: 'M2 sea, carries 1 land + 1 inf',
-    submarine: 'A2 D1 M2 sea (abilities in phase 2)',
+    submarine: 'A2 D1 M2 sea, surprise strike, submerges',
     destroyer: 'A2 D2 M2 sea',
     cruiser: 'A3 D3 M2 sea, bombards',
-    carrier: 'A1 D2 M2 sea (fighters in phase 2)',
+    carrier: 'A1 D2 M2 sea, carries 2 fighters',
     battleship: 'A4 D4 M2 sea, 2 hits, bombards',
     factory: 'needs IPC 2+ land',
   };

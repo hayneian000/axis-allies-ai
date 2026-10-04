@@ -148,6 +148,7 @@ export function createGame(opts: CreateGameOptions): GameState {
     battles: [],
     nextBattleId: 1,
     turnCap: DEFAULT_TURN_CAP,
+    capitalsToWin: scenario.capitalsToWin ?? (Math.floor(numPlayers / 2) + 1),
     winner: null,
     winReason: null,
     events: [],
@@ -187,10 +188,15 @@ export function createGame(opts: CreateGameOptions): GameState {
     };
     covered.add(h.territory);
   }
+  // Neutral garrison default (Ian, Oct 4 2026): 3 infantry unless the
+  // scenario specifies otherwise, per-territory or via neutralGarrison.
+  const defaultGarrison: Partial<Record<UnitType, number>> =
+    scenario.neutralGarrison ?? { infantry: 3 };
   for (const [tid, units] of Object.entries(scenario.neutrals)) {
     if (!territoryDef(tid)) throw new Error(`Scenario references unknown territory "${tid}".`);
     const u = emptyUnits();
-    for (const [type, n] of Object.entries(units ?? {})) {
+    const garrison = units ?? defaultGarrison;
+    for (const [type, n] of Object.entries(garrison)) {
       u[type as UnitType] = n as number;
     }
     state.territories[tid] = { owner: null, units: u, factory: false, factoryFresh: false };
@@ -572,17 +578,23 @@ export function resolveCapture(
 }
 
 function checkWinByCapitals(state: GameState): void {
-  const holders = new Set<number>();
+  // FFA Decision (Ian, Oct 3 2026): Majority of capitals held simultaneously wins.
+  // For 4 players: 3 of 4. Scenario/map may override via capitalsToWin.
+  const holders = new Map<number, number>();
   for (const p of state.players) {
     const holder = state.territories[p.capital]?.owner;
-    if (holder !== null && holder !== undefined) holders.add(holder);
+    if (holder !== null && holder !== undefined) {
+      holders.set(holder, (holders.get(holder) ?? 0) + 1);
+    }
   }
-  if (holders.size === 1) {
-    const winner = [...holders][0];
-    state.winner = winner;
-    state.winReason = 'all_capitals';
-    state.phase = 'gameover';
-    log(state, 'game_over', `${state.players[winner].name} controls all capitals and wins!`);
+  for (const [holder, count] of holders) {
+    if (count >= state.capitalsToWin) {
+      state.winner = holder;
+      state.winReason = 'majority_capitals';
+      state.phase = 'gameover';
+      log(state, 'game_over', `${state.players[holder].name} controls ${count} capitals and wins!`);
+      return;
+    }
   }
 }
 

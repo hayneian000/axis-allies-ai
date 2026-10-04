@@ -1,4 +1,4 @@
-import { MAP, UNITS, centroid, ipcOf, neighborsOf, type UnitType } from '../data/data';
+import { MAP, UNITS, centroid, ipcOf, neighborsOf, pointInPolygon, type UnitType } from '../data/data';
 import {
   autoCasualties,
   chooseCasualties,
@@ -56,6 +56,8 @@ const STEPS: Array<{ id: string; label: string }> = [
 
 let S: GameState | null = null;
 let sel: string | null = null;
+/** Last click client coords, for popup positioning. */
+let selClick: { x: number; y: number } | null = null;
 let draftMoves: CombatMove[] = [];
 let draftNonCombat: NonCombatMove[] = [];
 let draftMob: Array<{ territory: string; units: Partial<UnitCounts>; buildFactory?: boolean }> = [];
@@ -461,12 +463,55 @@ function drawFactory(g: SVGElement, fresh: boolean): void {
   );
 }
 
-/** One territory: tile + sheen + labels + badges + unit icons, in MAP order. */
-function terrGroup(s: GameState, tid: string, inBattle: boolean, isDest: boolean): SVGElement {
+/** Label layout: pipeline anchors adjusted for stack fit + collision.
+ *  Returns map tid -> {x, y} label anchor. */
+function layoutLabels(): Map<string, { x: number; y: number }> {
+  const pos = new Map<string, { x: number; y: number }>();
+  for (const t of MAP.territories) pos.set(t.id, { x: t.label[0], y: t.label[1] });
+  const bbOf = (tid: string) => bboxOf(MAP.territories.find((t) => t.id === tid)!.points);
+
+  // Keep the label stack (IPC pill sits ~30px above anchor) inside the tile.
+  for (const t of MAP.territories) {
+    const bb = bbOf(t.id);
+    const p = pos.get(t.id)!;
+    if (p.y - 30 < bb.y0) p.y = bb.y0 + 30;
+    if (p.y + 34 > bb.y1 && bb.y1 - bb.y0 > 70) p.y = bb.y1 - 34;
+  }
+
+  // Push apart anchors that are closer than MIN_SEP, clamped to their tiles.
+  const MIN_SEP = 68;
+  const clampToBb = (tid: string, p: { x: number; y: number }) => {
+    const bb = bbOf(tid);
+    p.x = Math.min(bb.x1 - 8, Math.max(bb.x0 + 8, p.x));
+    p.y = Math.min(bb.y1 - 8, Math.max(bb.y0 + 8, p.y));
+  };
+  for (let iter = 0; iter < 4; iter++) {
+    let moved = false;
+    for (let i = 0; i < MAP.territories.length; i++) {
+      for (let j = i + 1; j < MAP.territories.length; j++) {
+        const a = MAP.territories[i], b = MAP.territories[j];
+        const pa = pos.get(a.id)!, pb = pos.get(b.id)!;
+        const dx = pb.x - pa.x, dy = pb.y - pa.y;
+        const d = Math.hypot(dx, dy);
+        if (d < MIN_SEP && d > 0.01) {
+          const push = (MIN_SEP - d) / 2;
+          const nx = dx / d, ny = dy / d;
+          pa.x -= nx * push; pa.y -= ny * push;
+          pb.x += nx * push; pb.y += ny * push;
+          clampToBb(a.id, pa); clampToBb(b.id, pb);
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+  return pos;
+}
+
+/** Land tile: polygon + sheen + interactions. Labels live in terrLabels (own layer). */
+function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean): SVGElement {
   const t = MAP.territories.find((x) => x.id === tid)!;
   const st = s.territories[tid];
-  const bb = bboxOf(t.points);
-  const [lx, ly] = t.label;
   const g = svgEl('g', { class: 'tgroup', 'data-terr': tid });
 
   // Native tooltip + accessible summary + test hook for force contents.
@@ -497,6 +542,18 @@ function terrGroup(s: GameState, tid: string, inBattle: boolean, isDest: boolean
   g.appendChild(
     svgEl('polygon', { points: pts, fill: 'url(#sheen)', class: 'sheen', 'pointer-events': 'none' }),
   );
+  return g;
+}
+
+/** Labels, badges, unit icons — drawn in a layer above water. */
+function terrLabels(
+  s: GameState, tid: string, inBattle: boolean, lx: number, ly: number,
+): SVGElement {
+  const t = MAP.territories.find((x) => x.id === tid)!;
+  const st = s.territories[tid];
+  const bb = bboxOf(t.points);
+  const g = svgEl('g', { class: 'tlabels', 'data-terr': tid, 'pointer-events': 'none' });
+  const isCap = s.players.some((p) => p.capital === tid);
 
   // Name + owner stacked on the label anchor.
   const name = svgEl('text', {
@@ -518,8 +575,7 @@ function terrGroup(s: GameState, tid: string, inBattle: boolean, isDest: boolean
   owner.textContent = st.owner === null ? 'neutral' : s.players[st.owner].name;
   g.appendChild(owner);
 
-  // IPC value pill heading the label stack (bbox pinning collided with
-  // names on short tiles like Oklahoma).
+  // IPC value pill heading the label stack.
   const badge = svgEl('g', { class: 'ipcbadge', transform: `translate(${lx} ${ly - 27})` });
   badge.appendChild(svgEl('rect', { x: '-21', y: '-7', width: '42', height: '14', rx: '7', class: 'ipcpill' }));
   const bt = svgEl('text', { x: '0', y: '3.5', 'text-anchor': 'middle', 'font-size': '9.5', class: 'ipctext' });
@@ -527,9 +583,14 @@ function terrGroup(s: GameState, tid: string, inBattle: boolean, isDest: boolean
   badge.appendChild(bt);
   g.appendChild(badge);
 
-  // Capital star pinned to the top-right corner.
+  // Capital star: beside the IPC pill, verified inside the tile
+  // (bbox corners can hang over neighbors on irregular shapes).
   if (isCap) {
-    const cap = svgEl('g', { class: 'capbadge', transform: `translate(${bb.x1 - 9} ${bb.y0 + 10})` });
+    const candidates: Array<[number, number]> = [
+      [lx + 32, ly - 27], [lx - 32, ly - 27], [lx + 32, ly - 10], [lx - 32, ly - 10],
+    ];
+    const spot = candidates.find(([cx, cy]) => pointInPolygon([cx, cy], t.points)) ?? [lx, ly - 27];
+    const cap = svgEl('g', { class: 'capbadge', transform: `translate(${spot[0]} ${spot[1]})` });
     cap.appendChild(svgEl('circle', { cx: '0', cy: '0', r: '7.5', class: 'capring' }));
     const star = svgEl('text', { x: '0', y: '3.5', 'text-anchor': 'middle', 'font-size': '10', class: 'capstar' });
     star.textContent = '★';
@@ -539,8 +600,7 @@ function terrGroup(s: GameState, tid: string, inBattle: boolean, isDest: boolean
 
   const present = UNIT_ORDER.filter((u) => st.units[u] > 0);
 
-  // Factory silhouette centered below the icon row (bbox corners often fall
-  // outside organic shapes, leaving the glyph floating off-tile).
+  // Factory silhouette centered below the icon row.
   if (st.factory) {
     const fy = present.length > 0 ? ly + 22 : ly + 8;
     const fac = svgEl('g', { class: 'facbadge', transform: `translate(${lx - 7.5} ${fy})` });
@@ -624,12 +684,13 @@ function renderMap(s: GameState): void {
 
   const battles = new Set(openBattles(s).map((b) => b.territoryId));
   const dests = legalDestinations(s);
+  // Layer 1: land tiles.
   for (const t of MAP.territories) {
-    vport.appendChild(terrGroup(s, t.id, battles.has(t.id), dests.has(t.id)));
+    vport.appendChild(terrTile(s, t.id, battles.has(t.id), dests.has(t.id)));
   }
 
-  // Water overlays: drawn above land, below labels/arrows;
-  // pointer-events none so territory clicks pass through.
+  // Layer 2: water overlays — above land, below labels; pointer-events none
+  // so territory clicks pass through.
   for (const lake of MAP.lakes ?? []) {
     const pts = lake.points.map((p) => p.join(',')).join(' ');
     const tip = document.createElementNS(SVGNS, 'title');
@@ -644,6 +705,13 @@ function renderMap(s: GameState): void {
     });
     poly.appendChild(tip);
     vport.appendChild(poly);
+  }
+
+  // Layer 3: labels, badges, unit icons — above water.
+  const layout = layoutLabels();
+  for (const t of MAP.territories) {
+    const p = layout.get(t.id)!;
+    vport.appendChild(terrLabels(s, t.id, battles.has(t.id), p.x, p.y));
   }
 
   // Draft-move arrows above the tiles.
@@ -691,9 +759,22 @@ function hideTip(): void {
 }
 
 function applyView(): void {
+  clampView();
   document
     .getElementById('vport')
     ?.setAttribute('transform', `translate(${view.x} ${view.y}) scale(${view.k})`);
+}
+
+/** Keep the map from scrolling away: the transformed viewBox must always
+ *  cover the viewport (with a small margin). */
+function clampView(): void {
+  const M = 120; // px of overscroll allowed beyond the map edge
+  const minX = VB_W - view.k * VB_W - M;
+  const maxX = M;
+  const minY = VB_H - view.k * VB_H - M;
+  const maxY = M;
+  view.x = Math.min(maxX, Math.max(minX, view.x));
+  view.y = Math.min(maxY, Math.max(minY, view.y));
 }
 
 /** Client-pixel point mapped into viewBox units (letterboxed `meet` fit). */
@@ -757,6 +838,7 @@ function onTerrClick(tid: string, e?: MouseEvent): void {
     showError('');
   } else {
     sel = sel === tid ? null : tid;
+    selClick = e ? { x: (e as MouseEvent).clientX, y: (e as MouseEvent).clientY } : null;
   }
   render();
   if (ripple) {
@@ -856,6 +938,31 @@ function renderInspector(s: GameState): void {
     if (i.id) saved[i.id] = { value: i.value, checked: i.checked === true };
   });
   el.innerHTML = '';
+  if (!sel) return;
+  // Popup close button.
+  const close = document.createElement('button');
+  close.className = 'insp-close';
+  close.textContent = '×';
+  close.title = 'Close';
+  close.addEventListener('click', () => {
+    sel = null;
+    render();
+  });
+  el.appendChild(close);
+  // Position near the click, clamped inside the map column.
+  const mapcol = $('mapcol').getBoundingClientRect();
+  if (selClick) {
+    const pw = 300, ph = 220; // approx popup size for clamping
+    let px = selClick.x - mapcol.left + 12;
+    let py = selClick.y - mapcol.top + 12;
+    px = Math.min(Math.max(8, px), Math.max(8, mapcol.width - pw));
+    py = Math.min(Math.max(8, py), Math.max(8, mapcol.height - ph));
+    el.style.left = `${px}px`;
+    el.style.top = `${py}px`;
+  } else {
+    el.style.left = '12px';
+    el.style.top = '12px';
+  }
   const restore = (): void => {
     for (const [id, v] of Object.entries(saved)) {
       const n = document.getElementById(id) as HTMLInputElement | null;
@@ -864,10 +971,6 @@ function renderInspector(s: GameState): void {
       else n.value = v.value;
     }
   };
-  if (!sel) {
-    el.textContent = 'Click a territory to inspect it.';
-    return;
-  }
   const t = s.territories[sel];
   const def = MAP.territories.find((x) => x.id === sel)!;
   const mine = t.owner === s.currentPlayer;

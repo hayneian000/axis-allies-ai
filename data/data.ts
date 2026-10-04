@@ -118,6 +118,20 @@ export function centroid(points: Array<[number, number]>): { x: number; y: numbe
   };
 }
 
+/** Ray-casting point-in-polygon (for label/badge placement). */
+export function pointInPolygon(pt: [number, number], poly: Array<[number, number]>): boolean {
+  const [x, y] = pt;
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
 /** BFS step-distance over all territories (aircraft ignore ground ownership). */
 export function airDistance(from: string, to: string): number {
   if (from === to) return 0;

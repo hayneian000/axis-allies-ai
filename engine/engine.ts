@@ -144,7 +144,7 @@ export function createGame(opts: CreateGameOptions): GameState {
   const scenario = scenarioFor(numPlayers);
   const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31);
   const state: GameState = {
-    version: 2,
+    version: 3,
     seed,
     rngState: seed >>> 0,
     numPlayers,
@@ -342,24 +342,193 @@ export function describeUnits(u: UnitCounts, damagedBB = 0): string {
 /** Land unit types a transport can carry (1942 2e p.30). */
 const CARGO_TYPES: UnitType[] = ['infantry', 'artillery', 'tank', 'aa'];
 
-/** Phase 1 simplification: a sea zone is hostile to `playerId` when another
- *  player controls it. The full 1942 2e rule (p.27) — lone submarines and
- *  transports neither make a zone hostile nor block movement — arrives with
- *  submarine mechanics in navy phase 2. */
+/** All forces in a sea zone: the primary occupant plus coexisting foreigners. */
+function seaZoneForces(z: TerritoryState): Array<{ owner: number | null; units: UnitCounts }> {
+  const out: Array<{ owner: number | null; units: UnitCounts }> = [{ owner: z.owner, units: z.units }];
+  for (const f of z.coexist ?? []) out.push(f);
+  return out;
+}
+
+function hasSurfaceWarships(u: UnitCounts): boolean {
+  return SURFACE_WARSHIP_TYPES.some((t) => u[t] > 0);
+}
+
+/** Enemy destroyers in a sea zone (block submarine movement, 1942 2e p.29). */
+function hasHostileDestroyer(work: Record<string, TerritoryState>, zid: string, playerId: number): boolean {
+  const z = work[zid];
+  if (!z) return false;
+  return seaZoneForces(z).some((f) => f.owner !== null && f.owner !== playerId && f.units.destroyer > 0);
+}
+
+/**
+ * Keep the sea-zone owner invariant: `units`/`owner` hold the primary
+ * occupant; `coexist` holds everyone else (one entry per owner, no empties,
+ * never the owner). If the primary force is gone, promote the first
+ * coexisting force.
+ */
+function normalizeSeaZone(work: Record<string, TerritoryState>, zid: string): void {
+  const z = work[zid];
+  if (!z || !isSea(zid)) return;
+  const merged: Array<{ owner: number; units: UnitCounts }> = [];
+  for (const f of z.coexist ?? []) {
+    if (countUnits(f.units) === 0) continue;
+    const e = merged.find((m) => m.owner === f.owner);
+    if (e) e.units = addUnits(e.units, f.units);
+    else merged.push({ owner: f.owner, units: { ...f.units } });
+  }
+  // The owner's own coexisting units belong in the primary force.
+  const ownIdx = z.owner !== null ? merged.findIndex((m) => m.owner === z.owner) : -1;
+  if (ownIdx >= 0) {
+    z.units = addUnits(z.units, merged[ownIdx].units);
+    merged.splice(ownIdx, 1);
+  }
+  if (countUnits(z.units) === 0) {
+    if (merged.length > 0) {
+      const [first, ...rest] = merged;
+      z.owner = first.owner;
+      z.units = first.units;
+      z.coexist = rest.length > 0 ? rest : undefined;
+    } else {
+      z.owner = null;
+      z.coexist = undefined;
+    }
+  } else {
+    z.coexist = merged.length > 0 ? merged : undefined;
+  }
+}
+
+/** The current player's force in a sea zone, wherever it sits. */
+function playerSeaForce(
+  work: Record<string, TerritoryState>,
+  zid: string,
+  playerId: number,
+): { units: UnitCounts; primary: boolean } {
+  const z = work[zid];
+  if (z.owner === playerId) return { units: z.units, primary: true };
+  const f = (z.coexist ?? []).find((f) => f.owner === playerId);
+  return { units: f ? f.units : emptyUnits(), primary: false };
+}
+
+/** Remove the player's units from a sea zone (from `units` or `coexist`). */
+function removeSeaUnits(
+  work: Record<string, TerritoryState>,
+  zid: string,
+  playerId: number,
+  units: Partial<UnitCounts>,
+): void {
+  const z = work[zid];
+  if (z.owner === playerId) {
+    z.units = subUnits(z.units, units);
+  } else {
+    const f = (z.coexist ?? []).find((f) => f.owner === playerId);
+    if (f) f.units = subUnits(f.units, units);
+  }
+  normalizeSeaZone(work, zid);
+}
+
+/**
+ * Settle the player's arriving ships into a sea zone known to hold no enemy
+ * surface warships. If another player is the primary occupant (lone subs or
+ * transports — 1942 2e p.29), their force becomes coexisting and the arriver
+ * takes primary occupancy.
+ */
+function arriveSeaZone(
+  work: Record<string, TerritoryState>,
+  zid: string,
+  playerId: number,
+  units: Partial<UnitCounts>,
+): void {
+  const z = work[zid];
+  if (z.owner !== null && z.owner !== playerId && countUnits(z.units) > 0) {
+    z.coexist = [...(z.coexist ?? []), { owner: z.owner, units: { ...z.units } }];
+    z.units = emptyUnits();
+  }
+  z.units = addUnits(z.units, units);
+  // The arriver becomes the primary occupant (owner) of the zone.
+  if (countUnits({ ...emptyUnits(), ...units }) > 0) z.owner = playerId;
+  normalizeSeaZone(work, zid);
+}
+
+/**
+ * Consolidate a sea zone around a battle defender: the defender's units
+ * (wherever they sit) become `units`/`owner`; everyone else coexists.
+ * While a sea battle is open, `territories[z].units` IS the defender's force.
+ */
+function consolidateDefender(work: Record<string, TerritoryState>, zid: string, defenderId: number): void {
+  const z = work[zid];
+  const defUnits = emptyUnits();
+  const rest: Array<{ owner: number; units: UnitCounts }> = [];
+  for (const f of seaZoneForces(z)) {
+    if (f.owner === defenderId) {
+      for (const t of ALL_UNIT_TYPES) defUnits[t] += f.units[t];
+    } else if (f.owner !== null && countUnits(f.units) > 0) {
+      const e = rest.find((r) => r.owner === f.owner);
+      if (e) e.units = addUnits(e.units, f.units);
+      else rest.push({ owner: f.owner, units: { ...f.units } });
+    }
+  }
+  z.owner = defenderId;
+  z.units = defUnits;
+  z.coexist = rest.length > 0 ? rest : undefined;
+}
+
+/** `used` key: sea zones track per occupying owner, since several players'
+ *  forces can share one zone. Land keeps the plain territory id. */
+function usedKey(terrId: string, owner: number): string {
+  return isSea(terrId) ? `${terrId}~${owner}` : terrId;
+}
+
+/**
+ * Find a sea zone with a hostile destroyer that would intercept a submarine
+ * sailing from `from` toward `to` (1942 2e p.29: entering such a zone ends
+ * the sub's movement immediately). BFS up to 2 zones; returns the first
+ * intercept found, or null.
+ */
+function findDestroyerIntercept(
+  work: Record<string, TerritoryState>,
+  from: string,
+  playerId: number,
+): string | null {
+  const seen = new Set<string>([from]);
+  let frontier = [from];
+  for (let step = 0; step < 2; step++) {
+    const next: string[] = [];
+    for (const cur of frontier) {
+      for (const n of neighborsOf(cur)) {
+        if (!isSea(n) || seen.has(n)) continue;
+        seen.add(n);
+        if (hasHostileDestroyer(work, n, playerId)) return n;
+        next.push(n);
+      }
+    }
+    frontier = next;
+  }
+  return null;
+}
+
+/** Combat power of a move's units (for the p.30 transport-escort rule). */
+function movePower(units: Partial<UnitCounts>): number {
+  let power = 0;
+  for (const t of ALL_UNIT_TYPES) {
+    if ((units[t] ?? 0) > 0 && UNITS[t].attack > 0) power += units[t] ?? 0;
+  }
+  return power;
+}
+
+/** 1942 2e p.27: a sea zone is hostile to `playerId` when it holds surface
+ *  warships (battleship, carrier, cruiser, destroyer) belonging to another
+ *  player. Lone submarines and transports neither make it hostile nor block
+ *  movement — that is the full rule, not a simplification. */
 function seaZoneHostileTo(
   work: Record<string, TerritoryState>,
   zid: string,
   playerId: number,
 ): boolean {
-  // 1942 2e p.27: a sea zone is hostile only if it contains enemy surface
-  // warships (battleship, carrier, cruiser, destroyer). Lone submarines and
-  // transports neither make it hostile nor block movement. (Phase 1: sub and
-  // carrier abilities are data-only, but the hostility rule applies.)
   const z = work[zid];
   if (!z) return false;
-  const o = z.owner;
-  if (o === null || o === undefined || o === playerId) return false;
-  return SURFACE_WARSHIP_TYPES.some((t) => z.units[t] > 0);
+  return seaZoneForces(z).some(
+    (f) => f.owner !== null && f.owner !== playerId && hasSurfaceWarships(f.units),
+  );
 }
 
 /** Land units currently aboard `owner`'s transports in a sea zone. */
@@ -377,12 +546,15 @@ function cargoOf(work: Record<string, TerritoryState>, zid: string, owner: numbe
  * Load land units onto transports in a friendly sea zone (1942 2e p.30).
  * Capacity per transport: any one land unit plus one additional infantry.
  * Loads are repacked greedily; any packing is legal since loads are fungible.
+ * `nTransports` is the loader's transport count in the zone (they may sit in
+ * `coexist` rather than as the primary occupant).
  */
 function embarkUnits(
   work: Record<string, TerritoryState>,
   zid: string,
   owner: number,
   add: Partial<UnitCounts>,
+  nTransports: number,
 ): ActionResult | null {
   for (const t of ALL_UNIT_TYPES) {
     if ((add[t] ?? 0) > 0 && !(CARGO_TYPES as UnitType[]).includes(t)) {
@@ -393,7 +565,7 @@ function embarkUnits(
   for (const t of CARGO_TYPES) want[t] = add[t] ?? 0;
   if (countUnits(want) === 0) return fail('empty_move', 'Nothing to load.');
   const zone = work[zid];
-  const nT = zone.units.transport;
+  const nT = nTransports;
   if (nT === 0) return fail('no_transport', 'No transports in that sea zone.');
   const total = addUnits(cargoOf(work, zid, owner), want);
   const nonInf = total.artillery + total.tank + total.aa;
@@ -496,6 +668,107 @@ function undamagedBB(force: UnitCounts, damaged: number): number {
   return Math.max(0, force.battleship - damaged);
 }
 
+// ------------------------------------------------------------- submarines ---
+
+/**
+ * A side's subs are eligible to submerge when it has subs in the fight and no
+ * hostile destroyer is present (1942 2e p.28: a destroyer cancels Submersible
+ * for all enemy submarines in the battle). Only the two fighting sides count;
+ * coexisting third parties are not in the battle.
+ */
+function hasEligibleSubs(state: GameState, b: Battle, side: 'attacker' | 'defender'): boolean {
+  const terr = state.territories[b.territoryId];
+  if (side === 'attacker') {
+    return b.attack.submarine > 0 && terr.units.destroyer === 0;
+  }
+  return terr.units.submarine > 0 && b.attack.destroyer === 0;
+}
+
+/**
+ * The submerge decision state with ineligible sides auto-skipped. Pure
+ * function of game state: no mutation, so it is safe to call on failure paths.
+ */
+function effectiveSubPhase(state: GameState, b: Battle): 'attacker' | 'defender' | 'done' {
+  let p = b.subPhase;
+  for (let i = 0; i < 2 && p !== 'done'; i++) {
+    if (!hasEligibleSubs(state, b, p)) p = p === 'attacker' ? 'defender' : 'done';
+  }
+  return p;
+}
+
+/**
+ * Which side must decide submarine submerges next in a sea battle, or null
+ * when the decision is complete or not applicable. For the battle UI prompt.
+ */
+export function submergeTurn(state: GameState, territoryId: string): 'attacker' | 'defender' | null {
+  const b = state.battles.find((x) => x.territoryId === territoryId && !x.over);
+  if (!b || !isSea(b.territoryId) || b.kind !== 'combat') return null;
+  const p = effectiveSubPhase(state, b);
+  return p === 'done' ? null : p;
+}
+
+/**
+ * Submerge submarines instead of fighting (1942 2e p.29). Called once per
+ * side per round, BEFORE any dice are rolled, attacker first. A submerged sub
+ * is removed from the battle: it cannot fire or take hits for the rest of the
+ * fight. Invalid actions never mutate state. Designed so a future LLM-agent
+ * tool can call it directly.
+ */
+export function submergeSubs(
+  state: GameState,
+  playerId: number,
+  territoryId: string,
+  side: 'attacker' | 'defender',
+  count: number,
+): ActionResult {
+  const phaseErr = requirePhase(state, ['combat']);
+  if (phaseErr) return phaseErr;
+  // The defender decides during the attacker's turn, so we only require the
+  // decider to be alive — the side check below ensures the right player.
+  if (!state.players[playerId]?.alive) return fail('eliminated', 'You are eliminated.');
+  const b = state.battles.find((x) => x.territoryId === territoryId && !x.over);
+  if (!b) return fail('no_battle', `There is no open battle in ${territoryId}.`);
+  if (!isSea(b.territoryId) || b.kind !== 'combat') {
+    return fail('not_sea_battle', 'Submerging is only possible in a sea battle (1942 2e p.29).');
+  }
+  if (b.pendingAttacker > 0 || b.pendingDefender > 0) {
+    return fail('casualties_pending', 'Choose casualties before submerging.');
+  }
+  if (side === 'attacker' && b.attackerId !== playerId) {
+    return fail('not_attacker', 'Only the attacker decides attacker submerges.');
+  }
+  if (side === 'defender') {
+    if (b.defenderId === null) return fail('no_defender', 'There is no defender to decide.');
+    if (b.defenderId !== playerId) return fail('not_defender', 'Only the defender decides defender submerges.');
+  }
+  const due = effectiveSubPhase(state, b);
+  if (due !== side) {
+    return fail('wrong_order', 'Submerge decisions happen attacker-first, before any dice are rolled (1942 2e p.29).');
+  }
+  // 1942 2e p.28: an enemy destroyer in the battle cancels Submersible.
+  const hostileDD = side === 'attacker'
+    ? state.territories[b.territoryId].units.destroyer > 0
+    : b.attack.destroyer > 0;
+  if (hostileDD) {
+    return fail('destroyer_present', 'Submarines cannot submerge with an enemy destroyer in the battle (1942 2e p.28).');
+  }
+  const eligible = side === 'attacker' ? b.attack.submarine : state.territories[b.territoryId].units.submarine;
+  if (!Number.isInteger(count) || count < 0 || count > eligible) {
+    return fail('bad_count', `Submerge count must be between 0 and ${eligible}.`);
+  }
+  if (side === 'attacker') {
+    b.attack.submarine -= count;
+    b.submergedA += count;
+  } else {
+    state.territories[b.territoryId].units.submarine -= count;
+    b.submergedD += count;
+  }
+  b.subPhase = side === 'attacker' ? 'defender' : 'done';
+  const who = side === 'attacker' ? state.players[b.attackerId].name : state.players[b.defenderId!].name;
+  log(state, 'submerge', `${who} submerges ${count} submarine(s) in ${territoryId} instead of fighting.`);
+  return { ok: true };
+}
+
 // --------------------------------------------------------------- purchase ---
 
 export function purchase(state: GameState, playerId: number, items: PurchaseItem[]): ActionResult {
@@ -543,6 +816,8 @@ interface WorkBattle {
   seaborne?: UnitCounts;
   /** Bombardment ships decided at combat-move time (p.15). */
   bombard?: { battleship: number; cruiser: number };
+  /** Amphibious cargo earmarked but not yet offloaded (contested launch zone). */
+  pendingDisembark?: { from: string; units: UnitCounts };
 }
 
 function blitzCapture(
@@ -567,7 +842,8 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
   const work: Record<string, TerritoryState> = JSON.parse(JSON.stringify(state.territories));
   const usedWork: Record<string, UnitCounts> = {};
   const markUsed = (terr: string, u: Partial<UnitCounts>) => {
-    usedWork[terr] = addUnits(usedWork[terr] ?? emptyUnits(), u);
+    const k = usedKey(terr, playerId);
+    usedWork[k] = addUnits(usedWork[k] ?? emptyUnits(), u);
   };
   // Preload the attacker's already-open battles so a second combatMove call
   // reinforces them instead of opening duplicates. All-or-nothing still holds:
@@ -584,6 +860,9 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
     }));
   const blitzes: Array<{ terr: string; prevOwner: number | null }> = [];
   const landing = landingOptions(state, playerId);
+  /** Amphibious cargo earmarked by disembark moves, per launch zone (so two
+   *  moves cannot double-count the same manifest). */
+  const earmarked: Record<string, UnitCounts> = {};
 
   const getBattle = (tid: string, defenderId: number | null, kind: 'combat' | 'sbr'): WorkBattle | ActionResult => {
     const existing = workBattles.find((b) => b.territoryId === tid);
@@ -600,7 +879,9 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
   /**
    * Naval leg of a combat move (1942 2e, sea units pp.27-30): fleet movement,
    * sea attacks, transport embark/disembark, and amphibious assault declaration.
-   * Returns null on success, an ActionResult failure otherwise.
+   * Submarines get their p.29 movement rules; ignored subs/transports coexist
+   * via `coexist` until attacked. Returns null on success, an ActionResult
+   * failure otherwise.
    */
   const navalCombatMove = (move: CombatMove, playerId: number): ActionResult | null => {
     const fromSea = isSea(move.from);
@@ -612,15 +893,66 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
     const airN = countAir(full);
     const aaN = units.aa ?? 0;
 
+    // --- from==to: open a battle with forces already sharing the zone ---
+    // (1942 2e p.29: a force that ignored subs/transports may attack them on
+    // a later turn; likewise the ignored subs may strike back.)
+    if (fromSea && toSea && move.from === move.to) {
+      if (!move.attack) {
+        return fail('attack_flag', 'Opening a battle with forces already in this sea zone requires attack: true.');
+      }
+      if (landN > 0 || aaN > 0) return fail('no_land_at_sea', 'Only naval and air units operate at sea.');
+      const pf = playerSeaForce(work, move.to, playerId);
+      if (!hasEnough(pf.units, units)) {
+        return fail('too_few_units', `Not enough of your units in ${move.to}.`);
+      }
+      if (movePower(units) === 0) return fail('no_escort', 'Transports may not attack unescorted (1942 2e p.30).');
+      const z = work[move.to];
+      const enemies = seaZoneForces(z).filter(
+        (f) => f.owner !== null && f.owner !== playerId && countUnits(f.units) > 0,
+      );
+      if (enemies.length === 0) return fail('no_enemy', `No enemy forces in ${move.to} to attack.`);
+      // One defender per battle (simplification): the primary occupant first.
+      const def = enemies.find((f) => f.owner === z.owner) ?? enemies[0];
+      const defenderId = def.owner as number;
+      removeSeaUnits(work, move.to, playerId, units);
+      consolidateDefender(work, move.to, defenderId);
+      const b = getBattle(move.to, defenderId, 'combat');
+      if ('ok' in b) return b;
+      b.attack = addUnits(b.attack, units);
+      if (!b.origins.includes(move.to)) b.origins.push(move.to);
+      markUsed(move.to, units);
+      return null;
+    }
+
     // --- sea -> sea: fleet movement or sea attack ---
     if (fromSea && toSea) {
       if (move.embark || move.disembark) return fail('bad_move', 'embark/disembark are for land/sea transfers.');
       if (landN > 0 || aaN > 0) return fail('no_land_at_sea', 'Only naval and air units operate at sea.');
-      const destOwner = work[move.to].owner;
-      const hostile = destOwner !== null && destOwner !== playerId;
-      // Ships move up to 2 sea zones without crossing hostile waters (p.27);
-      // aircraft fly over anything within their move value.
-      if (seaN > 0) {
+      const pf = playerSeaForce(work, move.from, playerId);
+      if (!hasEnough(pf.units, units)) {
+        return fail('too_few_units', `Not enough of your units in ${move.from}.`);
+      }
+      // Range. Submarines treat hostile zones as friendly but a hostile
+      // destroyer ends their movement immediately (1942 2e p.29); other ships
+      // cannot transit hostile waters at all (p.27).
+      const nSubs = units.submarine ?? 0;
+      const otherSeaN = seaN - nSubs;
+      if (nSubs > 0) {
+        const reach = seaReachable(move.from, UNITS.submarine.move, (z) =>
+          z === move.to ? true : !hasHostileDestroyer(work, z, playerId),
+        );
+        if (!reach.has(move.to)) {
+          const intercept = findDestroyerIntercept(work, move.from, playerId);
+          if (intercept) {
+            return fail(
+              'destroyer_intercept',
+              `An enemy destroyer in ${intercept} intercepts the submarine: it must end its movement there (1942 2e p.29).`,
+            );
+          }
+          return fail('range', `Submarines in ${move.from} cannot reach ${move.to}.`);
+        }
+      }
+      if (otherSeaN > 0) {
         const reach = seaReachable(move.from, UNITS.transport.move, (z) =>
           z === move.to ? true : !seaZoneHostileTo(work, z, playerId),
         );
@@ -641,28 +973,48 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
           return fail('no_landing', `Aircraft attacking ${move.to} cannot reach a legal landing spot.`);
         }
       }
-      if (!hasEnough(work[move.from].units, units)) {
-        return fail('too_few_units', `Not enough units in ${move.from}.`);
-      }
-      if (hostile) {
-        // 1942 2e p.30: transports may not attack without an escorting combat unit.
-        let power = 0;
-        for (const t of ALL_UNIT_TYPES) {
-          if ((units[t] ?? 0) > 0 && UNITS[t].attack > 0) power += units[t] ?? 0;
-        }
-        if (power === 0) return fail('no_escort', 'Transports may not attack unescorted (1942 2e p.30).');
-        const b = getBattle(move.to, destOwner, 'combat');
+      // Enemy forces at the destination (combined primary + coexisting).
+      const dz = work[move.to];
+      const enemies = seaZoneForces(dz).filter(
+        (f) => f.owner !== null && f.owner !== playerId && countUnits(f.units) > 0,
+      );
+      const surfaceFoe = enemies.find((f) => hasSurfaceWarships(f.units));
+      const subTransFoes = enemies.filter((f) => !hasSurfaceWarships(f.units));
+      removeSeaUnits(work, move.from, playerId, units);
+      const nTrn = units.transport ?? 0;
+      if (nTrn > 0) carryCargoAlong(work, move.from, move.to, playerId, nTrn);
+      if (surfaceFoe) {
+        // Hostile waters: sea battle (1942 2e p.27).
+        if (movePower(units) === 0) return fail('no_escort', 'Transports may not attack unescorted (1942 2e p.30).');
+        const defenderId = surfaceFoe.owner as number;
+        consolidateDefender(work, move.to, defenderId);
+        const b = getBattle(move.to, defenderId, 'combat');
         if ('ok' in b) return b;
         b.attack = addUnits(b.attack, units);
         if (!b.origins.includes(move.from)) b.origins.push(move.from);
+      } else if (subTransFoes.length > 0) {
+        // 1942 2e p.29: the mover chooses to attack the subs/transports or
+        // ignore them. Default is attack (phase-1 behavior); set attack: false
+        // to ignore and coexist.
+        if (move.attack ?? true) {
+          // Declared attack on the ignored subs/transports.
+          if (movePower(units) === 0) return fail('no_escort', 'Transports may not attack unescorted (1942 2e p.30).');
+          const def = subTransFoes.find((f) => f.owner === dz.owner) ?? subTransFoes[0];
+          const defenderId = def.owner as number;
+          consolidateDefender(work, move.to, defenderId);
+          const b = getBattle(move.to, defenderId, 'combat');
+          if ('ok' in b) return b;
+          b.attack = addUnits(b.attack, units);
+          if (!b.origins.includes(move.from)) b.origins.push(move.from);
+        } else {
+          // Ignore (1942 2e p.29): coexist; the enemy subs/transports yield
+          // primary occupancy to the arriver.
+          arriveSeaZone(work, move.to, playerId, units);
+        }
       } else {
-        work[move.to].units = addUnits(work[move.to].units, units);
-        if (seaN > 0 && work[move.to].owner === null) work[move.to].owner = playerId;
+        arriveSeaZone(work, move.to, playerId, units);
       }
-      work[move.from].units = subUnits(work[move.from].units, units);
-      const nTrn = units.transport ?? 0;
-      if (nTrn > 0) carryCargoAlong(work, move.from, move.to, playerId, nTrn);
-      if (countSea(work[move.from].units) === 0) work[move.from].owner = null;
+      normalizeSeaZone(work, move.from);
       markUsed(move.from, units);
       return null;
     }
@@ -682,15 +1034,17 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
       if (!hasEnough(work[move.from].units, units)) {
         return fail('too_few_units', `Not enough units in ${move.from}.`);
       }
-      const err = embarkUnits(work, move.to, playerId, units);
+      const nT = playerSeaForce(work, move.to, playerId).units.transport;
+      const err = embarkUnits(work, move.to, playerId, units, nT);
       if (err) return err;
       work[move.from].units = subUnits(work[move.from].units, units);
       markUsed(move.from, units);
       return null;
     }
 
-    // --- sea -> land: disembark. In the combat-move phase this is always an
-    // amphibious assault (1942 2e p.15); friendly offloads wait for non-combat.
+    // --- sea -> land: amphibious assault. The offload is earmarked here and
+    // settled at commit: immediate from a friendly launch zone, deferred
+    // until the sea battle resolves from a contested one (1942 2e p.15).
     if (!move.disembark) return fail('disembark_flag', 'Leaving a transport requires disembark: true.');
     for (const t of ALL_UNIT_TYPES) {
       if ((units[t] ?? 0) > 0 && !(CARGO_TYPES as UnitType[]).includes(t)) {
@@ -704,20 +1058,21 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
     if (destOwner === playerId) {
       return fail('friendly_offload', 'Offloading into friendly territory happens in the non-combat phase.');
     }
-    // Phase 1: the launch zone must already be friendly. The full 1942 2e
-    // sequence (sea battle then assault from the same zone in one turn)
-    // needs cross-battle ordering; it arrives in navy phase 2.
-    if (seaZoneHostileTo(work, move.from, playerId)) {
-      return fail('hostile_waters', 'Amphibious assaults launch from a friendly sea zone in phase 1.');
-    }
-    const err = disembarkUnits(work, move.from, playerId, units);
-    if (err) return err;
     const b = getBattle(move.to, destOwner, 'combat');
     if ('ok' in b) return b;
-    b.attack = addUnits(b.attack, units);
-    if (!b.origins.includes(move.from)) b.origins.push(move.from);
+    // One launch zone per assault (simplification).
+    if (b.amphibiousFrom && b.amphibiousFrom !== move.from) {
+      return fail('multi_launch', 'An amphibious assault launches from a single sea zone.');
+    }
+    // Cargo availability, net of earmarks by earlier moves in this action.
+    const availCargo = subUnits(cargoOf(work, move.from, playerId), earmarked[move.from] ?? emptyUnits());
+    if (!hasEnough(availCargo, units)) {
+      return fail('no_cargo', 'Those units are not aboard your transports there.');
+    }
+    earmarked[move.from] = addUnits(earmarked[move.from] ?? emptyUnits(), units);
     b.amphibiousFrom = move.from;
-    b.seaborne = addUnits(b.seaborne ?? emptyUnits(), units);
+    b.pendingDisembark = { from: move.from, units: { ...earmarked[move.from] } };
+    if (!b.origins.includes(move.from)) b.origins.push(move.from);
     return null;
   };
 
@@ -728,13 +1083,25 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
     if (countUnits({ ...emptyUnits(), ...move.units }) === 0) {
       return fail('empty_move', 'Each move must move at least one unit.');
     }
-    if (work[move.from].owner !== playerId) return fail('not_owner', `You do not hold ${move.from}.`);
 
     // Any leg at sea takes the naval path (fleet movement, sea attack, embark/disembark).
     if (isSea(move.from) || isSea(move.to)) {
+      if (isSea(move.from)) {
+        // The player's force may sit in `coexist` (ignored subs, or ships
+        // mobilized into hostile waters) rather than as primary occupant.
+        const pf = playerSeaForce(work, move.from, playerId);
+        if (countUnits(pf.units) === 0) {
+          return fail('not_owner', `You have no forces in ${move.from}.`);
+        }
+      } else if (work[move.from].owner !== playerId) {
+        return fail('not_owner', `You do not hold ${move.from}.`);
+      }
       const err = navalCombatMove(move, playerId);
       if (err) return err;
       continue;
+    }
+    if (work[move.from].owner !== playerId) {
+      return fail('not_owner', `You do not hold ${move.from}.`);
     }
 
     if ((move.units.aa ?? 0) > 0) return fail('aa_no_attack', 'AA guns cannot move in the combat-move phase.');
@@ -845,17 +1212,87 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
     if (landN > 0 && !b.origins.includes(move.from)) b.origins.push(move.from);
   }
 
-  // Amphibious bombardment eligibility (1942 2e p.15): battleships and cruisers
-  // in the launch zone may shell the target when no sea battle was fought
-  // there, at most one ship per offloaded land unit. Decided here from final
-  // positions, so supporting ships may move in during the same combat move.
+  // Amphibious offloads (1942 2e p.15). From a friendly launch zone the cargo
+  // comes ashore at once; from a contested zone (a sea battle is being fought
+  // there) the offload waits for the sea battle's outcome, and no bombardment
+  // is allowed. Bombardment eligibility is decided here from final positions,
+  // so supporting ships may move in during the same combat move.
   for (const wb of workBattles) {
-    if (!wb.amphibiousFrom) continue;
-    const z = work[wb.amphibiousFrom];
+    if (!wb.amphibiousFrom || !wb.pendingDisembark) continue;
+    const lz = wb.amphibiousFrom;
+    const hostile = seaZoneHostileTo(work, lz, playerId);
+    const seaBattleOpen =
+      workBattles.some((x) => x !== wb && x.territoryId === lz && isSea(x.territoryId)) ||
+      state.battles.some(
+        (x) => !x.over && x.territoryId === lz && isSea(x.territoryId) && x.attackerId === playerId,
+      );
+    if (hostile && !seaBattleOpen) {
+      return fail(
+        'hostile_waters',
+        `Amphibious assaults cannot launch from hostile ${lz} without fighting for it (1942 2e p.15).`,
+      );
+    }
+    if (seaBattleOpen) {
+      // Contested: the offload stays pending until the sea battle resolves;
+      // p.15 forbids bombardment when a sea battle occurs in the launch zone.
+      wb.bombard = undefined;
+      continue;
+    }
+    // Friendly launch: offload now.
+    const pd = wb.pendingDisembark;
+    const err = disembarkUnits(work, lz, playerId, pd.units);
+    if (err) return err; // unreachable: earmarked cargo was validated per-move
+    wb.attack = addUnits(wb.attack, pd.units);
+    wb.seaborne = addUnits(wb.seaborne ?? emptyUnits(), pd.units);
+    wb.pendingDisembark = undefined;
+    const pf = playerSeaForce(work, lz, playerId);
     const seaborneLand = countLand(wb.seaborne ?? emptyUnits());
-    const n = Math.min(z.units.battleship + z.units.cruiser, seaborneLand);
-    const nbb = Math.min(z.units.battleship, n);
+    const n = Math.min(pf.units.battleship + pf.units.cruiser, seaborneLand);
+    const nbb = Math.min(pf.units.battleship, n);
     wb.bombard = { battleship: nbb, cruiser: n - nbb };
+  }
+
+  // 1942 2e p.30: enemy transports left ignored in a sea zone are destroyed
+  // automatically at the end of the Combat Move phase by combat-capable units
+  // present. (This counts as a sea combat for the destroyers: they are marked
+  // used.) Only when the enemy has transports alone — subs may be ignored freely.
+  for (const zid of seaZoneIds()) {
+    const z = work[zid];
+    if (workBattles.some((wb) => wb.territoryId === zid)) continue;
+    const owner = z.owner;
+    if (owner === null || owner === undefined) continue;
+    const hunters: Partial<UnitCounts> = {};
+    for (const t of ALL_UNIT_TYPES) {
+      if (t === 'transport') continue;
+      if ((z.units[t] ?? 0) > 0 && (UNITS[t].sea || UNITS[t].air)) hunters[t] = z.units[t];
+    }
+    if (countUnits({ ...emptyUnits(), ...hunters }) === 0) continue;
+    const kept: Array<{ owner: number; units: UnitCounts }> = [];
+    let sunk = 0;
+    for (const f of z.coexist ?? []) {
+      if (f.owner === owner) {
+        kept.push(f);
+        continue;
+      }
+      const enemyOther = countUnits(f.units) - f.units.transport;
+      if (f.units.transport > 0 && enemyOther === 0) {
+        sunk += f.units.transport;
+        const lost = destroyCargo(work, zid, f.owner, f.units.transport);
+        log(
+          state,
+          'sink',
+          `${state.players[owner].name}'s forces destroy ${f.units.transport} ignored transport(s) in ${zid}${lost > 0 ? ` (${lost} embarked unit(s) lost)` : ''} (1942 2e p.30).`,
+        );
+      } else {
+        kept.push(f);
+      }
+    }
+    if (sunk > 0) {
+      z.coexist = kept.length > 0 ? kept : undefined;
+      normalizeSeaZone(work, zid);
+      const k = usedKey(zid, owner);
+      usedWork[k] = addUnits(usedWork[k] ?? emptyUnits(), hunters);
+    }
   }
 
   // Commit.
@@ -871,6 +1308,12 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
       if (wb.seaborne) live.seaborne = addUnits(live.seaborne ?? emptyUnits(), wb.seaborne);
       if (wb.amphibiousFrom) live.amphibiousFrom = wb.amphibiousFrom;
       if (wb.bombard) live.bombard = wb.bombard;
+      if (wb.pendingDisembark) {
+        live.pendingDisembark = {
+          from: wb.pendingDisembark.from,
+          units: addUnits(live.pendingDisembark?.units ?? emptyUnits(), wb.pendingDisembark.units),
+        };
+      }
       continue;
     }
     state.battles.push({
@@ -897,6 +1340,12 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
       bombardDoomed: 0,
       damagedAttackBB: 0,
       damagedDefBB: 0,
+      subPhase: 'attacker',
+      submergedA: 0,
+      submergedD: 0,
+      pendAtkAir: 0,
+      pendDefAir: 0,
+      pendingDisembark: wb.pendingDisembark,
     });
   }
   for (const bl of blitzes) {
@@ -988,58 +1437,120 @@ function rollHits(state: GameState, count: number, value: number): { dice: numbe
   return { dice, hits };
 }
 
-function attackerRolls(state: GameState, atk: UnitCounts): { dice: number[]; hits: number } {
+/** Hits broken down by scoring source, for the 1942 2e p.29 casualty rules:
+ *  submarine hits can only sink sea units (never aircraft), and air-scored
+ *  hits cannot sink submarines unless a friendly destroyer is in the battle. */
+interface RollBreakdown {
+  dice: number[];
+  hits: number;
+  subHits: number;
+  airHits: number;
+  otherHits: number;
+}
+
+function attackerRolls(state: GameState, atk: UnitCounts, excludeSubs: boolean): RollBreakdown {
   const dice: number[] = [];
-  let hits = 0;
+  let subHits = 0;
+  let airHits = 0;
+  let otherHits = 0;
   const boosted = Math.min(atk.infantry, atk.artillery); // 1:1 artillery pairing
   for (let i = 0; i < atk.infantry; i++) {
     const v = i < boosted ? (UNITS.infantry.boostedAttack as number) : UNITS.infantry.attack;
     const d = rollDie(state);
     dice.push(d);
-    if (d <= v) hits++;
+    if (d <= v) otherHits++;
   }
-  const rest: Array<[UnitType, number, number]> = [
-    ['artillery', atk.artillery, UNITS.artillery.attack],
-    ['tank', atk.tank, UNITS.tank.attack],
-    ['fighter', atk.fighter, UNITS.fighter.attack],
-    ['bomber', atk.bomber, UNITS.bomber.attack],
-    ['submarine', atk.submarine, UNITS.submarine.attack],
-    ['destroyer', atk.destroyer, UNITS.destroyer.attack],
-    ['cruiser', atk.cruiser, UNITS.cruiser.attack],
-    ['carrier', atk.carrier, UNITS.carrier.attack],
-    ['battleship', atk.battleship, UNITS.battleship.attack],
+  const rest: Array<[UnitType, number, number, 'sub' | 'air' | 'other']> = [
+    ['artillery', atk.artillery, UNITS.artillery.attack, 'other'],
+    ['tank', atk.tank, UNITS.tank.attack, 'other'],
+    ['fighter', atk.fighter, UNITS.fighter.attack, 'air'],
+    ['bomber', atk.bomber, UNITS.bomber.attack, 'air'],
+    ['submarine', excludeSubs ? 0 : atk.submarine, UNITS.submarine.attack, 'sub'],
+    ['destroyer', atk.destroyer, UNITS.destroyer.attack, 'other'],
+    ['cruiser', atk.cruiser, UNITS.cruiser.attack, 'other'],
+    ['carrier', atk.carrier, UNITS.carrier.attack, 'other'],
+    ['battleship', atk.battleship, UNITS.battleship.attack, 'other'],
   ];
-  for (const [, n, v] of rest) {
+  for (const [, n, v, src] of rest) {
     if (n <= 0 || v <= 0) continue; // transports have no combat value (1942 2e p.30)
     const r = rollHits(state, n, v);
     dice.push(...r.dice);
-    hits += r.hits;
+    if (src === 'sub') subHits += r.hits;
+    else if (src === 'air') airHits += r.hits;
+    else otherHits += r.hits;
   }
-  return { dice, hits };
+  return { dice, hits: subHits + airHits + otherHits, subHits, airHits, otherHits };
 }
 
-function defenderRolls(state: GameState, def: UnitCounts): { dice: number[]; hits: number } {
+function defenderRolls(state: GameState, def: UnitCounts, excludeSubs: boolean): RollBreakdown {
   const dice: number[] = [];
-  let hits = 0;
-  const parts: Array<[number, number]> = [
-    [def.infantry, UNITS.infantry.defense],
-    [def.artillery, UNITS.artillery.defense],
-    [def.tank, UNITS.tank.defense],
-    [def.fighter, UNITS.fighter.defense],
-    [def.bomber, UNITS.bomber.defense],
-    [def.submarine, UNITS.submarine.defense],
-    [def.destroyer, UNITS.destroyer.defense],
-    [def.cruiser, UNITS.cruiser.defense],
-    [def.carrier, UNITS.carrier.defense],
-    [def.battleship, UNITS.battleship.defense],
+  let subHits = 0;
+  let airHits = 0;
+  let otherHits = 0;
+  const parts: Array<[number, number, 'sub' | 'air' | 'other']> = [
+    [def.infantry, UNITS.infantry.defense, 'other'],
+    [def.artillery, UNITS.artillery.defense, 'other'],
+    [def.tank, UNITS.tank.defense, 'other'],
+    [def.fighter, UNITS.fighter.defense, 'air'],
+    [def.bomber, UNITS.bomber.defense, 'air'],
+    [excludeSubs ? 0 : def.submarine, UNITS.submarine.defense, 'sub'],
+    [def.destroyer, UNITS.destroyer.defense, 'other'],
+    [def.cruiser, UNITS.cruiser.defense, 'other'],
+    [def.carrier, UNITS.carrier.defense, 'other'],
+    [def.battleship, UNITS.battleship.defense, 'other'],
   ];
-  for (const [n, v] of parts) {
+  for (const [n, v, src] of parts) {
     if (n <= 0 || v <= 0) continue;
     const r = rollHits(state, n, v);
     dice.push(...r.dice);
-    hits += r.hits;
+    if (src === 'sub') subHits += r.hits;
+    else if (src === 'air') airHits += r.hits;
+    else otherHits += r.hits;
   }
-  return { dice, hits };
+  return { dice, hits: subHits + airHits + otherHits, subHits, airHits, otherHits };
+}
+
+/**
+ * Apply submarine-scored hits immediately (1942 2e p.29): surprise-strike
+ * casualties are removed before the general exchange with no return fire, and
+ * in all cases submarines cannot hit air units — only sea units. Uses the
+ * standard cheapest-first policy (transports last) restricted to sea units.
+ */
+function applySubHits(state: GameState, b: Battle, side: 'attacker' | 'defender', hits: number): void {
+  if (hits <= 0) return;
+  const seaOnly = (u: UnitCounts): UnitCounts => {
+    const o = emptyUnits();
+    for (const t of NAVAL_UNIT_TYPES) o[t] = u[t];
+    return o;
+  };
+  if (side === 'defender') {
+    const terr = state.territories[b.territoryId];
+    const { removed, damaged } = autoCasualtyPolicy(
+      seaOnly(terr.units),
+      hits,
+      undamagedBB(terr.units, b.damagedDefBB),
+    );
+    b.damagedDefBB += damaged;
+    b.damagedDefBB = Math.max(0, b.damagedDefBB - Math.min(removed.battleship ?? 0, b.damagedDefBB));
+    terr.units = subUnits(terr.units, removed);
+    sinkTransportCargo(state, b, 'defender', removed.transport ?? 0);
+    if (countUnits({ ...emptyUnits(), ...removed }) > 0 || damaged > 0) {
+      log(state, 'casualties', `Submarine fire sinks ${describeUnits({ ...emptyUnits(), ...removed }, damaged)} (defender, ${b.territoryId}).`);
+    }
+  } else {
+    const { removed, damaged } = autoCasualtyPolicy(
+      seaOnly(b.attack),
+      hits,
+      undamagedBB(b.attack, b.damagedAttackBB),
+    );
+    b.damagedAttackBB += damaged;
+    b.damagedAttackBB = Math.max(0, b.damagedAttackBB - Math.min(removed.battleship ?? 0, b.damagedAttackBB));
+    b.attack = subUnits(b.attack, removed);
+    sinkTransportCargo(state, b, 'attacker', removed.transport ?? 0);
+    if (countUnits({ ...emptyUnits(), ...removed }) > 0 || damaged > 0) {
+      log(state, 'casualties', `Submarine fire sinks ${describeUnits({ ...emptyUnits(), ...removed }, damaged)} (attacker, ${b.territoryId}).`);
+    }
+  }
 }
 
 function battleResult(state: GameState, b: Battle, extra?: Partial<CombatRoundResult>): CombatRoundResult {
@@ -1074,6 +1585,12 @@ export function resolveCombatRound(
   if (b.attackerId !== playerId) return fail('not_attacker', 'Only the attacker resolves combat here.');
   if (b.pendingAttacker > 0 || b.pendingDefender > 0) {
     return fail('casualties_pending', 'Choose casualties before rolling another round.');
+  }
+  if (b.pendingDisembark) {
+    return fail(
+      'sea_battle_pending',
+      `Resolve the sea battle in ${b.pendingDisembark.from} before fighting for ${territoryId}.`,
+    );
   }
 
   // AA fire: once per battle, before the first exchange, at attacking aircraft.
@@ -1151,7 +1668,8 @@ export function resolveCombatRound(
       bombardHits = r1.hits + r2.hits;
       b.bombardDoomed = bombardHits;
       // Bombarding ships fought: they may not move in the non-combat phase.
-      state.used[b.amphibiousFrom] = addUnits(state.used[b.amphibiousFrom] ?? emptyUnits(), {
+      const buk = usedKey(b.amphibiousFrom, playerId);
+      state.used[buk] = addUnits(state.used[buk] ?? emptyUnits(), {
         battleship: ships.battleship,
         cruiser: ships.cruiser,
       });
@@ -1164,11 +1682,97 @@ export function resolveCombatRound(
     }
   }
 
-  const a = attackerRolls(state, b.attack);
-  const d = defenderRolls(state, state.territories[territoryId].units);
+  const a = { dice: [] as number[], hits: 0, subHits: 0, airHits: 0, otherHits: 0 };
+  const d = { dice: [] as number[], hits: 0, subHits: 0, airHits: 0, otherHits: 0 };
+  let surpriseARolls: number[] = [];
+  let surpriseAHits = 0;
+  let surpriseDRolls: number[] = [];
+  let surpriseDHits = 0;
+  // Subs that surprise-strike do not roll again in the general exchange.
+  let subsFiredA = false;
+  let subsFiredD = false;
+
+  if (seaBattle && b.kind === 'combat') {
+    // Submerge decisions precede all dice, attacker first (1942 2e p.29).
+    const due = effectiveSubPhase(state, b);
+    if (due !== 'done') {
+      return fail(
+        'submerge_pending',
+        `${due === 'attacker' ? 'Attacker' : 'Defender'} must decide submarine submerges via submergeSubs before this round (1942 2e p.29).`,
+      );
+    }
+    // Surprise strike (1942 2e p.29): subs on both sides fire before any other
+    // units. Attacker subs roll first; their casualties are removed at once
+    // and get no return fire. A destroyer cancels the enemy subs' strike (p.28).
+    const terrNow = () => state.territories[territoryId].units;
+    if (b.attack.submarine > 0 && terrNow().destroyer === 0) {
+      subsFiredA = true;
+      const r = rollHits(state, b.attack.submarine, UNITS.submarine.attack);
+      surpriseARolls = r.dice;
+      surpriseAHits = r.hits;
+      applySubHits(state, b, 'defender', r.hits);
+      logEvent(state, 'surprise', `Attacker subs surprise-strike in ${territoryId}: ${r.hits} hit(s) (${r.dice.join(',') || 'no dice'}).`, {
+        side: 'attack',
+        dice: r.dice,
+        hits: r.hits,
+      });
+    }
+    if (terrNow().submarine > 0 && b.attack.destroyer === 0) {
+      subsFiredD = true;
+      const r = rollHits(state, terrNow().submarine, UNITS.submarine.defense);
+      surpriseDRolls = r.dice;
+      surpriseDHits = r.hits;
+      applySubHits(state, b, 'attacker', r.hits);
+      logEvent(state, 'surprise', `Defender subs surprise-strike in ${territoryId}: ${r.hits} hit(s) (${r.dice.join(',') || 'no dice'}).`, {
+        side: 'defense',
+        dice: r.dice,
+        hits: r.hits,
+      });
+    }
+    // Surprise casualties get no return fire: a wiped side ends the battle now.
+    if (countUnits(terrNow()) === 0 || countSea(b.attack) + countAir(b.attack) === 0) {
+      evaluateBattleEnd(state, b);
+      return {
+        ok: true,
+        combat: {
+          ...battleResult(state, b),
+          aaRolls,
+          aaHits,
+          attackRolls: a.dice,
+          attackHits: a.hits,
+          defenseRolls: d.dice,
+          defenseHits: d.hits,
+          pendingAttacker: b.pendingAttacker,
+          pendingDefender: b.pendingDefender,
+          over: b.over,
+          result: b.result,
+          bombardRolls,
+          bombardHits,
+          surpriseARolls,
+          surpriseAHits,
+          surpriseDRolls,
+          surpriseDHits,
+        },
+      };
+    }
+  }
+
+  // General exchange. Every unit fires simultaneously, so both sides' rolls
+  // are computed before any casualties are applied.
+  const ga = attackerRolls(state, b.attack, subsFiredA);
+  const gd = defenderRolls(state, state.territories[territoryId].units, subsFiredD);
+  a.dice = ga.dice; a.hits = ga.hits; a.airHits = ga.airHits; a.otherHits = ga.otherHits;
+  d.dice = gd.dice; d.hits = gd.hits; d.airHits = gd.airHits; d.otherHits = gd.otherHits;
+  // Submarine-scored hits can only sink sea units, never aircraft (1942 2e
+  // p.29): applied immediately to sea units. (Deliberate simplification: the
+  // owner does not choose which sea units these sink; cheapest-first applies.)
+  applySubHits(state, b, 'defender', ga.subHits);
+  applySubHits(state, b, 'attacker', gd.subHits);
   b.rounds++;
-  b.pendingAttacker += d.hits;
-  b.pendingDefender += a.hits;
+  b.pendingAttacker += d.airHits + d.otherHits;
+  b.pendAtkAir = d.airHits;
+  b.pendingDefender += a.airHits + a.otherHits;
+  b.pendDefAir = a.airHits;
   b.attackerResolved = b.pendingAttacker === 0;
   b.defenderResolved = b.pendingDefender === 0;
   logEvent(state, 'combat_round', `${state.players[playerId].name} vs ${territoryId} round ${b.rounds}: attack ${a.hits}, defense ${d.hits}.`, {
@@ -1211,6 +1815,10 @@ export function resolveCombatRound(
       result: b.result,
       bombardRolls,
       bombardHits,
+      surpriseARolls,
+      surpriseAHits,
+      surpriseDRolls,
+      surpriseDHits,
     },
   };
 }
@@ -1220,14 +1828,23 @@ export function resolveCombatRound(
  * Undamaged battleships absorb hits first: the first hit damages rather than
  * destroying (1942 2e p.27). `undamagedBB` is the force's battleships minus
  * those already damaged in this combat.
+ *
+ * `airHits`: hits in this batch scored by air units. 1942 2e p.29 — they
+ * cannot be assigned to submarines (the caller passes 0 when a friendly
+ * destroyer cancelled that rule, p.28). They are satisfied from non-sub
+ * units first; any excess is lost.
  */
 export function autoCasualtyPolicy(
   force: UnitCounts,
   hits: number,
   undamagedBB = 0,
+  blockedAirHits = 0,
 ): { removed: Partial<UnitCounts>; damaged: number } {
   const damaged = Math.min(hits, undamagedBB);
   let left = hits - damaged;
+  // Blocked air hits (air vs subs without a friendly destroyer, 1942 2e p.29)
+  // cannot be assigned at all and are lost.
+  left -= Math.min(blockedAirHits, left);
   const order: UnitType[] = [
     'infantry',
     'artillery',
@@ -1242,15 +1859,21 @@ export function autoCasualtyPolicy(
     'transport',
   ];
   const removed: Partial<UnitCounts> = {};
-  left = Math.min(left, countUnits({ ...force, aa: 0 }));
-  for (const t of order) {
-    if (left <= 0) break;
-    const take = Math.min(force[t], left);
-    if (take > 0) {
-      removed[t] = take;
-      left -= take;
+  const pool: UnitCounts = { ...force };
+  left = Math.min(left, countUnits({ ...pool, aa: 0 }));
+  const takeCheapest = (n: number): void => {
+    let need = n;
+    for (const t of order) {
+      if (need <= 0) break;
+      const take = Math.min(pool[t], need);
+      if (take > 0) {
+        removed[t] = (removed[t] ?? 0) + take;
+        pool[t] -= take;
+        need -= take;
+      }
     }
-  }
+  };
+  takeCheapest(left);
   return { removed, damaged };
 }
 
@@ -1305,6 +1928,7 @@ function validateCasualtySelection(
   force: UnitCounts,
   pending: number,
   units: Partial<UnitCounts>,
+  airVsSub?: { airHits: number; blocked: boolean },
 ): ActionResult | null {
   if (!validCounts(units)) return fail('bad_count', 'Casualty counts must be non-negative integers.');
   if ((units.aa ?? 0) > 0) return fail('aa_spared', 'AA guns are captured, never taken as casualties.');
@@ -1314,7 +1938,39 @@ function validateCasualtySelection(
   if (selected !== required) {
     return fail('bad_casualties', `You must remove exactly ${required} unit(s) (${pending} hits).`);
   }
+  // 1942 2e p.29: air-scored hits cannot sink submarines unless a destroyer
+  // friendly to the air units is in the battle (caller sets blocked=false then).
+  if (airVsSub?.blocked && (units.submarine ?? 0) > 0) {
+    const maxSub = Math.max(0, required - airVsSub.airHits);
+    if ((units.submarine ?? 0) > maxSub) {
+      return fail(
+        'air_vs_sub',
+        `At most ${maxSub} submarine(s) can be lost here: air-scored hits cannot sink subs without a friendly destroyer in the battle (1942 2e p.29).`,
+      );
+    }
+  }
   return null;
+}
+
+/**
+ * 1942 2e p.29 air-vs-submarine casualty constraint for a pending pool:
+ * returns the air-scored hits that are blocked from sinking subs, or 0 when
+ * the rule doesn't apply (not a sea battle, no subs, no air, or the scorer
+ * has a destroyer in the battle per p.28).
+ */
+function airVsSubBlocked(
+  state: GameState,
+  b: Battle,
+  scorer: 'attacker' | 'defender',
+  airHits: number,
+): number {
+  if (!isSea(b.territoryId) || b.kind !== 'combat' || airHits <= 0) return 0;
+  const scorerForce = scorer === 'attacker' ? b.attack : state.territories[b.territoryId].units;
+  const targetForce = scorer === 'attacker' ? state.territories[b.territoryId].units : b.attack;
+  if (targetForce.submarine === 0) return 0;
+  if (countAir(scorerForce) === 0) return 0;
+  if (scorerForce.destroyer > 0) return 0; // p.28: destroyer cancels the rule
+  return airHits;
 }
 
 export function chooseCasualties(
@@ -1333,12 +1989,17 @@ export function chooseCasualties(
   if (side === 'attacker') {
     if (b.attackerId !== playerId) return fail('not_attacker', 'Only the attacker chooses attacker casualties.');
     if (b.pendingAttacker === 0 || b.attackerResolved) return fail('none_pending', 'No attacker casualties pending.');
-    const bad = validateCasualtySelection(b.attack, b.pendingAttacker, units);
+    const airBlocked = airVsSubBlocked(state, b, 'defender', b.pendAtkAir);
+    const bad = validateCasualtySelection(b.attack, b.pendingAttacker, units, {
+      airHits: b.pendAtkAir,
+      blocked: airBlocked > 0,
+    });
     if (bad) return bad;
     const toRemove = applyBBCasualties(b, 'attacker', b.attack, units);
     b.attack = subUnits(b.attack, toRemove);
     sinkTransportCargo(state, b, 'attacker', toRemove.transport ?? 0);
     b.pendingAttacker = 0;
+    b.pendAtkAir = 0;
     b.attackerResolved = true;
     log(
       state,
@@ -1349,12 +2010,17 @@ export function chooseCasualties(
     if (b.defenderId === null) return fail('auto', 'Neutral casualties are applied automatically.');
     if (b.pendingDefender === 0 || b.defenderResolved) return fail('none_pending', 'No defender casualties pending.');
     const def = state.territories[territoryId].units;
-    const bad = validateCasualtySelection(def, b.pendingDefender, units);
+    const airBlocked = airVsSubBlocked(state, b, 'attacker', b.pendDefAir);
+    const bad = validateCasualtySelection(def, b.pendingDefender, units, {
+      airHits: b.pendDefAir,
+      blocked: airBlocked > 0,
+    });
     if (bad) return bad;
     const toRemove = applyBBCasualties(b, 'defender', def, units);
     state.territories[territoryId].units = subUnits(def, toRemove);
     sinkTransportCargo(state, b, 'defender', toRemove.transport ?? 0);
     b.pendingDefender = 0;
+    b.pendDefAir = 0;
     b.defenderResolved = true;
     log(
       state,
@@ -1388,12 +2054,14 @@ export function autoCasualties(
       b.attack,
       b.pendingAttacker,
       undamagedBB(b.attack, b.damagedAttackBB),
+      airVsSubBlocked(state, b, 'defender', b.pendAtkAir),
     );
     b.damagedAttackBB += damaged;
     b.damagedAttackBB = Math.max(0, b.damagedAttackBB - Math.min(removed.battleship ?? 0, b.damagedAttackBB));
     b.attack = subUnits(b.attack, removed);
     sinkTransportCargo(state, b, 'attacker', removed.transport ?? 0);
     b.pendingAttacker = 0;
+    b.pendAtkAir = 0;
     b.attackerResolved = true;
     log(
       state,
@@ -1407,12 +2075,14 @@ export function autoCasualties(
       def,
       b.pendingDefender,
       undamagedBB(def, b.damagedDefBB),
+      airVsSubBlocked(state, b, 'attacker', b.pendDefAir),
     );
     b.damagedDefBB += damaged;
     b.damagedDefBB = Math.max(0, b.damagedDefBB - Math.min(removed.battleship ?? 0, b.damagedDefBB));
     state.territories[territoryId].units = subUnits(def, removed);
     sinkTransportCargo(state, b, 'defender', removed.transport ?? 0);
     b.pendingDefender = 0;
+    b.pendDefAir = 0;
     b.defenderResolved = true;
     log(
       state,
@@ -1442,13 +2112,80 @@ function applyBombardDoom(state: GameState, b: Battle): void {
   b.bombardDoomed = 0;
 }
 
+/**
+ * Settle amphibious assaults that launched from a contested sea zone (1942 2e
+ * p.15: sea battle first, then the offload). Called when a sea battle ends.
+ * If the attacker cleared the zone, the earmarked cargo comes ashore into the
+ * land battle. Otherwise the assault fizzles: cargo stays aboard retreating
+ * transports, or died with them (sinkTransportCargo already handled that).
+ * Land battles left with no attackers at all are removed.
+ */
+function settleAmphibiousAfterSeaBattle(state: GameState, zid: string, attackerWon: boolean): void {
+  for (let i = state.battles.length - 1; i >= 0; i--) {
+    const b = state.battles[i];
+    if (b.over || !b.pendingDisembark || b.amphibiousFrom !== zid) continue;
+    const pd = b.pendingDisembark;
+    b.pendingDisembark = undefined;
+    if (attackerWon) {
+      const have = cargoOf(state.territories, zid, b.attackerId);
+      const take: Partial<UnitCounts> = {};
+      for (const t of CARGO_TYPES) take[t] = Math.min(pd.units[t], have[t]);
+      if (countUnits({ ...emptyUnits(), ...take }) > 0) {
+        const err = disembarkUnits(state.territories, zid, b.attackerId, take);
+        if (!err) {
+          b.attack = addUnits(b.attack, take);
+          b.seaborne = addUnits(b.seaborne ?? emptyUnits(), take);
+          log(state, 'amphibious', `${state.players[b.attackerId].name} offloads into ${b.territoryId} after clearing ${zid}.`);
+        }
+      }
+    }
+    if (countUnits(b.attack) === 0) {
+      state.battles.splice(i, 1);
+      log(state, 'amphibious', `Amphibious assault on ${b.territoryId} fizzles after the sea battle in ${zid}.`);
+    }
+  }
+}
+
 function evaluateBattleEnd(state: GameState, b: Battle): void {
   const terr = state.territories[b.territoryId];
 
   // Sea battle (1942 2e pp.27-30): no capture mechanics — the attacker seizes
   // the zone by clearing it. Surviving damaged battleships on either side are
-  // repaired when the combat ends (p.27).
+  // repaired when the combat ends (p.27). Submerged subs return: to the zone
+  // (attacker's, if it seizes it) or as coexisting foreigners.
   if (isSea(b.territoryId)) {
+    const returnSubmerged = (attackerWon: boolean): void => {
+      // The victor's subs resurface into the zone; the loser's lurk submerged
+      // as coexisting foreigners (1942 2e p.29).
+      if (attackerWon) {
+        if (b.submergedA > 0) {
+          terr.units = addUnits(terr.units, { submarine: b.submergedA });
+          b.submergedA = 0;
+        }
+        if (b.submergedD > 0 && b.defenderId !== null) {
+          terr.coexist = [
+            ...(terr.coexist ?? []),
+            { owner: b.defenderId, units: { ...emptyUnits(), submarine: b.submergedD } },
+          ];
+          b.submergedD = 0;
+        } else {
+          b.submergedD = 0;
+        }
+      } else {
+        if (b.submergedD > 0) {
+          terr.units = addUnits(terr.units, { submarine: b.submergedD });
+          b.submergedD = 0;
+        }
+        if (b.submergedA > 0) {
+          terr.coexist = [
+            ...(terr.coexist ?? []),
+            { owner: b.attackerId, units: { ...emptyUnits(), submarine: b.submergedA } },
+          ];
+          b.submergedA = 0;
+        }
+      }
+      normalizeSeaZone(state.territories, b.territoryId);
+    };
     const defForce = countUnits(terr.units);
     const atkSea = countSea(b.attack);
     const atkAir = countAir(b.attack);
@@ -1461,33 +2198,46 @@ function evaluateBattleEnd(state: GameState, b: Battle): void {
         terr.owner = b.attackerId;
         b.damagedAttackBB = 0;
         b.damagedDefBB = 0;
+        returnSubmerged(true);
+        settleAmphibiousAfterSeaBattle(state, b.territoryId, true);
         b.over = true;
         b.result = 'sea_taken';
         log(state, 'battle_end', `${state.players[b.attackerId].name} seizes ${b.territoryId}.`);
       } else {
+        returnSubmerged(false);
+        settleAmphibiousAfterSeaBattle(state, b.territoryId, false);
         b.over = true;
         b.result = 'air_only';
         log(state, 'battle_end', `Only aircraft survive over ${b.territoryId}; they must land.`);
       }
       b.pendingAttacker = 0;
       b.pendingDefender = 0;
+      b.pendAtkAir = 0;
+      b.pendDefAir = 0;
       return;
     }
     if (atkSea + atkAir === 0) {
       b.damagedAttackBB = 0;
       b.damagedDefBB = 0;
+      returnSubmerged(false);
+      settleAmphibiousAfterSeaBattle(state, b.territoryId, false);
       b.over = true;
       b.result = 'defender_holds';
       b.pendingAttacker = 0;
       b.pendingDefender = 0;
+      b.pendAtkAir = 0;
+      b.pendDefAir = 0;
       log(state, 'battle_end', `${b.territoryId} holds against the attack.`);
       return;
     }
     // Both sides live on: reset for the next round.
     b.pendingAttacker = 0;
     b.pendingDefender = 0;
+    b.pendAtkAir = 0;
+    b.pendDefAir = 0;
     b.attackerResolved = true;
     b.defenderResolved = true;
+    b.subPhase = 'attacker';
     return;
   }
 
@@ -1556,6 +2306,12 @@ export function retreat(
   if (b.pendingAttacker > 0 || b.pendingDefender > 0) {
     return fail('casualties_pending', 'Choose casualties before retreating.');
   }
+  if (b.pendingDisembark) {
+    return fail(
+      'sea_battle_pending',
+      `Resolve the sea battle in ${b.pendingDisembark.from} before retreating from ${territoryId}.`,
+    );
+  }
   if (!b.origins.includes(toId)) return fail('bad_retreat', 'Units retreat to a territory they attacked from.');
   // Warships may withdraw into the open waters they sailed from: a sea zone
   // emptied by the attack itself reverts to owner null (1942 2e p.27).
@@ -1566,19 +2322,35 @@ export function retreat(
   }
 
   // Sea battle: warships withdraw to a friendly sea origin; cargo rides along.
-  // Aircraft stay aloft and must land in the non-combat phase.
+  // Aircraft stay aloft and must land in the non-combat phase. Submerged
+  // attacker subs withdraw with the fleet; the defender's resurface (p.29).
   if (isSea(territoryId)) {
     if (!isSea(toId)) return fail('bad_retreat', 'Warships retreat to a sea zone they attacked from.');
     const sea: Partial<UnitCounts> = {};
     for (const t of NAVAL_UNIT_TYPES) sea[t] = b.attack[t];
     state.territories[toId].units = addUnits(state.territories[toId].units, sea);
+    if (b.submergedA > 0) {
+      state.territories[toId].units = addUnits(state.territories[toId].units, { submarine: b.submergedA });
+      b.submergedA = 0;
+    }
+    if (b.submergedD > 0) {
+      state.territories[territoryId].units = addUnits(state.territories[territoryId].units, {
+        submarine: b.submergedD,
+      });
+      b.submergedD = 0;
+    }
+    normalizeSeaZone(state.territories, toId);
+    normalizeSeaZone(state.territories, territoryId);
     carryCargoAlong(state.territories, territoryId, toId, playerId, sea.transport ?? 0);
-    state.used[toId] = addUnits(state.used[toId] ?? emptyUnits(), sea);
+    state.used[usedKey(toId, playerId)] = addUnits(state.used[usedKey(toId, playerId)] ?? emptyUnits(), sea);
     b.attack = subUnits(b.attack, sea);
     b.over = true;
     b.result = 'retreated';
     b.pendingAttacker = 0;
     b.pendingDefender = 0;
+    b.pendAtkAir = 0;
+    b.pendDefAir = 0;
+    settleAmphibiousAfterSeaBattle(state, territoryId, false);
     log(state, 'retreat', `${state.players[playerId].name} withdraws from ${territoryId} to ${toId}. Aircraft must still land.`);
     return { ok: true };
   }
@@ -1660,10 +2432,13 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
   const avail = (terr: string): UnitCounts => {
     const t = work[terr];
     if (!t) return emptyUnits();
-    const used = usedWork[terr] ?? emptyUnits();
+    // Sea zones: the player's own force (primary or coexisting), minus what
+    // that player already used. Land: as before.
+    const mine = isSea(terr) ? playerSeaForce(work, terr, playerId).units : t.units;
+    const used = usedWork[usedKey(terr, playerId)] ?? emptyUnits();
     const base = emptyUnits();
     for (const u of ALL_UNIT_TYPES) {
-      base[u] = u === 'fighter' || u === 'bomber' ? t.units[u] : Math.max(0, t.units[u] - used[u]);
+      base[u] = u === 'fighter' || u === 'bomber' ? mine[u] : Math.max(0, mine[u] - used[u]);
     }
     return addUnits(base, airAloft[terr] ?? emptyUnits());
   };
@@ -1675,7 +2450,8 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
       if (t === 'fighter' || t === 'bomber') continue;
       if ((u[t] ?? 0) > 0) add[t] = u[t];
     }
-    usedWork[terr] = addUnits(usedWork[terr] ?? emptyUnits(), add);
+    const k = usedKey(terr, playerId);
+    usedWork[k] = addUnits(usedWork[k] ?? emptyUnits(), add);
   };
 
   /**
@@ -1692,10 +2468,6 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
     const landN = countLand(full);
     const airN = countAir(full);
     const aaN = units.aa ?? 0;
-    const zoneFriendly = (z: string): boolean => {
-      const o = work[z].owner;
-      return o === null || o === playerId;
-    };
 
     // --- sea -> sea: reposition the fleet ---
     if (fromSea && toSea) {
@@ -1703,20 +2475,45 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
       if (landN > 0 || airN > 0 || aaN > 0) {
         return fail('no_air_land_at_sea', 'Only naval units reposition at sea.');
       }
-      if (!zoneFriendly(move.to)) return fail('not_owner', 'Non-combat moves stay in friendly waters.');
-      const reach = seaReachable(move.from, UNITS.transport.move, (z) => zoneFriendly(z));
-      if (!reach.has(move.to)) {
-        return fail('range', `Ships in ${move.from} cannot reach ${move.to} (2 friendly sea zones).`);
+      // No ending in hostile waters. Subs may transit hostile zones (but not
+      // hostile destroyers); other ships may not (1942 2e p.29).
+      if (seaZoneHostileTo(work, move.to, playerId)) {
+        return fail('not_owner', 'Non-combat moves stay out of hostile waters.');
+      }
+      const pf = playerSeaForce(work, move.from, playerId);
+      if (!hasEnough(pf.units, units)) {
+        return fail('too_few_units', `Not enough of your units in ${move.from}.`);
+      }
+      const nSubs = units.submarine ?? 0;
+      const otherSeaN = seaN - nSubs;
+      if (nSubs > 0) {
+        const reach = seaReachable(move.from, UNITS.submarine.move, (z) =>
+          z === move.to ? true : !hasHostileDestroyer(work, z, playerId),
+        );
+        if (!reach.has(move.to)) {
+          const intercept = findDestroyerIntercept(work, move.from, playerId);
+          if (intercept) {
+            return fail(
+              'destroyer_intercept',
+              `An enemy destroyer in ${intercept} blocks the submarine's non-combat movement (1942 2e p.29).`,
+            );
+          }
+          return fail('range', `Submarines in ${move.from} cannot reach ${move.to}.`);
+        }
+      }
+      if (otherSeaN > 0) {
+        const reach = seaReachable(move.from, UNITS.transport.move, (z) => !seaZoneHostileTo(work, z, playerId));
+        if (!reach.has(move.to)) {
+          return fail('range', `Ships in ${move.from} cannot reach ${move.to} (2 non-hostile sea zones).`);
+        }
       }
       if (!hasEnough(avail(move.from), units)) {
         return fail('too_few_units', `Not enough available units in ${move.from}.`);
       }
-      work[move.from].units = subUnits(work[move.from].units, units);
-      work[move.to].units = addUnits(work[move.to].units, units);
-      if (seaN > 0 && work[move.to].owner === null) work[move.to].owner = playerId;
+      removeSeaUnits(work, move.from, playerId, units);
+      arriveSeaZone(work, move.to, playerId, units);
       const nTrn = units.transport ?? 0;
       if (nTrn > 0) carryCargoAlong(work, move.from, move.to, playerId, nTrn);
-      if (countSea(work[move.from].units) === 0) work[move.from].owner = null;
       markNonCombatUsed(move.from, units);
       return null;
     }
@@ -1725,7 +2522,9 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
     if (!fromSea && toSea) {
       if (!move.embark) return fail('embark_flag', 'Loading transports requires embark: true.');
       if (seaN > 0 || airN > 0) return fail('bad_cargo', 'Only land units embark onto transports.');
-      if (!zoneFriendly(move.to)) return fail('not_owner', 'Non-combat moves stay in friendly waters.');
+      if (seaZoneHostileTo(work, move.to, playerId)) {
+        return fail('not_owner', 'Non-combat moves stay out of hostile waters.');
+      }
       if (!areAdjacent(move.from, move.to)) {
         return fail('range', 'Transports load from an adjacent coastal territory.');
       }
@@ -1733,7 +2532,8 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
       if (!hasEnough(avail(move.from), units)) {
         return fail('too_few_units', `Not enough available units in ${move.from}.`);
       }
-      const err = embarkUnits(work, move.to, playerId, units);
+      const nT = playerSeaForce(work, move.to, playerId).units.transport;
+      const err = embarkUnits(work, move.to, playerId, units, nT);
       if (err) return err;
       work[move.from].units = subUnits(work[move.from].units, units);
       markNonCombatUsed(move.from, units);
@@ -1753,7 +2553,9 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
     if (work[move.to].owner !== playerId) {
       return fail('not_owner', 'Non-combat offloads go to territory you hold.');
     }
-    if (work[move.from].owner !== playerId) return fail('not_owner', `You do not hold ${move.from}.`);
+    if (countUnits(playerSeaForce(work, move.from, playerId).units) === 0) {
+      return fail('not_owner', `You have no forces in ${move.from}.`);
+    }
     const err = disembarkUnits(work, move.from, playerId, units);
     if (err) return err;
     work[move.to].units = addUnits(work[move.to].units, units);
@@ -1911,12 +2713,9 @@ export function mobilize(state: GameState, playerId: number, placements: Mobiliz
           return fail('bad_unit', `Only naval units mobilize into sea zones (not ${t}).`);
         }
       }
-      // Phase 1: no mobilizing into hostile waters. 1942 2e p.21 permits it,
-      // but multi-owner sea zones arrive with fuller naval rules in phase 2.
-      const zOwner = state.territories[p.seaZone].owner;
-      if (zOwner !== null && zOwner !== playerId) {
-        return fail('hostile_waters', 'Phase 1: mobilize into friendly or empty waters only.');
-      }
+      // 1942 2e p.21: new sea units may enter play even in a hostile sea zone;
+      // no combat occurs (the Conduct Combat phase is over). Existing
+      // occupants become coexisting foreigners.
     }
   }
   for (const [terr, n] of Object.entries(need)) {
@@ -1937,9 +2736,23 @@ export function mobilize(state: GameState, playerId: number, placements: Mobiliz
 
   for (const p of placements) {
     const target = p.seaZone ?? p.territory;
+    if (p.seaZone) {
+      const z = state.territories[p.seaZone];
+      const zOwner = z.owner;
+      if (zOwner !== null && zOwner !== playerId && countUnits(z.units) > 0) {
+        // 1942 2e p.21: mobilizing into hostile waters. The current occupants
+        // become coexisting foreigners; no combat occurs.
+        z.coexist = [...(z.coexist ?? []), { owner: zOwner, units: { ...z.units } }];
+        z.units = emptyUnits();
+        z.owner = playerId;
+      }
+    }
     state.territories[target].units = addUnits(state.territories[target].units, p.units);
-    if (p.seaZone && countSea(state.territories[p.seaZone].units) > 0) {
-      state.territories[p.seaZone].owner = playerId;
+    if (p.seaZone) {
+      normalizeSeaZone(state.territories, p.seaZone);
+      if (countSea(state.territories[p.seaZone].units) > 0 && state.territories[p.seaZone].owner === null) {
+        state.territories[p.seaZone].owner = playerId;
+      }
     }
   }
   for (const terr of newFactories) {
@@ -2142,7 +2955,7 @@ export function serialize(state: GameState): string {
 
 export function deserialize(json: string): GameState {
   const data = JSON.parse(json) as GameState;
-  if (!data || data.version !== 2) throw new Error('Unsupported save version.');
+  if (!data || data.version !== 3) throw new Error('Unsupported save version.');
   for (const t of MAP.territories) {
     const s = data.territories?.[t.id];
     if (!s || s.owner === undefined || !s.units) {

@@ -21,6 +21,8 @@ import {
   retreat,
   sendMessage,
   serialize,
+  submergeSubs,
+  submergeTurn,
 } from '../engine/engine';
 import type { CombatMove, GameState, NonCombatMove, TerritoryState, UnitCounts } from '../engine/types';
 
@@ -767,6 +769,19 @@ function seaLabels(
     ct.textContent = `(${cargo})`;
     g.appendChild(ct);
   }
+  // Coexisting foreign forces (ignored subs, mobilized-into-hostile ships).
+  const co = st.coexist ?? [];
+  if (co.length > 0) {
+    const cot = svgEl('text', {
+      x: String(lx),
+      y: String(ly + 46),
+      'text-anchor': 'middle',
+      'font-size': '9',
+      class: 'seafont dim',
+    });
+    cot.textContent = co.map((f) => `${s.players[f.owner].name}: ${describeUnits(f.units)}`).join(' | ');
+    g.appendChild(cot);
+  }
   return g;
 }
 
@@ -1094,6 +1109,7 @@ function stageMoveFromInspector(
   if (S.phase === 'combatMove') {
     const viaEl = document.getElementById('mv-via') as HTMLInputElement | null;
     const sbrEl = document.getElementById('mv-sbr') as HTMLInputElement | null;
+    const atkEl = document.getElementById(`${unitPrefix}-attack`) as HTMLInputElement | null;
     const via = (viaEl?.value ?? '').split(',').map((x) => x.trim()).filter(Boolean);
     draftMoves.push({
       from,
@@ -1101,6 +1117,7 @@ function stageMoveFromInspector(
       units,
       ...(via.length > 0 ? { via } : {}),
       ...(sbrEl?.checked ? { sbr: true } : {}),
+      ...(atkEl && !atkEl.checked ? { attack: false } : {}),
       ...(opts?.embark ? { embark: true } : {}),
       ...(opts?.disembark ? { disembark: true } : {}),
     });
@@ -1389,6 +1406,17 @@ function seaMoveDialogBody(
     h.innerHTML = '<strong>Fleet — send to:</strong>';
     el.appendChild(h);
     el.appendChild(grid);
+    // Ignore-or-attack choice (1942 2e p.29): when ending movement in a zone
+    // with only enemy subs/transports, choose to attack or coexist.
+    if (isCombat) {
+      const atkLab = document.createElement('label');
+      const atkBox = document.createElement('input');
+      atkBox.type = 'checkbox';
+      atkBox.id = `${prefix}-attack`;
+      atkBox.checked = true;
+      atkLab.append(' Attack subs/transports (uncheck to ignore & coexist) ', atkBox);
+      el.appendChild(atkLab);
+    }
     const dests = neighborsOf(tid).filter(
       (n) => MAP.territories.find((x) => x.id === n)?.domain === 'sea',
     );
@@ -1874,6 +1902,36 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
   forces.append(atkPanel, vs, defPanel);
   el.appendChild(forces);
 
+  // Submerge decision (1942 2e p.29): attacker first, before any dice.
+  const due = submergeTurn(s, tid);
+  if (due) {
+    const subP = document.createElement('div');
+    subP.className = 'submerge-prompt';
+    const sideName = due === 'attacker' ? s.players[b.attackerId].name : defName;
+    const nSubs = due === 'attacker' ? b.attack.submarine : s.territories[tid].units.submarine;
+    subP.innerHTML = `<strong>🚇 ${sideName} (${due})</strong>: submerge submarines instead of fighting? ` +
+      `(${nSubs} sub(s) eligible; decide before any dice are rolled, attacker first.)`;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.max = String(nSubs);
+    input.value = '0';
+    input.className = 'submerge-count';
+    const btn = document.createElement('button');
+    btn.textContent = `Decide (${due})`;
+    btn.className = 'btn-primary';
+    btn.addEventListener('click', () => {
+      const count = Math.max(0, Math.min(nSubs, parseInt(input.value || '0', 10)));
+      const decider = due === 'attacker' ? b.attackerId : b.defenderId!;
+      const r = submergeSubs(S!, decider, tid, due, count);
+      if (!r.ok) showError(`${r.code}: ${r.error}`);
+      else showError('');
+      render();
+    });
+    subP.append(input, btn);
+    el.appendChild(subP);
+  }
+
   // Amphibious bombardment status (1942 2e p.15).
   if (b.amphibiousFrom && !b.bombardDone && b.bombard) {
     const sh = b.bombard;
@@ -1936,6 +1994,13 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
     if (c.aaRolls.length > 0) show('AA flak', c.aaRolls, c.aaHits);
     if (c.bombardRolls && c.bombardRolls.length > 0) {
       show('🚢 Bombardment', c.bombardRolls, c.bombardHits ?? 0);
+    }
+    // Submarine surprise strike (1942 2e p.29): fired before the general exchange.
+    if (c.surpriseARolls && c.surpriseARolls.length > 0) {
+      show('🚇 Surprise (attacker subs)', c.surpriseARolls, c.surpriseAHits ?? 0);
+    }
+    if (c.surpriseDRolls && c.surpriseDRolls.length > 0) {
+      show('🚇 Surprise (defender subs)', c.surpriseDRolls, c.surpriseDHits ?? 0);
     }
     if (c.sbrDamage !== undefined) {
       const p = document.createElement('div');

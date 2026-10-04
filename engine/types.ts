@@ -52,6 +52,11 @@ export interface TerritoryState {
   factoryFresh: boolean;
   /** Transport cargo manifest. Meaningful only for sea zones. */
   cargo: TransportLoad[];
+  /** Foreign forces coexisting in a sea zone without a battle (1942 2e p.29:
+   *  ignored submarines/transports, or forces mobilized into hostile waters
+   *  per p.21). `units`/`owner` always hold the primary occupant; each entry
+   *  here is one other owner's units. Never used on land. */
+  coexist?: Array<{ owner: number; units: UnitCounts }>;
 }
 
 export interface PlayerState {
@@ -115,6 +120,21 @@ export interface Battle {
    *  repaired when the combat ends. Tracked on the battle, not the map. */
   damagedAttackBB: number;
   damagedDefBB: number;
+  // --- Submarines (1942 2e pp.28-29) ---
+  /** Submerge decision state. Each sea-battle round, subs decide whether to
+   *  submerge before any dice are rolled, attacker first (p.29). */
+  subPhase: 'attacker' | 'defender' | 'done';
+  /** Subs that submerged: out of the fight for the rest of this battle (p.29). */
+  submergedA: number;
+  submergedD: number;
+  /** Amphibious cargo awaiting the launch zone's sea-battle outcome. When an
+   *  assault launches from a contested sea zone, the offload happens only if
+   *  the attacker clears the zone (1942 2e p.15). */
+  pendingDisembark?: { from: string; units: UnitCounts };
+  /** Air-scored portion of the pending hits. 1942 2e p.29: air hits cannot be
+   *  assigned to submarines unless a friendly destroyer is in the battle. */
+  pendAtkAir: number;
+  pendDefAir: number;
 }
 
 export interface CombatMove {
@@ -131,6 +151,10 @@ export interface CombatMove {
   /** Unload transport cargo into an adjacent land territory (from=sea,
    *  to=land). Hostile target in combatMove = amphibious assault. */
   disembark?: boolean;
+  /** Sea zones only: attack ignored enemy submarines/transports instead of
+   *  coexisting with them (1942 2e p.29). Also enables a from==to move that
+   *  opens a battle with forces already sharing the zone. */
+  attack?: boolean;
 }
 
 export interface NonCombatMove {
@@ -172,7 +196,7 @@ export interface ChatMessage {
 }
 
 export interface GameState {
-  version: 2;
+  version: 3;
   seed: number;
   rngState: number;
   numPlayers: number;
@@ -219,6 +243,12 @@ export interface CombatRoundResult {
   /** Bombardment dice from an amphibious assault's pre-invasion shelling. */
   bombardRolls?: number[];
   bombardHits?: number;
+  /** Submarine surprise-strike dice (1942 2e p.29): fired before the general
+   *  exchange, casualties removed with no return fire. */
+  surpriseARolls?: number[];
+  surpriseAHits?: number;
+  surpriseDRolls?: number[];
+  surpriseDHits?: number;
 }
 
 /** Result returned by every action. Invalid actions never mutate state. */

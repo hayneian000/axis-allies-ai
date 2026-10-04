@@ -63,7 +63,7 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 
 ---
 
-## Appendix: Naval Rules (Navy Phase 1)
+## Appendix: Naval Rules (Navy Phase 1+2)
 
 All citations are to the Axis & Allies 1942 Second Edition rulebook (2012).
 
@@ -75,16 +75,24 @@ All citations are to the Axis & Allies 1942 Second Edition rulebook (2012).
 | Unit | Cost | A/D/M | Notes |
 |---|---|---|---|
 | Transport | 7 | 0/0/2 | No combat value; chosen as casualty last; cargo destroyed with it (p.30) |
-| Submarine | 6 | 2/1/2 | Phase 2: data only in phase 1 |
-| Destroyer | 8 | 2/2/2 | |
+| Submarine | 6 | 2/1/2 | Surprise strike, submersible, see Submarines below (pp.28-29) |
+| Destroyer | 8 | 2/2/2 | Cancels all sub abilities (p.28) |
 | Cruiser | 12 | 3/3/2 | Offshore bombardment (p.28) |
-| Carrier | 14 | 1/2/2 | Phase 2/3: data only in phase 1 |
+| Carrier | 14 | 1/2/2 | Phase 3: data only |
 | Battleship | 20 | 4/4/2 | Two hits to destroy; offshore bombardment (p.27) |
 
 ### Movement (p.27)
 - All sea units move 2 sea zones.
 - A sea zone is **hostile** if it contains enemy surface warships (battleship, carrier, cruiser, destroyer). Lone submarines and transports neither make a zone hostile nor block movement.
 - Ships may not transit hostile zones; aircraft fly over anything within range.
+
+### Submarines (pp.28-29)
+- **Surprise strike**: In a sea battle, submarines on both sides fire before any other units. Order: attacking subs roll → casualties removed immediately (no return fire) → defending subs roll → casualties removed → general combat. Cancelled entirely if an enemy destroyer is present.
+- **Submersible**: Instead of firing, a sub may submerge before any dice are rolled in a round. Attacker decides first. A submerged sub is removed from the battle (cannot fire, cannot take hits). Cannot submerge if an enemy destroyer is present.
+- **Movement**: Subs treat hostile sea zones as friendly for transit, except they must stop upon entering a zone with an enemy destroyer. In the combat-move phase, ending movement in a zone with only enemy subs/transports gives the choice to ignore (coexist) or attack.
+- **Cannot hit air**: Submarine hits are assigned to sea units only.
+- **Cannot be hit by air**: Air hits cannot be assigned to subs unless the attacker has a destroyer in the battle.
+- **Destroyer** (p.28): Cancels all four sub abilities above for enemy subs.
 
 ### Transports (pp.13, 30)
 - Capacity: any **one** land unit plus one additional infantry (2 infantry, or infantry + tank/artillery/AA).
@@ -94,20 +102,19 @@ All citations are to the Axis & Allies 1942 Second Edition rulebook (2012).
 - AA guns embark only in the noncombat phase (project rule, consistent with p.30's "only phase in which AA can move").
 
 ### Amphibious assaults (p.15)
-Sequence: 1. sea combat (only if defending surface warships are present; lone subs/transports may be ignored), 2. battleship/cruiser bombardment — **only if no sea battle occurred** in the launch zone, at most one ship per offloaded land unit (battleships hit on 4-, cruisers on 3-; victims defend the first land round, then die), 3. land combat. Seaborne units cannot retreat.
-- **Phase-1 simplification**: assaults launch from friendly sea zones only (the full sea-battle-then-assault sequencing arrives in phase 2).
+Sequence: 1. sea combat (if defending surface warships are present; lone subs/transports may be ignored or attacked), 2. battleship/cruiser bombardment — **only if no sea battle occurred** in the launch zone, at most one ship per offloaded land unit (battleships hit on 4-, cruisers on 3-; victims defend the first land round, then die), 3. land combat. Seaborne units cannot retreat.
+- **Contested launch**: If a sea battle is fought in the launch zone, the offload is deferred until the sea battle resolves. Bombardment is forfeited.
 
 ### Battleship damage (p.27)
 - First hit in a combat = damaged; second hit in the **same** combat = destroyed. A battleship that survives the combat is repaired immediately. Damage is tracked on the Battle object, never on persistent map state.
 
 ### Mobilization (p.21)
 - Sea units mobilize into a sea zone adjacent to a territory with an eligible factory.
-- **Phase-1 simplification**: into friendly or empty waters only (p.21 allows hostile waters; deferred).
+- **Hostile waters**: New sea units may be placed even in a hostile sea zone; no combat occurs. Existing occupants become coexisting foreigners.
 
-### Phase-2 follow-ons (not in phase 1)
-- Submarine abilities (surprise strikes, submerging, convoy disruption)
+### Phase-3 follow-ons (not in phase 1+2)
 - Carrier fighter operations (launch/recover, carrier as landing spot)
-- Full p.27 hostile-zone transit nuances for subs
+- Convoy disruption (economic warfare)
 - Sea-battle-then-amphibious-assault sequencing in a single turn
 - Mobilization into hostile waters
 

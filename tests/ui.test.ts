@@ -61,11 +61,13 @@ describe('browser UI playthrough', () => {
   });
 
   it('renders Tier 1 map chrome: groups, badges, icons, zoom controls', () => {
-    const groups = document.querySelectorAll('#map g[data-terr]');
-    expect(groups).toHaveLength(26);
-    for (const g of groups) {
+    // 26 land tiles (+ 26 label groups in a separate layer above water).
+    const tiles = document.querySelectorAll('#map g.tgroup[data-terr]');
+    expect(tiles).toHaveLength(26);
+    for (const g of tiles) {
       expect(g.querySelector('title')?.textContent).toMatch(/IPC \d/);
     }
+    expect(document.querySelectorAll('#map g.tlabels[data-terr]')).toHaveLength(26);
     expect(document.querySelectorAll('#map .ipcbadge')).toHaveLength(26);
     expect(document.querySelectorAll('#map .uicon').length).toBeGreaterThan(0);
     // 2p capitals (california, new_york) start with star badges + factories.

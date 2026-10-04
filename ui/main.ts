@@ -24,6 +24,8 @@ import {
   serialize,
 } from '../engine/engine';
 import type { CombatMove, GameState, NonCombatMove, UnitCounts } from '../engine/types';
+import { bridge } from './driverBridge';
+import { initAiLobby, getAiMode, startAiGameFromLobby } from './aiLobby';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const UNIT_ORDER: UnitType[] = ['infantry', 'artillery', 'tank', 'fighter', 'bomber', 'aa'];
@@ -85,6 +87,17 @@ function showError(msg: string): void {
 
 // ------------------------------------------------------------ boot ---
 
+function resetTransientUi(): void {
+  draftMoves = [];
+  draftNonCombat = [];
+  draftMob = [];
+  selectedBattle = null;
+  lastCombat = null;
+  sel = null;
+  modal = null;
+  showError('');
+}
+
 function boot(): void {
   // Dog-tag player count selection
   let numPlayers = 4;
@@ -98,14 +111,16 @@ function boot(): void {
   }
 
   $('startBtn').addEventListener('click', () => {
+    // Phase 2: AI modes are owned by the lobby (ui/aiLobby.ts).
+    if (getAiMode() !== 'hotseat') {
+      startAiGameFromLobby();
+      return;
+    }
     const seed = parseInt(($('seed') as HTMLInputElement).value, 10) || 1;
     S = createGame({ numPlayers, seed });
-    draftMoves = [];
-    draftNonCombat = [];
-    draftMob = [];
-    selectedBattle = null;
-    lastCombat = null;
-    sel = null;
+    resetTransientUi();
+    // A previous AI game may have revealed the AI tab; hot-seat hides it.
+    $('tab-ai').hidden = true;
     $('setup').hidden = true;
     // Fog-of-war cinematic, then reveal the game UI.
     playIntro(S, () => {
@@ -114,12 +129,21 @@ function boot(): void {
     });
   });
   $('newBtn').addEventListener('click', () => {
+    // Abort a Phase 2 driver run before tearing down the screens.
+    if (bridge.driverActive) bridge.stopDriver?.();
     S = null;
     $('game').hidden = true;
     $('setup').hidden = false;
   });
   $('endPhaseBtn').addEventListener('click', () => {
     if (!S) return;
+    // While the driver runs AI seats, the button is inert — the driver ends
+    // phases itself. During a human seat's turn it works as usual and hands
+    // control back to the driver.
+    if (bridge.driverActive && !bridge.pendingHuman) {
+      showError('The AI commanders are deliberating — your turn will come.');
+      return;
+    }
     const r = endPhase(S, S.currentPlayer);
     if (!r.ok) showError(`${r.code}: ${r.error}`);
     else {
@@ -134,6 +158,11 @@ function boot(): void {
       }
     }
     render();
+    if (bridge.pendingHuman) {
+      const p = bridge.pendingHuman;
+      bridge.pendingHuman = null;
+      p.resolve();
+    }
   });
   $('saveBtn').addEventListener('click', () => {
     if (!S) return;
@@ -179,13 +208,17 @@ function boot(): void {
   $('tab-log').addEventListener('click', () => {
     $('tab-log').classList.add('active');
     $('tab-chat').classList.remove('active');
+    $('tab-ai').classList.remove('active');
     $('log').hidden = false;
     $('chatwrap').hidden = true;
+    $('aiwrap').hidden = true;
   });
   $('tab-chat').addEventListener('click', () => {
     $('tab-chat').classList.add('active');
     $('tab-log').classList.remove('active');
+    $('tab-ai').classList.remove('active');
     $('log').hidden = true;
+    $('aiwrap').hidden = true;
     $('chatwrap').hidden = false;
   });
   $('modal-close').addEventListener('click', () => {
@@ -265,6 +298,31 @@ function boot(): void {
     view = { x: 0, y: 0, k: 1 };
     applyView();
   });
+
+  // ---- Phase 2 driver integration ----
+  // The AI modules (ui/aiLobby.ts, ui/aiGame.ts) never import this module;
+  // they talk to it through the bridge registered here.
+  bridge.ui = {
+    setGameState: (s) => {
+      S = s;
+      resetTransientUi();
+    },
+    refresh: () => render(),
+    enterGame: (onShown) => {
+      $('setup').hidden = true;
+      if (S) playIntro(S, onShown);
+      else onShown();
+    },
+    showGame: () => {
+      $('game').hidden = false;
+    },
+    showSetup: () => {
+      $('game').hidden = true;
+      $('setup').hidden = false;
+    },
+    showError: (m) => showError(m),
+  };
+  initAiLobby();
 }
 
 function ownerColor(state: GameState, owner: number | null): string {

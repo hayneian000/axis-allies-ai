@@ -41,15 +41,17 @@
             <span class="plaque-title">Hot-Seat</span>
             <span class="plaque-desc">Humans, one screen</span>
           </button>
-          <button type="button" class="mode-plaque locked" disabled
-                  data-tip="Face an AI commander. Coming in Phase 2.">
+          <button type="button" class="mode-plaque" data-mode="vsai"
+                  data-tip="You command one power; AI commanders hold the rest. Bring your own API keys.">
             <span class="plaque-title">VS AI</span>
-            <span class="phase-tag">Phase 2</span>
+            <span class="phase-tag new-tag">New</span>
+            <span class="plaque-desc">You vs AI commanders</span>
           </button>
-          <button type="button" class="mode-plaque locked" disabled
-                  data-tip="AI commanders battle for benchmarking. Coming in Phase 2.">
+          <button type="button" class="mode-plaque" data-mode="aivai"
+                  data-tip="AI commanders battle for benchmarking. Bring your own API keys.">
             <span class="plaque-title">AI vs AI</span>
-            <span class="phase-tag">Phase 2</span>
+            <span class="phase-tag new-tag">New</span>
+            <span class="plaque-desc">Spectate the machines</span>
           </button>
         </div>
 
@@ -84,6 +86,18 @@
             <label class="control-label" for="seed" data-tip="Random seed. Same code = same starting setup.">Operation Code</label>
             <input id="seed" type="number" value="1" min="1" />
           </div>
+        </div>
+
+        <div id="lobby" hidden>
+          <div class="lobby-head">
+            <h2 class="stencil-head">War Council — Seat Assignments</h2>
+            <p class="trust-note">🔑 <strong>Bring your own keys.</strong> Keys are stored only in this browser
+              (on this device if you tick “remember”, otherwise for this session only) and sent
+              directly to your chosen provider's API — nowhere else. Each AI seat is its own
+              model instance; seats never see each other's reasoning. You pay for your own tokens.</p>
+          </div>
+          <div id="seatcards"></div>
+          <div id="lobbyError" class="lobby-error" hidden></div>
         </div>
 
         <button id="startBtn" class="wax-seal-btn">
@@ -127,8 +141,12 @@
             <div id="tabbtns">
               <button id="tab-log" class="tab active">Log</button>
               <button id="tab-chat" class="tab">Chat</button>
+              <button id="tab-ai" class="tab" hidden>AI</button>
             </div>
             <div id="log"></div>
+            <div id="aiwrap" hidden>
+              <div id="ai"></div>
+            </div>
             <div id="chatwrap" hidden>
               <div id="chat"></div>
               <div id="chatrow">

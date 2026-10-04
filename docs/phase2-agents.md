@@ -1,6 +1,7 @@
 # Phase 2 agents — BYOK design (implemented in `agents/`)
 
-> **Status: MVP implemented** on the `phase2-byok-mvp` branch. The engine's
+> **Status: MVP merged to `main`** (PR #12). M2 (browser UI) is in progress
+> on the `phase2-ui` branch. The engine's
 > action API (`purchase`, `combatMove`, `resolveCombatRound`, `autoCasualties`,
 > `nonCombatMove`, `mobilize`, `sendMessage`, `summarizeState`) is the LLM tool
 > set with no translation layer — see `agents/tools.ts` for the JSON-Schema
@@ -106,12 +107,16 @@ can see another's system prompt, reasoning, or history — this is structural
 
 ## Milestones
 
-- **M1** (this branch): headless-validated driver — mock providers play full
-  legal games; architecture + basic tools; no negotiation.
-- **M2**: mixed human+AI with a spectator UI (lobby screen, per-seat
-  provider/model/key inputs, rationale display).
-- **M3**: negotiation on, heterogeneous model matchups (Claude vs ChatGPT vs
-  Meta), Elo + replay export, per-game cost budgets.
+- **M1** (done, merged): headless-validated driver — mock providers play
+  full legal games; architecture + basic tools; no negotiation.
+- **M2** (in progress, `phase2-ui`): mixed human+AI in the browser — lobby
+  screen with per-seat provider/model/BYOK key inputs, single-tab game
+  runner, spectator panel (rationale, tool calls, per-seat usage), human
+  seats via the existing hot-seat UI, seat-level failure recovery, pause /
+  resume. No negotiation.
+- **M3** (out of scope for M2): negotiation on, heterogeneous model
+  matchups (Claude vs ChatGPT vs Meta), Elo + replay export, per-game cost
+  budgets.
 - **M4**: hosted runner (for players without keys / tournament play).
 
 ## Non-goals

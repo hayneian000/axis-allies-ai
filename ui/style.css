@@ -640,8 +640,9 @@ input::placeholder { color: var(--faint); }
   position: fixed;
   inset: 0;
   z-index: 1000;
-  /* Aged parchment base with subtle mottling */
-  background:
+  /* Aged parchment: solid fallback + layered mottling */
+  background-color: #dcc394;
+  background-image:
     radial-gradient(ellipse at 30% 20%, rgba(255, 250, 235, 0.4) 0%, transparent 50%),
     radial-gradient(ellipse at 70% 80%, rgba(120, 90, 50, 0.25) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 50%, rgba(160, 120, 70, 0.15) 0%, transparent 70%),

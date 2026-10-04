@@ -57,7 +57,8 @@ const svgMatch = html.match(/<svg id="map".*?<\/svg>/s);
 if (!svgMatch) throw new Error('No SVG found');
 
 let svg = svgMatch[0];
-svg = svg.replace('<svg id="map"', '<svg xmlns="http://www.w3.org/2000/svg" id="map" width="1000" height="470"');
+// Render at 1.25x scale (1250x588) to simulate the larger map size from CSS
+svg = svg.replace('<svg id="map"', '<svg xmlns="http://www.w3.org/2000/svg" id="map" width="1250" height="588"');
 // Inline CSS variables and classes
 const replacements = {
   'var(--paper, #c9b98a)': '#c9b98a',

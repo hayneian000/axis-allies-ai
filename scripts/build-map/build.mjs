@@ -63,15 +63,20 @@ const projectGeom = (geom) => {
   if (geom.type === 'Polygon') return { type: 'Polygon', coordinates: geom.coordinates.map(projectRing) };
   return { type: 'MultiPolygon', coordinates: geom.coordinates.map((p) => p.map(projectRing)) };
 };
-// Largest polygon of a (multi)polygon by area — territories are contiguous.
-function largestPolygon(geom) {
+// All significant polygons of a (multi)polygon by area, largest first.
+// Territories are NOT always contiguous (e.g. Michigan has two peninsulas).
+// Polygons smaller than 2% of the largest are dropped as noise/islands.
+function allPolygons(geom) {
   const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
-  let best = polys[0], bestA = -1;
-  for (const p of polys) {
-    const a = area({ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: p } });
-    if (a > bestA) { bestA = a; best = p; }
-  }
-  return best; // [exterior, ...holes]
+  const withArea = polys.map((p) => ({
+    poly: p,
+    area: area({ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: p } }),
+  }));
+  withArea.sort((a, b) => b.area - a.area);
+  const largest = withArea[0]?.area ?? 0;
+  return withArea
+    .filter((x) => x.area >= largest * 0.02)
+    .map((x) => x.poly); // each: [exterior, ...holes]
 }
 /** Pole of inaccessibility: grid search for the interior point farthest from edges.
  *  All in pixel space (Euclidean). */
@@ -138,7 +143,8 @@ for (const t of config.territories) {
   }
   if (!merged) throw new Error(`union failed for ${t.id}`);
   const projected = projectGeom(merged.geometry);
-  const poly = largestPolygon(projected);
+  const polys = allPolygons(projected);
+  const poly = polys[0];
   let ring = simplifyRing(poly[0]);
   // enforce point budget
   let tol = simpTol;
@@ -155,8 +161,15 @@ for (const t of config.territories) {
   }
   const [lx, ly] = polylabel(ring);
   const label = [Math.round(lx), Math.round(ly)];
-  built.push({ id: t.id, points: ring, label });
-  console.log(`  ${t.id}: ${ring.length} pts`);
+  const entry = { id: t.id, points: ring, label };
+  // Extra disjoint polygons (e.g. Michigan's Upper Peninsula) — simplified separately.
+  if (polys.length > 1) {
+    entry.extraPolygons = polys.slice(1).map((p) => simplifyRing(p[0]));
+    console.log(`  ${t.id}: ${ring.length} pts + ${entry.extraPolygons.length} extra polygon(s)`);
+  } else {
+    console.log(`  ${t.id}: ${ring.length} pts`);
+  }
+  built.push(entry);
 }
 
 // ------------------------------------------------------------------ lakes ---

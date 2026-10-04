@@ -86,8 +86,18 @@ function showError(msg: string): void {
 // ------------------------------------------------------------ boot ---
 
 function boot(): void {
+  // Dog-tag player count selection
+  let numPlayers = 4;
+  const dogtags = Array.from(document.querySelectorAll<HTMLButtonElement>('.dogtag'));
+  for (const tag of dogtags) {
+    tag.addEventListener('click', () => {
+      dogtags.forEach((t) => t.classList.remove('active'));
+      tag.classList.add('active');
+      numPlayers = parseInt(tag.dataset.players ?? '4', 10);
+    });
+  }
+
   $('startBtn').addEventListener('click', () => {
-    const numPlayers = parseInt(($('numPlayers') as HTMLSelectElement).value, 10);
     const seed = parseInt(($('seed') as HTMLInputElement).value, 10) || 1;
     S = createGame({ numPlayers, seed });
     draftMoves = [];

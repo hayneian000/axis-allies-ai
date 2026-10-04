@@ -5,6 +5,13 @@ export interface UnitCounts {
   fighter: number;
   bomber: number;
   aa: number;
+  /** Naval units (1942 2e). Submarine/carrier mechanics arrive in navy phase 2+. */
+  transport: number;
+  submarine: number;
+  destroyer: number;
+  cruiser: number;
+  carrier: number;
+  battleship: number;
 }
 
 export type PurchasableType =
@@ -14,6 +21,12 @@ export type PurchasableType =
   | 'fighter'
   | 'bomber'
   | 'aa'
+  | 'transport'
+  | 'submarine'
+  | 'destroyer'
+  | 'cruiser'
+  | 'carrier'
+  | 'battleship'
   | 'factory';
 
 export interface PurchaseItem {
@@ -21,13 +34,24 @@ export interface PurchaseItem {
   count: number;
 }
 
+/** Land units riding on a transport. One entry per transport load.
+ *  1942 2e p.30: capacity is any one land unit plus one additional infantry
+ *  (i.e. 2 infantry, or infantry + tank/artillery/AA). Cargo cannot fight at
+ *  sea and is destroyed if its transport is destroyed. */
+export interface TransportLoad {
+  owner: number;
+  units: UnitCounts;
+}
+
 export interface TerritoryState {
-  /** null = neutral (unowned). */
+  /** null = neutral (unowned) on land; null = uncontrolled waters at sea. */
   owner: number | null;
   units: UnitCounts;
   factory: boolean;
   /** True when built or captured this turn: cannot produce until next turn. */
   factoryFresh: boolean;
+  /** Transport cargo manifest. Meaningful only for sea zones. */
+  cargo: TransportLoad[];
 }
 
 export interface PlayerState {
@@ -48,7 +72,9 @@ export type BattleResult =
   | 'defender_holds'
   | 'air_only'
   | 'retreated'
-  | 'sbr_done';
+  | 'sbr_done'
+  /** Attacker cleared a sea zone of defenders. */
+  | 'sea_taken';
 
 export interface Battle {
   id: number;
@@ -59,7 +85,7 @@ export interface Battle {
   kind: BattleKind;
   /** Attacker units currently in the territory (air stays here until landed). */
   attack: UnitCounts;
-  /** Origin territories of the attacking land units (retreat targets). */
+  /** Origin territories of the attacking units (retreat targets). */
   origins: string[];
   aaFired: boolean;
   sbrStruck: boolean;
@@ -70,6 +96,25 @@ export interface Battle {
   defenderResolved: boolean;
   over: boolean;
   result: BattleResult | null;
+  // --- Amphibious assault (1942 2e p.15) ---
+  /** Sea zone the assault launched from. Set on the land battle. */
+  amphibiousFrom?: string;
+  /** Land units in `attack` that came off transports: cannot retreat (p.15). */
+  seaborne?: UnitCounts;
+  /** Battleships/cruisers eligible for pre-invasion bombardment, decided at
+   *  combat-move time: only when no sea battle occurred in the launch zone,
+   *  at most one ship per offloaded land unit (p.15). */
+  bombard?: { battleship: number; cruiser: number };
+  bombardDone: boolean;
+  /** Defender units doomed by bombardment: they still defend the first land
+   *  round, then are removed (p.15). */
+  bombardDoomed: number;
+  // --- Battleship damage (1942 2e p.27) ---
+  /** Damaged (not destroyed) battleships still fighting. First hit in a
+   *  combat damages; second hit in the SAME combat destroys; survivors are
+   *  repaired when the combat ends. Tracked on the battle, not the map. */
+  damagedAttackBB: number;
+  damagedDefBB: number;
 }
 
 export interface CombatMove {
@@ -80,12 +125,22 @@ export interface CombatMove {
   via?: string[];
   /** Strategic bombing raid (bombers only, factory target). */
   sbr?: boolean;
+  /** Load land units from a coastal territory onto transports in an adjacent
+   *  sea zone (from=land, to=sea). */
+  embark?: boolean;
+  /** Unload transport cargo into an adjacent land territory (from=sea,
+   *  to=land). Hostile target in combatMove = amphibious assault. */
+  disembark?: boolean;
 }
 
 export interface NonCombatMove {
   from: string;
   to: string;
   units: Partial<UnitCounts>;
+  /** Load land units onto transports (from=land, to=sea). */
+  embark?: boolean;
+  /** Unload transport cargo into an adjacent FRIENDLY land territory. */
+  disembark?: boolean;
 }
 
 export interface MobilizePlacement {
@@ -94,6 +149,10 @@ export interface MobilizePlacement {
   units: Partial<UnitCounts>;
   /** Also build a purchased factory in this territory (owned, IPC>=2, no factory). */
   buildFactory?: boolean;
+  /** Target sea zone for naval units: must be adjacent to `territory`.
+   *  1942 2e p.21: sea units mobilize into a sea zone adjacent to an
+   *  eligible industrial complex. */
+  seaZone?: string;
 }
 
 export interface GameEvent {
@@ -157,6 +216,9 @@ export interface CombatRoundResult {
   over: boolean;
   result: BattleResult | null;
   sbrDamage?: number;
+  /** Bombardment dice from an amphibious assault's pre-invasion shelling. */
+  bombardRolls?: number[];
+  bombardHits?: number;
 }
 
 /** Result returned by every action. Invalid actions never mutate state. */

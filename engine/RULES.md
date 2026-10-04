@@ -1,0 +1,120 @@
+# Canonical Rules — Axis & Allies AI
+
+## Canonical Sources
+
+This project follows **Axis & Allies 1942, Second Edition** (2012) as its
+canonical ruleset, with simplifications noted below.
+
+### Official Rulebook
+**Axis & Allies 1942 Second Edition — Rulebook**  
+https://gamers-hq.de/media/pdf/0c/2c/5f/A-A_1942_2ndEd_Rulebook_WEB.pdf
+
+The complete official rules: turn sequence, unit profiles, combat, economy,
+victory conditions. When in doubt, this document wins.
+
+### Official FAQ & Errata
+**Axis & Allies 1942, 2nd Edition — FAQ** (November 9, 2012)  
+https://sup1rppclvpogpbbl9vro.vcmarry.top/files/rules/AA1942_2ndEdition_FAQ.pdf
+
+Clarifications and corrections to the rulebook, including:
+- Honolulu is a victory city (13 total, not 12)
+- Germany starting income 41, UK 31 (not as printed)
+- Armor costs 6 IPCs, not 5
+
+### Digital Reference
+**Axis & Allies 1942 Online FAQ** (Beamdog — official digital adaptation)  
+https://www.beamdog.com/news/faq-axis-allies-1942-online/
+
+Useful for phase naming and UI conventions. Note: the online version omits
+optional rules.
+
+---
+
+## Project Scope — What We Simplify
+
+This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation.
+
+| 1942 2e Rule | Project Implementation |
+|---|---|
+| 5 powers, Axis vs Allies teams | 2–4 players, free-for-all |
+| World map, sea zones, naval units | 26-territory continental US, land + air only |
+| 6-phase turn (purchase, combat move, combat, noncombat, mobilize, income) | Same 6 phases |
+| Unit roster: inf, art, tank, fighter, bomber, AA, sub, destroyer, carrier, battleship, transport | inf, art, tank, fighter, bomber, AA only |
+| IPC income from territories | Same, GDP-weighted (61 total) |
+| Victory: 9/10 victory cities | Majority of capitals held simultaneously (scenario-overridable via capitalsToWin), or highest income at 20-round cap |
+| Research & technology | Omitted (not in 1942 2e base rules either) |
+| Strategic bombing raids | Included: bombers may raid factory territories, AA fires first, 1d6 IPC damage |
+
+### Rules We Follow Exactly
+- **Turn sequence**: Purchase → Combat Move → Combat → Noncombat Move → Mobilize → Income
+- **Combat**: Attacker/defender hit profiles per unit type, casualty selection, retreat rules
+- **Movement**: Land units move 1 (tanks 2 with blitz), air units move per type, must land safely
+- **AA fire**: Fires once per combat round at attacking air units
+- **AA movement**: AA guns move ONLY in the noncombat phase (1942 2e p.30: "this is the only phase in which antiaircraft artillery units can move")
+- **Artillery support**: Boosts paired infantry attack
+- **Factory placement**: New units placed at owned factories, limited by territory IPC value
+- **Strategic bombing raids**: Bombers may raid factory territories; AA fires first; 1d6 IPC damage to victim bank
+
+### FFA Adaptations (Ian's decisions)
+- **Neutral territories**: Have garrisons that must be defeated before capture (blocks tank blitz). Default: 3 infantry; each map/scenario may customize via `neutralGarrison` or per-territory `neutrals`.
+- **Capital capture**: Captor steals the victim's entire saved IPC bank (1942 2e p.20).
+- **Victory**: Hold a majority of capitals simultaneously (3 of 4 on the current map). Scenarios may override via `capitalsToWin`.
+
+---
+
+## Test-Driven Approach
+
+### Philosophy
+Every rule in the engine must have a corresponding test that **fails if the
+rule is broken**. Tests are the executable specification. When the rulebook
+and the code disagree, the rulebook wins — fix the code, not the test.
+
+### Test Organization
+```
+tests/
+  combat.test.ts      — Hit profiles, casualty selection, retreat, AA fire
+  economy.test.ts     — IPC income, purchase costs, factory limits
+  movement.test.ts    — Legal moves, blitz, air landing, transport (N/A)
+  purchase.test.ts    — Unit costs, IPC deduction, placement validation
+  edge.test.ts        — Boundary conditions, invalid actions, error codes
+  simulation.test.ts  — Full-game headless sims (bot vs bot, invariant checks)
+  map.test.ts         — Territory graph, IPC totals, label data
+  ui.test.ts          — Rendering, interactions (not rules logic)
+```
+
+### Writing a Rule Test
+1. **Cite the source**: Comment with rulebook page/section, e.g. `// 1942 2e p.18: Tanks blitz`
+2. **Test the rule, not the implementation**: Assert on game state, not internals
+3. **Test both directions**: Valid action succeeds, invalid action fails with correct error code
+4. **Use deterministic seeds**: `createGame({ seed: N })` for reproducibility
+
+Example:
+```typescript
+// 1942 2e p.20: Artillery supports infantry (inf attacks at 2 when paired)
+it('artillery boosts paired infantry attack', () => {
+  const s = createGame({ numPlayers: 2, seed: 42 });
+  // ... setup ...
+  // Assert infantry hits on 2 or less when artillery present
+});
+```
+
+### Coverage Requirements
+- [ ] Every `export function` in `engine.ts` has direct unit tests
+- [ ] Every error code (`ActionResult.code`) has a test triggering it
+- [ ] Combat: all unit types, attacker/defender, with/without support
+- [ ] Movement: all unit types, edge cases (stranded air, blocked paths)
+- [ ] Economy: income calculation, purchase validation, factory capacity
+- [ ] Game end: capital capture victory, turn-cap tiebreak
+
+### Simulation Tests
+`simulation.test.ts` runs full bot-vs-bot games to catch emergent rule
+violations:
+- No crashes over 100+ games with random seeds
+- Invariants hold: IPC totals conserved, unit counts non-negative, turn counter advances
+- Games terminate (victory or turn cap)
+
+### When Rules Change
+1. Update this file with the rulebook citation
+2. Write the failing test first (red)
+3. Implement the fix (green)
+4. Verify all 95+ tests still pass (no regressions)

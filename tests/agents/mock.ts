@@ -1,6 +1,6 @@
 // Shared mock provider and scripted bot policies for agent e2e tests.
 
-import { ipcOf, neighborsOf, UNITS } from '../../data/data';
+import { ipcOf, isSea, neighborsOf, UNITS } from '../../data/data';
 import { ownsCapital } from '../../engine/engine';
 import type { GameState, Phase } from '../../engine/types';
 import type {
@@ -83,6 +83,7 @@ function greedyAttack(state: GameState, pid: number): {
     if (t.owner !== pid) continue;
     if (t.units.infantry + t.units.artillery + t.units.tank === 0) continue;
     for (const to of neighborsOf(from)) {
+      if (isSea(to)) continue; // the greedy land bot attempts no naval invasions
       const dt = state.territories[to];
       if (!dt || dt.owner === pid) continue;
       const def =

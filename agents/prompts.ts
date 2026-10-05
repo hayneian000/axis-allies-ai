@@ -79,3 +79,36 @@ export function buildPhasePrompt(args: PhasePromptArgs): string {
     `Unknown phase "${args.phase}". Take no action and call end_phase.`;
   return `${instruction}\n\nCURRENT GAME STATE\n${args.stateBrief}`;
 }
+
+export interface DiplomacyPromptArgs {
+  stateBrief: string;
+  /** Chat visible to this seat so far (already recipient-filtered). */
+  visibleChat: string;
+  /** Tokens of diplomacy budget remaining this round. */
+  budgetRemaining: number;
+}
+
+/**
+ * Prompt for one turn inside the diplomacy window. Talk is freeform and
+ * non-binding: the game enforces nothing about what is said, only how much
+ * can be said (the budget). Messages may be bluffs; other players' private
+ * reasoning is never visible.
+ */
+export function buildDiplomacyPrompt(args: DiplomacyPromptArgs): string {
+  const chat = args.visibleChat.trim()
+    ? `CONVERSATION SO FAR (only messages addressed to you or to all — other private mail is hidden)\n${args.visibleChat}`
+    : 'No messages yet this game. You may open the conversation.';
+  return (
+    `DIPLOMACY. Before the round's turns begin, commanders may talk — publicly (recipients "all") ` +
+    `or privately (recipients: player names, comma-separated for groups). ` +
+    `Use send_message to speak and end_diplomacy when you have said all you want to say this round ` +
+    `(you may also say nothing at all).\n\n` +
+    `Your diplomacy budget this round: ${args.budgetRemaining} tokens remaining. ` +
+    `Each message you send spends tokens; when your budget is exhausted you go silent until next round. ` +
+    `Spend it where it matters — threats, offers, bluffs, and coordination are all fair game, ` +
+    `but nothing you agree to is enforced by the game. Promises are only as good as your reputation.\n\n` +
+    `Do not reveal your private reasoning in messages. ` +
+    `Use player names exactly as they appear (e.g. "Player 2").\n\n` +
+    `CURRENT GAME STATE\n${args.stateBrief}\n\n${chat}`
+  );
+}

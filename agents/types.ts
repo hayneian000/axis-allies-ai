@@ -45,15 +45,31 @@ export interface TokenUsage {
   outputTokens: number;
 }
 
+/** Diplomacy-window token accounting for one player. */
+export interface DiplomacyUsage extends TokenUsage {
+  calls: number;
+}
+
+export function emptyDiplomacyUsage(): DiplomacyUsage {
+  return { inputTokens: 0, outputTokens: 0, calls: 0 };
+}
+
 /** Accumulated usage for one player across a game. */
 export interface PlayerUsage extends TokenUsage {
   calls: number;
   /** Tool calls rejected by engine validation. */
   errors: number;
+  /**
+   * Diplomacy-window breakout. Charged only for round-trips that produced
+   * at least one accepted send_message or an end_diplomacy (fully-rejected
+   * round-trips cost no budget). The top-level totals above always include
+   * every provider call, including diplomacy and rejected ones.
+   */
+  diplomacy: DiplomacyUsage;
 }
 
 export function emptyUsage(): PlayerUsage {
-  return { inputTokens: 0, outputTokens: 0, calls: 0, errors: 0 };
+  return { inputTokens: 0, outputTokens: 0, calls: 0, errors: 0, diplomacy: emptyDiplomacyUsage() };
 }
 
 /** Single round-trip request to a provider. */

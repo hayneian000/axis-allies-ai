@@ -93,7 +93,10 @@ describe('driver: full games', () => {
     const state = createGame({ numPlayers: 2, seed: 7 });
     state.turnCap = 4;
     const seats = [aiSeat(0, flakyHandlerFactory()), aiSeat(1, passBotHandler)];
-    const result = await runGame(state, seats);
+    // Diplomacy disabled: this test targets the phase retry path, and the
+    // flaky handler's first (invalid) call would otherwise be consumed by
+    // the round-1 diplomacy window.
+    const result = await runGame(state, seats, {}, { diplomacy: { enabled: false } });
 
     expect(result.state.phase).toBe('gameover');
     // The overspend purchase was rejected by engine validation and retried.
@@ -130,6 +133,8 @@ describe('driver: full games', () => {
           expect(r.ok).toBe(true);
         }
       },
+      // Human says nothing in diplomacy.
+      onHumanDiplomacy: async () => {},
       onPhase: (_s, pid, phase) => {
         phasesSeen.push(`${pid}:${phase}`);
       },

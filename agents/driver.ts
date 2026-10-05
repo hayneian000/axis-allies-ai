@@ -3,6 +3,12 @@
 import { autoCasualties, endPhase, openBattles, resolveCombatRound } from '../engine/engine';
 import type { ActionResult, GameState, Phase } from '../engine/types';
 import type { Agent, ToolResultRecord } from './agent';
+import {
+  DiplomacyLedger,
+  runDiplomacyWindow,
+  type DiplomacyEvents,
+  type RunDiplomacyOpts,
+} from './diplomacy';
 import { dispatchTool } from './tools';
 import type { PlayerUsage, SeatConfig } from './types';
 
@@ -10,6 +16,14 @@ export interface DriverEvents {
   onHumanTurn?: (state: GameState, playerId: number, phase: Phase) => Promise<void>;
   onPhase?: (state: GameState, playerId: number, phase: Phase) => void;
   onToolCall?: (playerId: number, name: string, ok: boolean, code?: string) => void;
+  /** Human seat's turn in the diplomacy window; resolves when done talking. */
+  onHumanDiplomacy?: (state: GameState, playerId: number) => Promise<void>;
+  /** A diplomacy message was accepted into chatLog. */
+  onDiplomacyMessage?: DiplomacyEvents['onDiplomacyMessage'];
+  /** Diplomacy window opened/closed for a round. */
+  onDiplomacyWindow?: DiplomacyEvents['onDiplomacyWindow'];
+  /** Engine validation outcome for an AI seat's send_message. */
+  onDiplomacyToolCall?: DiplomacyEvents['onDiplomacyToolCall'];
 }
 
 export interface SeatRuntime {
@@ -22,6 +36,18 @@ export interface GameResult {
   state: GameState;
   usage: Record<number, PlayerUsage>;
   rounds: number;
+  /** Everything said during diplomacy, plus spend accounting. */
+  diplomacy: DiplomacyLedger;
+}
+
+export interface DiplomacyOptions extends RunDiplomacyOpts {
+  /**
+   * Run the diplomacy window each round. Default true. The window is
+   * skipped automatically when no seat is AI-driven.
+   */
+  enabled?: boolean;
+  /** Bring your own ledger (the UI keeps one for live budget meters). */
+  ledger?: DiplomacyLedger;
 }
 
 export class MaxRoundsExceeded extends Error {
@@ -258,7 +284,7 @@ export async function runGame(
   state: GameState,
   seats: SeatRuntime[],
   events: DriverEvents = {},
-  opts: { maxRounds?: number } = {},
+  opts: { maxRounds?: number; diplomacy?: DiplomacyOptions } = {},
 ): Promise<GameResult> {
   if (seats.length !== state.numPlayers) {
     throw new Error(
@@ -273,15 +299,43 @@ export async function runGame(
       throw new Error('Human seats require events.onHumanTurn.');
     }
   }
+  const diplomacyOpts = opts.diplomacy ?? {};
+  const diplomacyEnabled = diplomacyOpts.enabled ?? true;
+  const anyAi = seats.some((s) => s.seat.kind === 'ai');
+  if (diplomacyEnabled && anyAi && seats.some((s) => s.seat.kind === 'human') && !events.onHumanDiplomacy) {
+    throw new Error('Human seats require events.onHumanDiplomacy when the diplomacy window runs.');
+  }
+  const ledger = diplomacyOpts.ledger ?? new DiplomacyLedger();
   // The Agent keeps its playerId private, so the driver cannot introspect the
   // pairing; it is established by whoever constructed the SeatRuntime
   // (AgentOptions.playerId === seat.playerId). A mismatch fails loudly via
   // engine validation, then falls back.
   const maxRounds = opts.maxRounds ?? Math.max(state.turnCap + 5, 60);
   const errorsByPlayer = new Map<number, number>();
+  let lastDiplomacyRound = 0;
 
   while (state.phase !== 'gameover') {
     if (state.round > maxRounds) throw new MaxRoundsExceeded(state.round, maxRounds);
+    // Diplomacy window: once per round, before the first purchase phase.
+    // Skipped when no seat is AI-driven (humans already chat freely).
+    if (diplomacyEnabled && anyAi && state.round !== lastDiplomacyRound) {
+      lastDiplomacyRound = state.round;
+      await runDiplomacyWindow(
+        state,
+        seats,
+        ledger,
+        {
+          onHumanDiplomacy: events.onHumanDiplomacy,
+          onDiplomacyMessage: events.onDiplomacyMessage,
+          onDiplomacyWindow: events.onDiplomacyWindow,
+          onDiplomacyToolCall: events.onDiplomacyToolCall,
+        },
+        {
+          budgetPerRound: diplomacyOpts.budgetPerRound,
+          backstopIterations: diplomacyOpts.backstopIterations,
+        },
+      );
+    }
     const pid = state.currentPlayer;
     const seat = seats[pid];
     if (!seat) throw new Error(`No seat configured for current player ${pid}.`);
@@ -304,5 +358,5 @@ export async function runGame(
       usage[s.seat.playerId] = { ...u, errors: u.errors + (errorsByPlayer.get(s.seat.playerId) ?? 0) };
     }
   }
-  return { state, usage, rounds: state.round };
+  return { state, usage, rounds: state.round, diplomacy: ledger };
 }

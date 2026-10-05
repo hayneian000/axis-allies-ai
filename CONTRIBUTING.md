@@ -4,7 +4,14 @@
 
 ### Visual Evidence (Required)
 
-**Every PR that changes anything visual MUST include visual evidence.**
+**Every PR that changes anything visual MUST include visual evidence provided by the
+contributor.** CI does not run browser screenshots (GitHub free tier minutes are limited).
+It is the contributor's responsibility to demonstrate their changes work.
+
+**For LLM contributors:** you MUST attach a screen recording or screenshots of your changes
+in the PR description or via message. Do not present mockups or approximations as real
+renders. If you cannot produce a real browser capture in your environment, say so explicitly
+and describe the manual verification steps instead.
 
 This includes:
 - Map geometry changes (territory shapes, new polygons, label positions)

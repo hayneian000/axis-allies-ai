@@ -15,7 +15,7 @@ const EXPECTED: Record<Phase, string[]> = {
 };
 
 describe('TOOLS definitions', () => {
-  it('has all nine canonical tool names', () => {
+  it('has all ten canonical tool names', () => {
     expect(TOOL_NAMES.sort()).toEqual(
       [
         'purchase',
@@ -27,6 +27,7 @@ describe('TOOLS definitions', () => {
         'mobilize',
         'end_phase',
         'send_message',
+        'end_diplomacy',
       ].sort(),
     );
   });
@@ -41,8 +42,15 @@ describe('TOOLS definitions', () => {
     }
   });
 
-  it('send_message description notes the MVP chat disablement', () => {
-    expect(TOOLS.send_message.description).toMatch(/disabled/i);
+  it('send_message is enabled for the diplomacy window (M3)', () => {
+    expect(TOOLS.send_message.description).toMatch(/diplomacy/i);
+    expect(TOOLS.send_message.description).toMatch(/non-binding/i);
+  });
+
+  it('end_diplomacy is a driver-consumed tool with an empty schema', () => {
+    expect(TOOLS.end_diplomacy.name).toBe('end_diplomacy');
+    expect((TOOLS.end_diplomacy.parameters as { type?: string }).type).toBe('object');
+    expect(TOOLS.end_diplomacy.description).toMatch(/diplomacy/i);
   });
 });
 

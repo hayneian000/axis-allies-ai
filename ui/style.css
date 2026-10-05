@@ -1428,3 +1428,44 @@ body.ai-thinking #actionbar::after {
   margin-left: 12px;
   pointer-events: none;
 }
+
+}
+body.ai-thinking #actionbar::after {
+  content: "AI deliberating…";
+  font-family: var(--font-text);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75em;
+  color: var(--brass);
+  margin-left: 12px;
+  pointer-events: none;
+}
+
+/* M3 diplomacy panel */
+.ai-diplomacy { padding: 8px 12px; }
+.ai-dip-head { display: flex; align-items: center; gap: 8px; }
+.ai-dip-head h4 { margin: 0; font-size: 0.85em; }
+.ai-dip-status { font-family: var(--font-text); color: var(--muted); font-size: 0.85em; flex: 1; }
+.dip-filters { display: flex; gap: 6px; margin: 8px 0; }
+.dip-filters .btn.active { outline: 2px solid var(--brass); }
+.dip-budgets { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+.dip-budget { display: flex; align-items: center; gap: 8px; font-family: var(--font-text); font-size: 0.85em; color: var(--text); }
+.dip-bar { flex: 1; height: 6px; background: #2a2f24; border-radius: 3px; overflow: hidden; max-width: 220px; }
+.dip-bar-fill { display: block; height: 100%; background: var(--brass); }
+.dip-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  font-family: var(--font-text);
+  font-size: 0.9em;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.dip-msg .dip-to { color: var(--muted); font-size: 0.85em; }
+.dip-msg .dip-round { color: var(--muted); font-size: 0.8em; }
+.chip-priv { background: var(--signal); color: var(--text); font-size: 0.7em; margin-right: 6px; }
+.dip-compose { display: flex; gap: 6px; margin-top: 8px; }
+.dip-compose select { background: #1c1f18; color: var(--text); border: 1px solid var(--brass-deep); border-radius: 4px; padding: 4px; }
+.dip-compose input[type="text"] { flex: 1; background: #1c1f18; color: var(--text); border: 1px solid var(--brass-deep); border-radius: 4px; padding: 4px 8px; }

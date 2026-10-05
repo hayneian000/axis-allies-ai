@@ -34,6 +34,8 @@ export const bridge = {
   driverActive: false,
   /** Set while a human seat's turn awaits the End-phase click. */
   pendingHuman: null as PendingHumanTurn | null,
+  /** Set while a human seat's diplomacy turn awaits "Done talking". */
+  pendingDiplomacy: null as PendingHumanTurn | null,
   /** Abort the current driver run (wired by ui/aiGame.ts). */
   stopDriver: null as (() => void) | null,
   /** Registered by ui/main.ts at boot. */

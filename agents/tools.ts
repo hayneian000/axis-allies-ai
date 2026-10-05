@@ -1,7 +1,8 @@
 // JSON-Schema tool definitions for the Phase 2 BYOK agent tools, mapping
 // each canonical snake_case tool name to the real engine action.
-// Agent-initiated chat (send_message from an agent) is disabled in the MVP:
-// the driver owns diplomacy in v1.
+// Agent-initiated chat (send_message) is enabled inside the diplomacy window
+// (see agents/diplomacy.ts); end_diplomacy is consumed by the driver like
+// end_phase and never dispatched to the engine.
 
 import {
   autoCasualties,
@@ -224,9 +225,10 @@ export const TOOLS: Record<string, ToolDefinition> = {
   send_message: {
     name: 'send_message',
     description:
-      'NOTE: agent-initiated chat is DISABLED in the MVP (v2). The tool exists for ' +
-      'schema/driver completeness only; the driver does not expose it to agents, ' +
-      'so do not plan around sending messages. Sends text to "all" or named recipients.',
+      'Send a chat message during the diplomacy window. recipients: "all" for a public broadcast, ' +
+      'or player names ("Player 2", comma-separated for groups) for private messages. ' +
+      'Text must be non-empty and at most 500 characters. Talk is non-binding — the game ' +
+      'enforces nothing about what you promise.',
     parameters: {
       type: 'object',
       properties: {
@@ -234,6 +236,19 @@ export const TOOLS: Record<string, ToolDefinition> = {
         text: { type: 'string' },
       },
       required: ['recipients', 'text'],
+      additionalProperties: false,
+    },
+  },
+
+  end_diplomacy: {
+    name: 'end_diplomacy',
+    description:
+      'Leave the diplomacy window. Call this when you have said all you want to say this round ' +
+      '(you may also say nothing at all). Consumed by the driver; ends your participation ' +
+      'in this round\'s diplomacy.',
+    parameters: {
+      type: 'object',
+      properties: {},
       additionalProperties: false,
     },
   },

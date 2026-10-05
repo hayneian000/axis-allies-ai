@@ -2,9 +2,30 @@ import { describe, expect, it } from 'vitest';
 import { MAP, neighborsOf, scenarioFor } from '../data/data';
 
 describe('map data', () => {
-  it('has exactly 26 land territories', () => {
-    expect(MAP.territories).toHaveLength(26);
-    for (const t of MAP.territories) expect(t.domain).toBe('land');
+  it('has 26 land territories and 3 sea zones', () => {
+    expect(MAP.territories).toHaveLength(29);
+    const land = MAP.territories.filter((t) => t.domain === 'land');
+    const sea = MAP.territories.filter((t) => t.domain === 'sea');
+    expect(land).toHaveLength(26);
+    expect(sea).toHaveLength(3);
+    expect(sea.map((t) => t.id).sort()).toEqual(['atlantic', 'gulf', 'pacific']);
+  });
+
+  it('sea zones are worth 0 IPCs and touch coastal land', () => {
+    for (const t of MAP.territories.filter((x) => x.domain === 'sea')) {
+      expect(t.ipc).toBe(0);
+      const coastal = t.neighbors.filter(
+        (n) => MAP.territories.find((x) => x.id === n)!.domain === 'land',
+      );
+      expect(coastal.length, `${t.id} should border coastal land`).toBeGreaterThan(0);
+    }
+    // Spot-checks: pacific borders the west coast, atlantic the east, gulf the south.
+    expect(neighborsOf('pacific')).toContain('california');
+    expect(neighborsOf('atlantic')).toContain('new_york');
+    expect(neighborsOf('gulf')).toContain('texas');
+    // Sea zones link to each other via the gulf (Panama-canal abstraction).
+    expect(neighborsOf('pacific')).toContain('gulf');
+    expect(neighborsOf('atlantic')).toContain('gulf');
   });
 
   it('sums to 61 IPCs (spec table arithmetic; spec text says 64)', () => {
@@ -23,7 +44,7 @@ describe('map data', () => {
     }
   });
 
-  it('is fully connected', () => {
+  it('is fully connected across land and sea', () => {
     const visited = new Set<string>([MAP.territories[0].id]);
     const queue = [...visited];
     while (queue.length > 0) {
@@ -34,7 +55,7 @@ describe('map data', () => {
         }
       }
     }
-    expect(visited.size).toBe(26);
+    expect(visited.size).toBe(29);
   });
 
   it('does not treat Four Corners point-contacts as adjacency', () => {

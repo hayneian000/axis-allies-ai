@@ -103,8 +103,13 @@ describe('combat rounds', () => {
 
   it('auto-casualty policy takes cheapest/lowest-defense first, never AA', () => {
     const force = { ...emptyUnits(), infantry: 1, artillery: 1, tank: 1, fighter: 1, bomber: 1, aa: 2 };
-    expect(autoCasualtyPolicy(force, 2)).toEqual({ infantry: 1, artillery: 1 });
-    expect(autoCasualtyPolicy(force, 99)).toEqual({ infantry: 1, artillery: 1, tank: 1, fighter: 1, bomber: 1 });
+    // Returns { removed, damaged }: damaged counts battleships that absorbed
+    // a first hit instead of dying (1942 2e p.27).
+    expect(autoCasualtyPolicy(force, 2)).toEqual({ removed: { infantry: 1, artillery: 1 }, damaged: 0 });
+    expect(autoCasualtyPolicy(force, 99)).toEqual({
+      removed: { infantry: 1, artillery: 1, tank: 1, fighter: 1, bomber: 1 },
+      damaged: 0,
+    });
   });
 
   it('rejects illegal casualty selections without mutating state', () => {

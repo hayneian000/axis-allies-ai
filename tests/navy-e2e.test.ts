@@ -1,1 +1,100 @@
-aW1wb3J0IHsgZGVzY3JpYmUsIGV4cGVjdCwgaXQgfSBmcm9tICd2aXRlc3QnOwppbXBvcnQgewogIGNvbWJhdE1vdmUsCiAgZW1wdHlVbml0cywKICBlbmRQaGFzZSwKICBtb2JpbGl6ZSwKICBub25Db21iYXRNb3ZlLAogIHB1cmNoYXNlLAp9IGZyb20gJy4uL2VuZ2luZS9lbmdpbmUnOwppbXBvcnQgdHlwZSB7IEdhbWVTdGF0ZSwgVW5pdENvdW50cyB9IGZyb20gJy4uL2VuZ2luZS90eXBlcyc7CmltcG9ydCB7CiAgZnJlc2hHYW1lLAogIGdvdG9Db21iYXRNb3ZlLAogIGdvdG9Nb2JpbGl6ZSwKICBnb3RvTm9uQ29tYmF0LAogIG5vb3BUdXJuLAp9IGZyb20gJy4vaGVscGVycyc7CgpmdW5jdGlvbiBjYXJnb04oczogR2FtZVN0YXRlLCB6aWQ6IHN0cmluZywgb3duZXI6IG51bWJlciwgdDoga2V5b2YgVW5pdENvdW50cyk6IG51bWJlciB7CiAgY29uc3QgYyA9IHMudGVycml0b3JpZXNbemlkXS5jYXJnbyA/PyBbXTsKICByZXR1cm4gYy5maWx0ZXIoKHgpID0+IHgub3duZXIgPT09IG93bmVyKS5yZWR1Y2UoKG4sIHgpID0+IG4gKyAoeC51bml0c1t0XSA/PyAwKSwgMCk7Cn0KCi8qKgogKiBOYXZ5IGVuZC10by1lbmQgb24gdGhlIEFtZXJpY2EgbWFwOiBmcm9tIGEgcmVhbCAycCBzY2VuYXJpbyBzdGFydCwgYSBwbGF5ZXIKICogYnV5cyBhIHRyYW5zcG9ydCwgZmxvYXRzIGl0LCBsb2FkcyB0cm9vcHMsIHNhaWxzIGl0LCBhbmQgdW5sb2FkcyDigJQgcHJvdmluZwogKiB0aGUgbmF2eSBsb29wIGlzIHBsYXlhYmxlIG9uIHRoZSBzaGlwcGVkIFVTIG1hcCwgbm90IGp1c3QgaW4gcmlnZ2VkIHNldHVwcy4KICovCmRlc2NyaWJlKCduYXZ5IGVuZC10by1lbmQgb24gdGhlIEFtZXJpY2EgbWFwJywgKCkgPT4gewogIGl0KCdidXlzLCBtb2JpbGl6ZXMsIGxvYWRzLCBzYWlscywgYW5kIHVubG9hZHMgYSB0cmFuc3BvcnQgYWNyb3NzIHR3byB0dXJucycsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgNDI0Mik7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7IC8vIFAwOiB3ZXN0LCBjYXBpdGFsIGNhbGlmb3JuaWEsIGJhbmsgMTIKICAgIGV4cGVjdChzLnBsYXllcnNbcGlkXS5jYXBpdGFsKS50b0JlKCdjYWxpZm9ybmlhJyk7CgogICAgLy8gLS0tIFR1cm4gMTogcHVyY2hhc2UgYSB0cmFuc3BvcnQgKDcgSVBDcyBvZiB0aGUgMTItYmFuaykgLi4uCiAgICBjb25zdCBwciA9IHB1cmNoYXNlKHMsIHBpZCwgW3sgdHlwZTogJ3RyYW5zcG9ydCcsIGNvdW50OiAxIH1dKTsKICAgIGV4cGVjdChwci5vaywgYCR7cHIuY29kZX0gJHtwci5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHMucGxheWVyc1twaWRdLmlwY3MpLnRvQmUoNSk7CgogICAgLy8gLi4uIGFuZCBmbG9hdCBpdCBpbiB0aGUgUGFjaWZpYywgYWRqYWNlbnQgdG8gdGhlIGNhbGlmb3JuaWEgZmFjdG9yeS4KICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgZ290b05vbkNvbWJhdChzKTsKICAgIGdvdG9Nb2JpbGl6ZShzKTsKICAgIGNvbnN0IG0gPSBtb2JpbGl6ZShzLCBwaWQsIFt7IHRlcnJpdG9yeTogJ2NhbGlmb3JuaWEnLCBzZWFab25lOiAnY2FsaWZvcm5pYV9jb2FzdCcsIHVuaXRzOiB7IHRyYW5zcG9ydDogMSB9IH1dKTsKICAgIGV4cGVjdChtLm9rLCBgJHttLmNvZGV9ICR7bS5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHMudGVycml0b3JpZXNbJ2NhbGlmb3JuaWFfY29hc3QnXS51bml0cy50cmFuc3BvcnQpLnRvQmUoMSk7CgogICAgLy8gUDEgdGFrZXMgYSBxdWlldCB0dXJuOyBQMCBpcyB1cCBhZ2Fpbi4KICAgIGV4cGVjdChlbmRQaGFzZShzLCBwaWQpLm9rKS50b0JlKHRydWUpOyAvLyBtb2JpbGl6ZSAtPiBQMSBwdXJjaGFzZQogICAgbm9vcFR1cm4ocyk7CiAgICBleHBlY3Qocy5jdXJyZW50UGxheWVyKS50b0JlKHBpZCk7CiAgICBleHBlY3Qocy5waGFzZSkudG9CZSgncHVyY2hhc2UnKTsKCiAgICAvLyAtLS0gVHVybiAyOiBlbWJhcmsgMiBpbmZhbnRyeSBmcm9tIGNhbGlmb3JuaWEgYW5kIHNhaWwgcGFjaWZpYyAtPiBndWxmLgogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBjb25zdCBjbSA9IGNvbWJhdE1vdmUocywgcGlkLCBbCiAgICAgIHsgZnJvbTogJ2NhbGlmb3JuaWEnLCB0bzogJ2NhbGlmb3JuaWFfY29hc3QnLCB1bml0czogeyBpbmZhbnRyeTogMiB9LCBlbWJhcms6IHRydWUgfSwKICAgICAgeyBmcm9tOiAnY2FsaWZvcm5pYV9jb2FzdCcsIHRvOiAnd2VzdGVybl9ndWxmJywgdW5pdHM6IHsgdHJhbnNwb3J0OiAxIH0gfSwKICAgIF0pOwogICAgZXhwZWN0KGNtLm9rLCBgJHtjbS5jb2RlfSAke2NtLmVycm9yfWApLnRvQmUodHJ1ZSk7CiAgICBleHBlY3Qocy50ZXJyaXRvcmllc1snd2VzdGVybl9ndWxmJ10udW5pdHMudHJhbnNwb3J0KS50b0JlKDEpOwogICAgZXhwZWN0KGNhcmdvTihzLCAnd2VzdGVybl9ndWxmJywgcGlkLCAnaW5mYW50cnknKSkudG9CZSgyKTsKICAgIGV4cGVjdChzLnRlcnJpdG9yaWVzWydjYWxpZm9ybmlhJ10udW5pdHMuaW5mYW50cnkpLnRvQmUoMSk7IC8vIDMgLSAyCgogICAgLy8gTm9uLWNvbWJhdDogdW5sb2FkIGludG8gZnJpZW5kbHkgdGV4YXMgKFAwIGhvbGRzIGl0IGluIHRoZSAycCBzY2VuYXJpbykuCiAgICBnb3RvTm9uQ29tYmF0KHMpOwogICAgY29uc3QgbmMgPSBub25Db21iYXRNb3ZlKHMsIHBpZCwgWwogICAgICB7IGZyb206ICd3ZXN0ZXJuX2d1bGYnLCB0bzogJ3RleGFzJywgdW5pdHM6IHsgaW5mYW50cnk6IDIgfSwgZGlzZW1iYXJrOiB0cnVlIH0sCiAgICBdKTsKICAgIGV4cGVjdChuYy5vaywgYCR7bmMuY29kZX0gJHtuYy5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHMudGVycml0b3JpZXNbJ3RleGFzJ10udW5pdHMuaW5mYW50cnkpLnRvQmUoNCk7IC8vIDIgKyAyCiAgICBleHBlY3QoY2FyZ29OKHMsICd3ZXN0ZXJuX2d1bGYnLCBwaWQsICdpbmZhbnRyeScpKS50b0JlKDApOwogICAgZXhwZWN0KHMudGVycml0b3JpZXNbJ3dlc3Rlcm5fZ3VsZiddLnVuaXRzLnRyYW5zcG9ydCkudG9CZSgxKTsgLy8gc2hpcCBzdGF5cyBhdCBzZWEKICB9KTsKCiAgaXQoJ2EgcHVyY2hhc2VkIHdhcnNoaXAgY2FuIHNhaWwgYW5kIGZpZ2h0IG9uIHRoZSBzaGlwcGVkIG1hcCcsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgNDI0Myk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBjYXAgPSBzLnBsYXllcnNbcGlkXS5jYXBpdGFsOwogICAgY29uc3QgaG9tZVdhdGVyID0gY2FwID09PSAnY2FsaWZvcm5pYScgPyAnY2FsaWZvcm5pYV9jb2FzdCcgOiAnbm9ydGhfYXRsYW50aWMnOwogICAgLy8gRmxvYXQgYSBkZXN0cm95ZXIgaW4gdGhlIGhvbWUgd2F0ZXIgYWRqYWNlbnQgdG8gdGhlIGNhcGl0YWwncyBmYWN0b3J5Li4uCiAgICBzLnBsYXllcnNbcGlkXS5pcGNzID0gMTAwOwogICAgZXhwZWN0KHB1cmNoYXNlKHMsIHBpZCwgW3sgdHlwZTogJ2Rlc3Ryb3llcicsIGNvdW50OiAxIH1dKS5vaykudG9CZSh0cnVlKTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgZ290b05vbkNvbWJhdChzKTsKICAgIGdvdG9Nb2JpbGl6ZShzKTsKICAgIGNvbnN0IG16ID0gbW9iaWxpemUocywgcGlkLCBbeyB0ZXJyaXRvcnk6IGNhcCwgc2VhWm9uZTogaG9tZVdhdGVyLCB1bml0czogeyBkZXN0cm95ZXI6IDEgfSB9XSk7CiAgICBleHBlY3QobXoub2ssIGAke216LmNvZGV9ICR7bXouZXJyb3J9YCkudG9CZSh0cnVlKTsKICAgIGV4cGVjdChzLnRlcnJpdG9yaWVzW2hvbWVXYXRlcl0udW5pdHMuZGVzdHJveWVyKS50b0JlKDEpOwogICAgZXhwZWN0KGVuZFBoYXNlKHMsIHBpZCkub2spLnRvQmUodHJ1ZSk7IC8vIG1vYmlsaXplIC0+IG5leHQgcHVyY2hhc2UKICAgIG5vb3BUdXJuKHMpOwogICAgLy8gLi4uYW5kIG9uIHRoZSBuZXh0IHR1cm4gc2FpbCBpdCBvbndhcmQgdGhyb3VnaCBmcmllbmRseSB3YXRlcnMuCiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIC8vIFNhaWwgdG8gYW4gYWRqYWNlbnQgd2F0ZXI6IGNhbGlmb3JuaWFfY29hc3QtPndlc3Rlcm5fZ3VsZiwgbm9ydGhfYXRsYW50aWMtPm1pZF9hdGxhbnRpY193YXRlcnMuCiAgICBjb25zdCBhd2F5ID0gaG9tZVdhdGVyID09PSAnY2FsaWZvcm5pYV9jb2FzdCcgPyAnd2VzdGVybl9ndWxmJyA6ICdtaWRfYXRsYW50aWNfd2F0ZXJzJzsKICAgIGNvbnN0IGNtID0gY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206IGhvbWVXYXRlciwgdG86IGF3YXksIHVuaXRzOiB7IGRlc3Ryb3llcjogMSB9IH1dKTsKICAgIGV4cGVjdChjbS5vaywgYCR7Y20uY29kZX0gJHtjbS5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHMudGVycml0b3JpZXNbYXdheV0udW5pdHMuZGVzdHJveWVyKS50b0JlKDEpOwogIH0pOwp9KTsK
+import { describe, expect, it } from 'vitest';
+import {
+  combatMove,
+  emptyUnits,
+  endPhase,
+  mobilize,
+  nonCombatMove,
+  purchase,
+} from '../engine/engine';
+import type { GameState, UnitCounts } from '../engine/types';
+import {
+  freshGame,
+  gotoCombatMove,
+  gotoMobilize,
+  gotoNonCombat,
+  noopTurn,
+} from './helpers';
+
+function cargoN(s: GameState, zid: string, owner: number, t: keyof UnitCounts): number {
+  const c = s.territories[zid].cargo ?? [];
+  return c.filter((x) => x.owner === owner).reduce((n, x) => n + (x.units[t] ?? 0), 0);
+}
+
+/**
+ * Navy end-to-end on the America map: from a real 2p scenario start, a player
+ * buys a transport, floats it, loads troops, sails it, and unloads — proving
+ * the navy loop is playable on the shipped US map, not just in rigged setups.
+ */
+describe('navy end-to-end on the America map', () => {
+  it('buys, mobilizes, loads, sails, and unloads a transport across two turns', () => {
+    const s = freshGame(2, 4242);
+    const pid = s.currentPlayer; // P0: west, capital california, bank 12
+    expect(s.players[pid].capital).toBe('california');
+
+    // --- Turn 1: purchase a transport (7 IPCs of the 12-bank) ...
+    const pr = purchase(s, pid, [{ type: 'transport', count: 1 }]);
+    expect(pr.ok, `${pr.code} ${pr.error}`).toBe(true);
+    expect(s.players[pid].ipcs).toBe(5);
+
+    // ... and float it in the Pacific, adjacent to the california factory.
+    gotoCombatMove(s);
+    gotoNonCombat(s);
+    gotoMobilize(s);
+    const m = mobilize(s, pid, [{ territory: 'california', seaZone: 'california_coast', units: { transport: 1 } }]);
+    expect(m.ok, `${m.code} ${m.error}`).toBe(true);
+    expect(s.territories['california_coast'].units.transport).toBe(1);
+
+    // P1 takes a quiet turn; P0 is up again.
+    expect(endPhase(s, pid).ok).toBe(true); // mobilize -> P1 purchase
+    noopTurn(s);
+    expect(s.currentPlayer).toBe(pid);
+    expect(s.phase).toBe('purchase');
+
+    // --- Turn 2: embark 2 infantry from california and sail pacific -> gulf.
+    gotoCombatMove(s);
+    const cm = combatMove(s, pid, [
+      { from: 'california', to: 'california_coast', units: { infantry: 2 }, embark: true },
+      { from: 'california_coast', to: 'western_gulf', units: { transport: 1 } },
+    ]);
+    expect(cm.ok, `${cm.code} ${cm.error}`).toBe(true);
+    expect(s.territories['western_gulf'].units.transport).toBe(1);
+    expect(cargoN(s, 'western_gulf', pid, 'infantry')).toBe(2);
+    expect(s.territories['california'].units.infantry).toBe(1); // 3 - 2
+
+    // Non-combat: unload into friendly texas (P0 holds it in the 2p scenario).
+    gotoNonCombat(s);
+    const nc = nonCombatMove(s, pid, [
+      { from: 'western_gulf', to: 'texas', units: { infantry: 2 }, disembark: true },
+    ]);
+    expect(nc.ok, `${nc.code} ${nc.error}`).toBe(true);
+    expect(s.territories['texas'].units.infantry).toBe(4); // 2 + 2
+    expect(cargoN(s, 'western_gulf', pid, 'infantry')).toBe(0);
+    expect(s.territories['western_gulf'].units.transport).toBe(1); // ship stays at sea
+  });
+
+  it('a purchased warship can sail and fight on the shipped map', () => {
+    const s = freshGame(2, 4243);
+    const pid = s.currentPlayer;
+    const cap = s.players[pid].capital;
+    const homeWater = cap === 'california' ? 'california_coast' : 'north_atlantic';
+    // Float a destroyer in the home water adjacent to the capital's factory...
+    s.players[pid].ipcs = 100;
+    expect(purchase(s, pid, [{ type: 'destroyer', count: 1 }]).ok).toBe(true);
+    gotoCombatMove(s);
+    gotoNonCombat(s);
+    gotoMobilize(s);
+    const mz = mobilize(s, pid, [{ territory: cap, seaZone: homeWater, units: { destroyer: 1 } }]);
+    expect(mz.ok, `${mz.code} ${mz.error}`).toBe(true);
+    expect(s.territories[homeWater].units.destroyer).toBe(1);
+    expect(endPhase(s, pid).ok).toBe(true); // mobilize -> next purchase
+    noopTurn(s);
+    // ...and on the next turn sail it onward through friendly waters.
+    gotoCombatMove(s);
+    // Sail to an adjacent water: california_coast->western_gulf, north_atlantic->mid_atlantic_waters.
+    const away = homeWater === 'california_coast' ? 'western_gulf' : 'mid_atlantic_waters';
+    const cm = combatMove(s, pid, [{ from: homeWater, to: away, units: { destroyer: 1 } }]);
+    expect(cm.ok, `${cm.code} ${cm.error}`).toBe(true);
+    expect(s.territories[away].units.destroyer).toBe(1);
+  });
+});

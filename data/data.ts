@@ -8,7 +8,8 @@ export interface TerritoryDef {
   id: string;
   name: string;
   states: string;
-  domain: string;
+  /** "land" or "sea". Sea zones are never owned, have 0 IPC, and hold naval units only. */
+  domain: 'land' | 'sea';
   ipc: number;
   neighbors: string[];
   /** Stylized polygon approximating the real geography. */
@@ -34,7 +35,13 @@ export type UnitType =
   | 'tank'
   | 'fighter'
   | 'bomber'
-  | 'aa';
+  | 'aa'
+  | 'transport'
+  | 'submarine'
+  | 'destroyer'
+  | 'cruiser'
+  | 'carrier'
+  | 'battleship';
 
 export type UnitOrFactory = UnitType | 'factory';
 
@@ -47,12 +54,38 @@ export const UNIT_TYPES: UnitType[] = [
   'aa',
 ];
 
+/** The six 1942 2e naval units. Move in sea zones only (2 zones/turn). */
+export const NAVAL_UNIT_TYPES: UnitType[] = [
+  'transport',
+  'submarine',
+  'destroyer',
+  'cruiser',
+  'carrier',
+  'battleship',
+];
+
+export const ALL_UNIT_TYPES: UnitType[] = [...UNIT_TYPES, ...NAVAL_UNIT_TYPES];
+
+/**
+ * 1942 2e, p.27: "the following are surface warships: battleships, carriers,
+ * cruisers, and destroyers. Transports are not part of the group called
+ * warships. Submarines are warships, but they are not surface warships."
+ */
+export const SURFACE_WARSHIP_TYPES: UnitType[] = [
+  'battleship',
+  'carrier',
+  'cruiser',
+  'destroyer',
+];
+
 export interface UnitStats {
   cost: number;
   attack: number;
   defense: number;
   move: number;
   air?: boolean;
+  /** Naval unit: moves in sea zones only. */
+  sea?: boolean;
   boostedAttack?: number;
   blitz?: boolean;
   strategicBomb?: boolean;
@@ -60,6 +93,25 @@ export interface UnitStats {
   noCombatMove?: boolean;
   neverCasualty?: boolean;
   structure?: boolean;
+  /** Offshore bombardment during amphibious assaults (battleship, cruiser). 1942 2e pp.27-28. */
+  bombard?: boolean;
+  /** Two hits to destroy; damage repaired if the ship survives the combat (battleship). 1942 2e p.27. */
+  twoHits?: boolean;
+  /** No combat value; may not attack unescorted (transport). 1942 2e p.30. */
+  noCombatValue?: boolean;
+  /** Chosen as casualty only when nothing else is eligible (transport). 1942 2e p.30. */
+  chosenLast?: boolean;
+  /** Carries land units (transport). 1942 2e p.30. */
+  isTransport?: boolean;
+  // --- Phase 2+ abilities (data only in navy phase 1; no mechanics yet) ---
+  /** Surprise strike / submersible / ignored-movement rules. 1942 2e pp.28-29. */
+  isSub?: boolean;
+  surpriseStrike?: boolean;
+  submersible?: boolean;
+  /** Cancels enemy submarine abilities. 1942 2e p.28. */
+  antiSub?: boolean;
+  /** Carries fighters (carrier). 1942 2e p.27. */
+  isCarrier?: boolean;
 }
 
 export interface HoldingDef {
@@ -116,6 +168,24 @@ export function ipcOf(id: string): number {
   return byId[id]?.ipc ?? 0;
 }
 
+/** True for sea zones (never owned, 0 IPC, naval units only). */
+export function isSea(id: string): boolean {
+  return byId[id]?.domain === 'sea';
+}
+
+/** True for land territories (everything that is not a sea zone). */
+export function isLand(id: string): boolean {
+  return !!byId[id] && byId[id].domain !== 'sea';
+}
+
+export function landTerritoryIds(): string[] {
+  return MAP.territories.filter((t) => t.domain !== 'sea').map((t) => t.id);
+}
+
+export function seaZoneIds(): string[] {
+  return MAP.territories.filter((t) => t.domain === 'sea').map((t) => t.id);
+}
+
 export function centroid(points: Array<[number, number]>): { x: number; y: number } {
   const n = points.length;
   return {
@@ -154,6 +224,31 @@ export function airDistance(from: string, to: string): number {
     }
   }
   return Infinity;
+}
+
+/** Sea zones reachable within `maxSteps` sea moves, traveling only through
+ *  zones where `passable` holds. Used for the 2-zone naval movement rule
+ *  (1942 2e p.27: "All sea units can move up to two sea zones"). */
+export function seaReachable(
+  from: string,
+  maxSteps: number,
+  passable: (id: string) => boolean,
+): Set<string> {
+  const seen = new Set<string>([from]);
+  let frontier = [from];
+  for (let step = 0; step < maxSteps; step++) {
+    const next: string[] = [];
+    for (const cur of frontier) {
+      for (const n of neighborsOf(cur)) {
+        if (!isSea(n) || seen.has(n) || !passable(n)) continue;
+        seen.add(n);
+        next.push(n);
+      }
+    }
+    frontier = next;
+  }
+  seen.delete(from);
+  return seen;
 }
 
 /**

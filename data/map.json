@@ -1,5 +1,5 @@
 {
-  "name": "Continental US (simplified, 26 land territories)",
+  "name": "Continental US (simplified, 26 land territories + 3 sea zones)",
   "viewBox": {
     "width": 1000,
     "height": 470
@@ -44,7 +44,8 @@
       "region": "pacific",
       "neighbors": [
         "oregon",
-        "idaho"
+        "idaho",
+        "pacific"
       ],
       "ipc": 1,
       "domain": "land",
@@ -140,7 +141,8 @@
         "washington",
         "california",
         "idaho",
-        "nevada_utah"
+        "nevada_utah",
+        "pacific"
       ],
       "ipc": 1,
       "domain": "land",
@@ -211,7 +213,8 @@
       "neighbors": [
         "oregon",
         "nevada_utah",
-        "arizona"
+        "arizona",
+        "pacific"
       ],
       "ipc": 8,
       "domain": "land",
@@ -783,7 +786,8 @@
         "new_mexico",
         "oklahoma",
         "arkansas",
-        "gulf_south"
+        "gulf_south",
+        "gulf"
       ],
       "ipc": 5,
       "domain": "land",
@@ -1758,7 +1762,8 @@
         "arkansas",
         "appalachia",
         "southeast",
-        "florida"
+        "florida",
+        "gulf"
       ],
       "ipc": 1,
       "domain": "land",
@@ -2140,7 +2145,9 @@
       "region": "south",
       "neighbors": [
         "gulf_south",
-        "southeast"
+        "southeast",
+        "atlantic",
+        "gulf"
       ],
       "ipc": 3,
       "domain": "land",
@@ -2284,7 +2291,8 @@
         "gulf_south",
         "florida",
         "appalachia",
-        "mid_atlantic"
+        "mid_atlantic",
+        "atlantic"
       ],
       "ipc": 4,
       "domain": "land",
@@ -2463,7 +2471,8 @@
       "neighbors": [
         "appalachia",
         "southeast",
-        "pa_nj"
+        "pa_nj",
+        "atlantic"
       ],
       "ipc": 3,
       "domain": "land",
@@ -2643,7 +2652,8 @@
         "great_lakes",
         "appalachia",
         "mid_atlantic",
-        "new_york"
+        "new_york",
+        "atlantic"
       ],
       "ipc": 4,
       "domain": "land",
@@ -2717,7 +2727,8 @@
       "region": "northeast",
       "neighbors": [
         "pa_nj",
-        "new_england"
+        "new_england",
+        "atlantic"
       ],
       "ipc": 5,
       "domain": "land",
@@ -2810,7 +2821,8 @@
       "states": "ME+NH+VT+MA+RI+CT",
       "region": "northeast",
       "neighbors": [
-        "new_york"
+        "new_york",
+        "atlantic"
       ],
       "ipc": 3,
       "domain": "land",
@@ -2935,6 +2947,174 @@
       "label": [
         784,
         110
+      ]
+    },
+    {
+      "id": "pacific",
+      "name": "Pacific",
+      "states": "",
+      "region": "ocean",
+      "domain": "sea",
+      "ipc": 0,
+      "neighbors": [
+        "washington",
+        "oregon",
+        "california",
+        "gulf"
+      ],
+      "points": [
+        [
+          6,
+          6
+        ],
+        [
+          110,
+          4
+        ],
+        [
+          150,
+          50
+        ],
+        [
+          144,
+          140
+        ],
+        [
+          152,
+          230
+        ],
+        [
+          144,
+          320
+        ],
+        [
+          150,
+          410
+        ],
+        [
+          112,
+          464
+        ],
+        [
+          6,
+          464
+        ]
+      ],
+      "label": [
+        80,
+        235
+      ]
+    },
+    {
+      "id": "atlantic",
+      "name": "Atlantic",
+      "states": "",
+      "region": "ocean",
+      "domain": "sea",
+      "ipc": 0,
+      "neighbors": [
+        "new_england",
+        "new_york",
+        "pa_nj",
+        "mid_atlantic",
+        "southeast",
+        "florida",
+        "gulf"
+      ],
+      "points": [
+        [
+          850,
+          50
+        ],
+        [
+          884,
+          6
+        ],
+        [
+          994,
+          6
+        ],
+        [
+          994,
+          464
+        ],
+        [
+          884,
+          464
+        ],
+        [
+          850,
+          410
+        ],
+        [
+          858,
+          320
+        ],
+        [
+          850,
+          230
+        ],
+        [
+          858,
+          140
+        ]
+      ],
+      "label": [
+        918,
+        235
+      ]
+    },
+    {
+      "id": "gulf",
+      "name": "Gulf of Mexico",
+      "states": "",
+      "region": "ocean",
+      "domain": "sea",
+      "ipc": 0,
+      "neighbors": [
+        "texas",
+        "gulf_south",
+        "florida",
+        "pacific",
+        "atlantic"
+      ],
+      "points": [
+        [
+          168,
+          446
+        ],
+        [
+          320,
+          442
+        ],
+        [
+          480,
+          445
+        ],
+        [
+          640,
+          442
+        ],
+        [
+          800,
+          444
+        ],
+        [
+          836,
+          446
+        ],
+        [
+          836,
+          466
+        ],
+        [
+          168,
+          466
+        ]
+      ],
+      "label": [
+        500,
+        457
       ]
     }
   ],

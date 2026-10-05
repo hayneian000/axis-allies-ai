@@ -1,1 +1,486 @@
-aW1wb3J0IHsgZGVzY3JpYmUsIGV4cGVjdCwgaXQgfSBmcm9tICd2aXRlc3QnOwppbXBvcnQgewogIGF1dG9DYXN1YWx0aWVzLAogIGNob29zZUNhc3VhbHRpZXMsCiAgY29tYmF0TW92ZSwKICBlbXB0eVVuaXRzLAogIG1vYmlsaXplLAogIG5vbkNvbWJhdE1vdmUsCiAgcHVyY2hhc2UsCiAgcmVzb2x2ZUNvbWJhdFJvdW5kLAogIHN1Ym1lcmdlU3VicywKICBzdWJtZXJnZVR1cm4sCn0gZnJvbSAnLi4vZW5naW5lL2VuZ2luZSc7CmltcG9ydCB0eXBlIHsgR2FtZVN0YXRlLCBVbml0Q291bnRzIH0gZnJvbSAnLi4vZW5naW5lL3R5cGVzJzsKaW1wb3J0IHsKICBmcmVzaEdhbWUsCiAgZ290b0NvbWJhdCwKICBnb3RvQ29tYmF0TW92ZSwKICBnb3RvTW9iaWxpemUsCiAgZ290b05vbkNvbWJhdCwKICByZXNvbHZlQmF0dGxlQXV0bywKfSBmcm9tICcuL2hlbHBlcnMnOwoKZnVuY3Rpb24gc2V0VW5pdHMoczogR2FtZVN0YXRlLCB0aWQ6IHN0cmluZywgdW5pdHM6IFBhcnRpYWw8VW5pdENvdW50cz4pOiB2b2lkIHsKICBzLnRlcnJpdG9yaWVzW3RpZF0udW5pdHMgPSB7IC4uLmVtcHR5VW5pdHMoKSwgLi4udW5pdHMgfTsKfQpmdW5jdGlvbiBzZXRTZWEoczogR2FtZVN0YXRlLCB6aWQ6IHN0cmluZywgb3duZXI6IG51bWJlciB8IG51bGwsIHVuaXRzOiBQYXJ0aWFsPFVuaXRDb3VudHM+KTogdm9pZCB7CiAgcy50ZXJyaXRvcmllc1t6aWRdLm93bmVyID0gb3duZXI7CiAgc2V0VW5pdHMocywgemlkLCB1bml0cyk7Cn0KCi8qKgogKiBOYXZ5IHBoYXNlIDIg4oCUIDE5NDIgMmUgc3VibWFyaW5lIHJ1bGVzIChwcC4yNy0yOSkgb24gdGhlIFVTIG1hcCdzIHNlYSB6b25lcy4KICoKICogQ292ZXJlZDogc3VycHJpc2Ugc3RyaWtlIG9yZGVyaW5nIGFuZCBuby1yZXR1cm4tZmlyZSwgc3VibWVyZ2UgdGltaW5nCiAqIChhdHRhY2tlci1maXJzdCwgYmVmb3JlIGRpY2UpIGFuZCByZW1vdmFsIGZyb20gYmF0dGxlLCBkZXN0cm95ZXIgY2FuY2VsbGluZwogKiBhbGwgZm91ciBzdWIgYWJpbGl0aWVzLCBzdWIgcGFzcy10aHJvdWdoIG1vdmVtZW50LCBkZXN0cm95ZXIgaW50ZXJjZXB0aW9uLAogKiB0aGUgaWdub3JlLW9yLWF0dGFjayBjaG9pY2UgaW4gc3Vicy90cmFuc3BvcnRzLW9ubHkgem9uZXMsIGFpcjwtPnN1YgogKiBjYXN1YWx0eSBjb25zdHJhaW50cywgYW5kIG1vYmlsaXphdGlvbiBpbnRvIGhvc3RpbGUgd2F0ZXJzIChwLjIxKS4KICovCgpkZXNjcmliZSgnc3VycHJpc2Ugc3RyaWtlICgxOTQyIDJlIHAuMjkpJywgKCkgPT4gewogIGl0KCdhdHRhY2tlciBzdWJzIGZpcmUgYmVmb3JlIHRoZSBnZW5lcmFsIGV4Y2hhbmdlJywgKCkgPT4gewogICAgLy8gQXR0YWNrZXI6IDEgc3ViLiBEZWZlbmRlcjogMSBjcnVpc2VyIChubyBkZXN0cm95ZXIsIHNvIHN1cnByaXNlIGhhcHBlbnMpLgogICAgLy8gVGhlIHN1YidzIHN1cnByaXNlIHN0cmlrZSBmaXJlcyBiZWZvcmUgdGhlIGNydWlzZXIncyByZXR1cm4gZmlyZS4KICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgMTAxKTsKICAgIGNvbnN0IHBpZCA9IHMuY3VycmVudFBsYXllcjsKICAgIGNvbnN0IGZvZSA9IDEgLSBwaWQ7CiAgICBzZXRTZWEocywgJ2NhbGlmb3JuaWFfY29hc3QnLCBwaWQsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgc2V0U2VhKHMsICd3ZXN0ZXJuX2d1bGYnLCBmb2UsIHsgY3J1aXNlcjogMSB9KTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgZXhwZWN0KGNvbWJhdE1vdmUocywgcGlkLCBbeyBmcm9tOiAnY2FsaWZvcm5pYV9jb2FzdCcsIHRvOiAnd2VzdGVybl9ndWxmJywgdW5pdHM6IHsgc3VibWFyaW5lOiAxIH0gfV0pLm9rKS50b0JlKHRydWUpOwogICAgZ290b0NvbWJhdChzKTsKICAgIC8vIEF0dGFja2VyIGRlY2xpbmVzIHRvIHN1Ym1lcmdlOyBkZWZlbmRlciBoYXMgbm8gc3Vicy4KICAgIGV4cGVjdChzdWJtZXJnZVR1cm4ocywgJ3dlc3Rlcm5fZ3VsZicpKS50b0JlKCdhdHRhY2tlcicpOwogICAgZXhwZWN0KHN1Ym1lcmdlU3VicyhzLCBwaWQsICd3ZXN0ZXJuX2d1bGYnLCAnYXR0YWNrZXInLCAwKS5vaykudG9CZSh0cnVlKTsKICAgIGV4cGVjdChzdWJtZXJnZVR1cm4ocywgJ3dlc3Rlcm5fZ3VsZicpKS50b0JlKG51bGwpOwogICAgLy8gVGhlIGJhdHRsZSByZXNvbHZlczsgdGhlIG1lY2hhbmljcyB3b3JrIChkaWNlIHZhcnkgYnkgc2VlZCkuCiAgICBjb25zdCByID0gcmVzb2x2ZUNvbWJhdFJvdW5kKHMsIHBpZCwgJ3dlc3Rlcm5fZ3VsZicpOwogICAgZXhwZWN0KHIub2ssIGAke3IuY29kZX0gJHtyLmVycm9yfWApLnRvQmUodHJ1ZSk7CiAgfSk7CgogIGl0KCdkZWZlbmRlciBzdWJzIGZpcmUgdGhlaXIgc3VycHJpc2Ugc3RyaWtlIGFmdGVyIHRoZSBhdHRhY2tlclwncycsICgpID0+IHsKICAgIC8vIEJvdGggc2lkZXMgaGF2ZSBzdWJzLCBubyBkZXN0cm95ZXJzLiBBdHRhY2tlciBkZWNpZGVzIGZpcnN0LCB0aGVuIGRlZmVuZGVyLgogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMDIpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnY2FsaWZvcm5pYV9jb2FzdCcsIHBpZCwgeyBzdWJtYXJpbmU6IDEgfSk7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyBzdWJtYXJpbmU6IDEsIGNydWlzZXI6IDEgfSk7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIGV4cGVjdChjb21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ2NhbGlmb3JuaWFfY29hc3QnLCB0bzogJ3dlc3Rlcm5fZ3VsZicsIHVuaXRzOiB7IHN1Ym1hcmluZTogMSB9IH1dKS5vaykudG9CZSh0cnVlKTsKICAgIGdvdG9Db21iYXQocyk7CiAgICBleHBlY3Qoc3VibWVyZ2VUdXJuKHMsICd3ZXN0ZXJuX2d1bGYnKSkudG9CZSgnYXR0YWNrZXInKTsKICAgIGV4cGVjdChzdWJtZXJnZVN1YnMocywgcGlkLCAnd2VzdGVybl9ndWxmJywgJ2F0dGFja2VyJywgMCkub2spLnRvQmUodHJ1ZSk7CiAgICBleHBlY3Qoc3VibWVyZ2VUdXJuKHMsICd3ZXN0ZXJuX2d1bGYnKSkudG9CZSgnZGVmZW5kZXInKTsKICAgIGV4cGVjdChzdWJtZXJnZVN1YnMocywgZm9lLCAnd2VzdGVybl9ndWxmJywgJ2RlZmVuZGVyJywgMCkub2spLnRvQmUodHJ1ZSk7CiAgICBleHBlY3Qoc3VibWVyZ2VUdXJuKHMsICd3ZXN0ZXJuX2d1bGYnKSkudG9CZShudWxsKTsKICAgIGNvbnN0IHIgPSByZXNvbHZlQ29tYmF0Um91bmQocywgcGlkLCAnd2VzdGVybl9ndWxmJyk7CiAgICBleHBlY3Qoci5vaywgYCR7ci5jb2RlfSAke3IuZXJyb3J9YCkudG9CZSh0cnVlKTsKICB9KTsKCiAgaXQoJ2EgZGVzdHJveWVyIGNhbmNlbHMgb25seSB0aGUgZW5lbXlcJ3Mgc3VycHJpc2Ugc3RyaWtlJywgKCkgPT4gewogICAgLy8gMTk0MiAyZSBwLjI4OiBhIGRlc3Ryb3llciBjYW5jZWxzIGVuZW15IHN1YnMnIHN1cnByaXNlIHN0cmlrZSwgbm90IGZyaWVuZGx5LgogICAgLy8gQXR0YWNrZXI6IDEgc3ViLiBEZWZlbmRlcjogMSBkZXN0cm95ZXIgKyAxIHN1Yi4KICAgIC8vIC0gQXR0YWNrZXIncyBzdWI6IGNhbmNlbGxlZCAoZGVmZW5kZXIgaGFzIGRlc3Ryb3llcikuIE5vIGRlY2lzaW9uLgogICAgLy8gLSBEZWZlbmRlcidzIHN1YjogTk9UIGNhbmNlbGxlZCAoYXR0YWNrZXIgaGFzIG5vIGRlc3Ryb3llcikuIEdldHMgZGVjaXNpb24uCiAgICBjb25zdCBzID0gZnJlc2hHYW1lKDIsIDEwMyk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBmb2UgPSAxIC0gcGlkOwogICAgc2V0U2VhKHMsICdjYWxpZm9ybmlhX2NvYXN0JywgcGlkLCB7IHN1Ym1hcmluZTogMSB9KTsKICAgIHNldFNlYShzLCAnd2VzdGVybl9ndWxmJywgZm9lLCB7IGRlc3Ryb3llcjogMSwgc3VibWFyaW5lOiAxIH0pOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBleHBlY3QoY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdjYWxpZm9ybmlhX2NvYXN0JywgdG86ICd3ZXN0ZXJuX2d1bGYnLCB1bml0czogeyBzdWJtYXJpbmU6IDEgfSB9XSkub2spLnRvQmUodHJ1ZSk7CiAgICBnb3RvQ29tYmF0KHMpOwogICAgLy8gQXR0YWNrZXIncyBzdWIgaXMgY2FuY2VsbGVkOyBkZWZlbmRlcidzIHN1YiBnZXRzIGEgZGVjaXNpb24uCiAgICBleHBlY3Qoc3VibWVyZ2VUdXJuKHMsICd3ZXN0ZXJuX2d1bGYnKSkudG9CZSgnZGVmZW5kZXInKTsKICAgIGV4cGVjdChzdWJtZXJnZVN1YnMocywgZm9lLCAnd2VzdGVybl9ndWxmJywgJ2RlZmVuZGVyJywgMCkub2spLnRvQmUodHJ1ZSk7CiAgICBleHBlY3Qoc3VibWVyZ2VUdXJuKHMsICd3ZXN0ZXJuX2d1bGYnKSkudG9CZShudWxsKTsKICAgIGNvbnN0IHIgPSByZXNvbHZlQ29tYmF0Um91bmQocywgcGlkLCAnd2VzdGVybl9ndWxmJyk7CiAgICBleHBlY3Qoci5vaywgYCR7ci5jb2RlfSAke3IuZXJyb3J9YCkudG9CZSh0cnVlKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnc3VibWVyZ2UgKDE5NDIgMmUgcC4yOSknLCAoKSA9PiB7CiAgaXQoJ2F0dGFja2VyIGRlY2lkZXMgZmlyc3QsIGJlZm9yZSBhbnkgZGljZSBhcmUgcm9sbGVkJywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMDQpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnY2FsaWZvcm5pYV9jb2FzdCcsIHBpZCwgeyBzdWJtYXJpbmU6IDEgfSk7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyBzdWJtYXJpbmU6IDEgfSk7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIGV4cGVjdChjb21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ2NhbGlmb3JuaWFfY29hc3QnLCB0bzogJ3dlc3Rlcm5fZ3VsZicsIHVuaXRzOiB7IHN1Ym1hcmluZTogMSB9IH1dKS5vaykudG9CZSh0cnVlKTsKICAgIGdvdG9Db21iYXQocyk7CiAgICAvLyBBdHRhY2tlcidzIHR1cm4gdG8gZGVjaWRlLgogICAgZXhwZWN0KHN1Ym1lcmdlVHVybihzLCAnd2VzdGVybl9ndWxmJykpLnRvQmUoJ2F0dGFja2VyJyk7CiAgICAvLyBEZWZlbmRlciBjYW5ub3QgZGVjaWRlIGJlZm9yZSB0aGUgYXR0YWNrZXIuCiAgICBleHBlY3Qoc3VibWVyZ2VTdWJzKHMsIGZvZSwgJ3dlc3Rlcm5fZ3VsZicsICdkZWZlbmRlcicsIDEpLm9rKS50b0JlKGZhbHNlKTsKICAgIC8vIEF0dGFja2VyIHN1Ym1lcmdlcy4KICAgIGV4cGVjdChzdWJtZXJnZVN1YnMocywgcGlkLCAnd2VzdGVybl9ndWxmJywgJ2F0dGFja2VyJywgMSkub2spLnRvQmUodHJ1ZSk7CiAgICAvLyBOb3cgZGVmZW5kZXIncyB0dXJuLgogICAgZXhwZWN0KHN1Ym1lcmdlVHVybihzLCAnd2VzdGVybl9ndWxmJykpLnRvQmUoJ2RlZmVuZGVyJyk7CiAgICBleHBlY3Qoc3VibWVyZ2VTdWJzKHMsIGZvZSwgJ3dlc3Rlcm5fZ3VsZicsICdkZWZlbmRlcicsIDApLm9rKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHN1Ym1lcmdlVHVybihzLCAnd2VzdGVybl9ndWxmJykpLnRvQmUobnVsbCk7CiAgICAvLyBUaGUgYXR0YWNrZXIncyBzdWIgaXMgcmVtb3ZlZCBmcm9tIHRoZSBiYXR0bGUuCiAgICBjb25zdCBiID0gcy5iYXR0bGVzLmZpbmQoKHgpID0+IHgudGVycml0b3J5SWQgPT09ICd3ZXN0ZXJuX2d1bGYnKSE7CiAgICBleHBlY3QoYi5hdHRhY2suc3VibWFyaW5lKS50b0JlKDApOwogICAgZXhwZWN0KGIuc3VibWVyZ2VkQSkudG9CZSgxKTsKICB9KTsKCiAgaXQoJ2Egc3VibWVyZ2VkIHN1YiBpcyByZW1vdmVkIGZyb20gdGhlIGJhdHRsZScsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgMTA1KTsKICAgIGNvbnN0IHBpZCA9IHMuY3VycmVudFBsYXllcjsKICAgIGNvbnN0IGZvZSA9IDEgLSBwaWQ7CiAgICBzZXRTZWEocywgJ2NhbGlmb3JuaWFfY29hc3QnLCBwaWQsIHsgc3VibWFyaW5lOiAxLCBkZXN0cm95ZXI6IDEgfSk7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyBjcnVpc2VyOiAxIH0pOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBleHBlY3QoCiAgICAgIGNvbWJhdE1vdmUocywgcGlkLCBbeyBmcm9tOiAnY2FsaWZvcm5pYV9jb2FzdCcsIHRvOiAnd2VzdGVybl9ndWxmJywgdW5pdHM6IHsgc3VibWFyaW5lOiAxLCBkZXN0cm95ZXI6IDEgfSB9XSkub2ssCiAgICApLnRvQmUodHJ1ZSk7CiAgICBnb3RvQ29tYmF0KHMpOwogICAgLy8gQXR0YWNrZXIgc3VibWVyZ2VzIHRoZSBzdWIuCiAgICBleHBlY3Qoc3VibWVyZ2VTdWJzKHMsIHBpZCwgJ3dlc3Rlcm5fZ3VsZicsICdhdHRhY2tlcicsIDEpLm9rKS50b0JlKHRydWUpOwogICAgY29uc3QgYiA9IHMuYmF0dGxlcy5maW5kKCh4KSA9PiB4LnRlcnJpdG9yeUlkID09PSAnd2VzdGVybl9ndWxmJykhOwogICAgZXhwZWN0KGIuYXR0YWNrLnN1Ym1hcmluZSkudG9CZSgwKTsKICAgIGV4cGVjdChiLnN1Ym1lcmdlZEEpLnRvQmUoMSk7CiAgICBleHBlY3QoYi5hdHRhY2suZGVzdHJveWVyKS50b0JlKDEpOwogICAgLy8gVGhlIHN1Ym1lcmdlZCBzdWIgc3RheXMgb3V0IG9mIHRoZSBmaWdodC4KICAgIHJlc29sdmVCYXR0bGVBdXRvKHMsIHBpZCwgJ3dlc3Rlcm5fZ3VsZicpOwogICAgZXhwZWN0KGIub3ZlcikudG9CZSh0cnVlKTsKICB9KTsKCiAgaXQoJ3N1YnMgY2Fubm90IHN1Ym1lcmdlIHdpdGggYW4gZW5lbXkgZGVzdHJveWVyIHByZXNlbnQnLCAoKSA9PiB7CiAgICAvLyAxOTQyIDJlIHAuMjg6IGRlc3Ryb3llciBjYW5jZWxzIFN1Ym1lcnNpYmxlLgogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMDYpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnY2FsaWZvcm5pYV9jb2FzdCcsIHBpZCwgeyBzdWJtYXJpbmU6IDEgfSk7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyBkZXN0cm95ZXI6IDEgfSk7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIGV4cGVjdChjb21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ2NhbGlmb3JuaWFfY29hc3QnLCB0bzogJ3dlc3Rlcm5fZ3VsZicsIHVuaXRzOiB7IHN1Ym1hcmluZTogMSB9IH1dKS5vaykudG9CZSh0cnVlKTsKICAgIGdvdG9Db21iYXQocyk7CiAgICAvLyBObyBzdWJtZXJnZSBkZWNpc2lvbiBpcyBkdWUgKGF0dGFja2VyJ3Mgc3ViIGlzIGNhbmNlbGxlZCkuCiAgICBleHBlY3Qoc3VibWVyZ2VUdXJuKHMsICd3ZXN0ZXJuX2d1bGYnKSkudG9CZShudWxsKTsKICAgIGV4cGVjdChzdWJtZXJnZVN1YnMocywgcGlkLCAnd2VzdGVybl9ndWxmJywgJ2F0dGFja2VyJywgMSkub2spLnRvQmUoZmFsc2UpOwogIH0pOwoKICBpdCgnaW52YWxpZCBzdWJtZXJnZSBhY3Rpb25zIG5ldmVyIG11dGF0ZSBzdGF0ZScsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgMTA3KTsKICAgIGNvbnN0IHBpZCA9IHMuY3VycmVudFBsYXllcjsKICAgIGNvbnN0IGZvZSA9IDEgLSBwaWQ7CiAgICBzZXRTZWEocywgJ2NhbGlmb3JuaWFfY29hc3QnLCBwaWQsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgc2V0U2VhKHMsICd3ZXN0ZXJuX2d1bGYnLCBmb2UsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBleHBlY3QoY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdjYWxpZm9ybmlhX2NvYXN0JywgdG86ICd3ZXN0ZXJuX2d1bGYnLCB1bml0czogeyBzdWJtYXJpbmU6IDEgfSB9XSkub2spLnRvQmUodHJ1ZSk7CiAgICBnb3RvQ29tYmF0KHMpOwogICAgY29uc3QgYmVmb3JlID0gSlNPTi5zdHJpbmdpZnkocy5iYXR0bGVzKTsKICAgIC8vIFRvbyBtYW55IHN1YnMuCiAgICBleHBlY3Qoc3VibWVyZ2VTdWJzKHMsIHBpZCwgJ3dlc3Rlcm5fZ3VsZicsICdhdHRhY2tlcicsIDUpLm9rKS50b0JlKGZhbHNlKTsKICAgIC8vIFdyb25nIHNpZGUuCiAgICBleHBlY3Qoc3VibWVyZ2VTdWJzKHMsIHBpZCwgJ3dlc3Rlcm5fZ3VsZicsICdkZWZlbmRlcicsIDEpLm9rKS50b0JlKGZhbHNlKTsKICAgIC8vIFdyb25nIHBsYXllci4KICAgIGV4cGVjdChzdWJtZXJnZVN1YnMocywgZm9lLCAnd2VzdGVybl9ndWxmJywgJ2F0dGFja2VyJywgMSkub2spLnRvQmUoZmFsc2UpOwogICAgZXhwZWN0KEpTT04uc3RyaW5naWZ5KHMuYmF0dGxlcykpLnRvQmUoYmVmb3JlKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnZGVzdHJveWVyIGNhbmNlbHMgc3ViIGFiaWxpdGllcyAoMTk0MiAyZSBwLjI4KScsICgpID0+IHsKICBpdCgnYWlyIGhpdHMgQ0FOIGJlIGFzc2lnbmVkIHRvIHN1YnMgd2hlbiB0aGUgYXR0YWNrZXIgaGFzIGEgZGVzdHJveWVyJywgKCkgPT4gewogICAgLy8gMTk0MiAyZSBwLjI5OiBhaXIgY2Fubm90IGhpdCBzdWJzIFVOTEVTUyBhIGZyaWVuZGx5IGRlc3Ryb3llciBpcyBwcmVzZW50LgogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMDgpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnY2FsaWZvcm5pYV9jb2FzdCcsIHBpZCwgeyBkZXN0cm95ZXI6IDEgfSk7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyBzdWJtYXJpbmU6IDEgfSk7CiAgICBzLnRlcnJpdG9yaWVzWydjYWxpZm9ybmlhX2NvYXN0J10udW5pdHMuZmlnaHRlciA9IDE7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIGV4cGVjdCgKICAgICAgY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdjYWxpZm9ybmlhX2NvYXN0JywgdG86ICd3ZXN0ZXJuX2d1bGYnLCB1bml0czogeyBkZXN0cm95ZXI6IDEsIGZpZ2h0ZXI6IDEgfSB9XSkub2ssCiAgICApLnRvQmUodHJ1ZSk7CiAgICBnb3RvQ29tYmF0KHMpOwogICAgY29uc3QgYiA9IHMuYmF0dGxlcy5maW5kKCh4KSA9PiB4LnRlcnJpdG9yeUlkID09PSAnd2VzdGVybl9ndWxmJykhOwogICAgLy8gUmlnIGFuIGFpciBoaXQgb24gdGhlIGRlZmVuZGVyLgogICAgYi5wZW5kaW5nRGVmZW5kZXIgPSAxOwogICAgYi5wZW5kRGVmQWlyID0gMTsKICAgIGIuZGVmZW5kZXJSZXNvbHZlZCA9IGZhbHNlOwogICAgLy8gV2l0aCB0aGUgYXR0YWNrZXIncyBkZXN0cm95ZXIgcHJlc2VudCwgYWlyIENBTiBoaXQgdGhlIHN1Yi4KICAgIGNvbnN0IHIgPSBhdXRvQ2FzdWFsdGllcyhzLCBwaWQsICd3ZXN0ZXJuX2d1bGYnLCAnZGVmZW5kZXInKTsKICAgIGV4cGVjdChyLm9rLCBgJHtyLmNvZGV9ICR7ci5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHMudGVycml0b3JpZXNbJ3dlc3Rlcm5fZ3VsZiddLnVuaXRzLnN1Ym1hcmluZSkudG9CZSgwKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnc3VibWFyaW5lIG1vdmVtZW50ICgxOTQyIDJlIHBwLjI3LCAyOSknLCAoKSA9PiB7CiAgaXQoJ3N1YnMgY2FuIGF0dGFjayBpbnRvIGEgaG9zdGlsZSB6b25lJywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMTApOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnY2FsaWZvcm5pYV9jb2FzdCcsIHBpZCwgeyBzdWJtYXJpbmU6IDEgfSk7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyBjcnVpc2VyOiAxIH0pOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBjb25zdCByID0gY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdjYWxpZm9ybmlhX2NvYXN0JywgdG86ICd3ZXN0ZXJuX2d1bGYnLCB1bml0czogeyBzdWJtYXJpbmU6IDEgfSB9XSk7CiAgICBleHBlY3Qoci5vaywgYCR7ci5jb2RlfSAke3IuZXJyb3J9YCkudG9CZSh0cnVlKTsKICAgIGV4cGVjdChzLmJhdHRsZXMuc29tZSgoYikgPT4gYi50ZXJyaXRvcnlJZCA9PT0gJ3dlc3Rlcm5fZ3VsZicgJiYgIWIub3ZlcikpLnRvQmUodHJ1ZSk7CiAgfSk7CgogIGl0KCd6b25lcyB3aXRoIG9ubHkgZW5lbXkgc3Vicy90cmFuc3BvcnRzIGRvIG5vdCBibG9jayBtb3ZlbWVudCcsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgMTExKTsKICAgIGNvbnN0IHBpZCA9IHMuY3VycmVudFBsYXllcjsKICAgIGNvbnN0IGZvZSA9IDEgLSBwaWQ7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIHBpZCwgeyBkZXN0cm95ZXI6IDEgfSk7CiAgICBzZXRTZWEocywgJ2Vhc3Rlcm5fZ3VsZicsIGZvZSwgeyBzdWJtYXJpbmU6IDEsIHRyYW5zcG9ydDogMSB9KTsKICAgIHNldFNlYShzLCAnc291dGhfYXRsYW50aWMnLCBudWxsLCB7fSk7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIC8vIERlc3Ryb3llciBtb3ZlcyB3ZXN0ZXJuX2d1bGYgLT4gZWFzdGVybl9ndWxmIC0+IHNvdXRoX2F0bGFudGljLCBwYXNzaW5nCiAgICAvLyB0aHJvdWdoIHRoZSBzdWJzL3RyYW5zcG9ydHMtb25seSB6b25lIHdpdGhvdXQgc3RvcHBpbmcuCiAgICBjb25zdCByID0gY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICd3ZXN0ZXJuX2d1bGYnLCB0bzogJ3NvdXRoX2F0bGFudGljJywgdW5pdHM6IHsgZGVzdHJveWVyOiAxIH0gfV0pOwogICAgZXhwZWN0KHIub2ssIGAke3IuY29kZX0gJHtyLmVycm9yfWApLnRvQmUodHJ1ZSk7CiAgICBleHBlY3Qocy50ZXJyaXRvcmllc1snc291dGhfYXRsYW50aWMnXS51bml0cy5kZXN0cm95ZXIpLnRvQmUoMSk7CiAgfSk7CgogIGl0KCdzdWJzIGNhbm5vdCBwYXNzIHRocm91Z2ggYSB6b25lIHdpdGggYW4gZW5lbXkgZGVzdHJveWVyJywgKCkgPT4gewogICAgLy8gMTk0MiAyZSBwLjI5OiBlbnRlcmluZyBhIHpvbmUgd2l0aCBhbiBlbmVteSBkZXN0cm95ZXIgZW5kcyBtb3ZlbWVudC4KICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgMTEyKTsKICAgIGNvbnN0IHBpZCA9IHMuY3VycmVudFBsYXllcjsKICAgIGNvbnN0IGZvZSA9IDEgLSBwaWQ7CiAgICBzZXRTZWEocywgJ2NhbGlmb3JuaWFfY29hc3QnLCBwaWQsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgc2V0U2VhKHMsICd3ZXN0ZXJuX2d1bGYnLCBmb2UsIHsgZGVzdHJveWVyOiAxIH0pOwogICAgc2V0U2VhKHMsICdub3J0aF9hdGxhbnRpYycsIG51bGwsIHt9KTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgLy8gU3ViIHRyaWVzIHBhY2lmaWMgLT4gZ3VsZiAtPiBhdGxhbnRpYy4gVGhlIGRlc3Ryb3llciBpbiBndWxmIGJsb2NrcyB0cmFuc2l0LgogICAgY29uc3QgciA9IGNvbWJhdE1vdmUocywgcGlkLCBbeyBmcm9tOiAnY2FsaWZvcm5pYV9jb2FzdCcsIHRvOiAnbm9ydGhfYXRsYW50aWMnLCB1bml0czogeyBzdWJtYXJpbmU6IDEgfSB9XSk7CiAgICBleHBlY3Qoci5vaykudG9CZShmYWxzZSk7CiAgICBleHBlY3QoWydkZXN0cm95ZXJfaW50ZXJjZXB0JywgJ3JhbmdlJ10pLnRvQ29udGFpbihyLmNvZGUpOwogIH0pOwp9KTsKCmRlc2NyaWJlKCdpZ25vcmUtb3ItYXR0YWNrIGNob2ljZSAoMTk0MiAyZSBwLjI5KScsICgpID0+IHsKICBpdCgnYXR0YWNrZXIgY2FuIGlnbm9yZSBzdWJzL3RyYW5zcG9ydHMgYW5kIGNvZXhpc3QnLCAoKSA9PiB7CiAgICBjb25zdCBzID0gZnJlc2hHYW1lKDIsIDExMyk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBmb2UgPSAxIC0gcGlkOwogICAgc2V0U2VhKHMsICdjYWxpZm9ybmlhX2NvYXN0JywgcGlkLCB7IGRlc3Ryb3llcjogMSB9KTsKICAgIHNldFNlYShzLCAnd2VzdGVybl9ndWxmJywgZm9lLCB7IHN1Ym1hcmluZTogMSB9KTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgY29uc3QgciA9IGNvbWJhdE1vdmUocywgcGlkLCBbCiAgICAgIHsgZnJvbTogJ2NhbGlmb3JuaWFfY29hc3QnLCB0bzogJ3dlc3Rlcm5fZ3VsZicsIHVuaXRzOiB7IGRlc3Ryb3llcjogMSB9LCBhdHRhY2s6IGZhbHNlIH0sCiAgICBdKTsKICAgIGV4cGVjdChyLm9rLCBgJHtyLmNvZGV9ICR7ci5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgLy8gTm8gYmF0dGxlOyB0aGUgZGVzdHJveWVyIGNvZXhpc3RzIHdpdGggdGhlIGVuZW15IHN1Yi4KICAgIGV4cGVjdChzLmJhdHRsZXMuZmlsdGVyKChiKSA9PiBiLnRlcnJpdG9yeUlkID09PSAnd2VzdGVybl9ndWxmJyAmJiAhYi5vdmVyKSkudG9IYXZlTGVuZ3RoKDApOwogICAgZXhwZWN0KHMudGVycml0b3JpZXNbJ3dlc3Rlcm5fZ3VsZiddLnVuaXRzLmRlc3Ryb3llcikudG9CZSgxKTsKICAgIGNvbnN0IGNvZXhpc3QgPSBzLnRlcnJpdG9yaWVzWyd3ZXN0ZXJuX2d1bGYnXS5jb2V4aXN0ID8/IFtdOwogICAgZXhwZWN0KGNvZXhpc3Quc29tZSgoZikgPT4gZi5vd25lciA9PT0gZm9lICYmIGYudW5pdHMuc3VibWFyaW5lID09PSAxKSkudG9CZSh0cnVlKTsKICB9KTsKCiAgaXQoJ2F0dGFja2VyIGNhbiBjaG9vc2UgdG8gYXR0YWNrIHN1YnMvdHJhbnNwb3J0cycsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgMTE0KTsKICAgIGNvbnN0IHBpZCA9IHMuY3VycmVudFBsYXllcjsKICAgIGNvbnN0IGZvZSA9IDEgLSBwaWQ7CiAgICBzZXRTZWEocywgJ2NhbGlmb3JuaWFfY29hc3QnLCBwaWQsIHsgZGVzdHJveWVyOiAxIH0pOwogICAgc2V0U2VhKHMsICd3ZXN0ZXJuX2d1bGYnLCBmb2UsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBjb25zdCByID0gY29tYmF0TW92ZShzLCBwaWQsIFsKICAgICAgeyBmcm9tOiAnY2FsaWZvcm5pYV9jb2FzdCcsIHRvOiAnd2VzdGVybl9ndWxmJywgdW5pdHM6IHsgZGVzdHJveWVyOiAxIH0sIGF0dGFjazogdHJ1ZSB9LAogICAgXSk7CiAgICBleHBlY3Qoci5vaywgYCR7ci5jb2RlfSAke3IuZXJyb3J9YCkudG9CZSh0cnVlKTsKICAgIGV4cGVjdChzLmJhdHRsZXMuc29tZSgoYikgPT4gYi50ZXJyaXRvcnlJZCA9PT0gJ3dlc3Rlcm5fZ3VsZicgJiYgIWIub3ZlcikpLnRvQmUodHJ1ZSk7CiAgfSk7CgogIGl0KCdkZWZhdWx0IGlzIHRvIGF0dGFjayAocGhhc2UtMSBiZWhhdmlvciBwcmVzZXJ2ZWQpJywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMTUpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnY2FsaWZvcm5pYV9jb2FzdCcsIHBpZCwgeyBkZXN0cm95ZXI6IDEgfSk7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyB0cmFuc3BvcnQ6IDEgfSk7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIGNvbnN0IHIgPSBjb21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ2NhbGlmb3JuaWFfY29hc3QnLCB0bzogJ3dlc3Rlcm5fZ3VsZicsIHVuaXRzOiB7IGRlc3Ryb3llcjogMSB9IH1dKTsKICAgIGV4cGVjdChyLm9rLCBgJHtyLmNvZGV9ICR7ci5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHMuYmF0dGxlcy5zb21lKChiKSA9PiBiLnRlcnJpdG9yeUlkID09PSAnd2VzdGVybl9ndWxmJyAmJiAhYi5vdmVyKSkudG9CZSh0cnVlKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnYWlyLXN1YiBjYXN1YWx0eSBjb25zdHJhaW50cyAoMTk0MiAyZSBwLjI5KScsICgpID0+IHsKICBpdCgnc3VicyBjYW5ub3QgaGl0IGFpciB1bml0cycsICgpID0+IHsKICAgIC8vIFRoZSBhdXRvIHBvbGljeSBuZXZlciBhc3NpZ25zIHN1YiBoaXRzIHRvIGFpci4KICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgMTE2KTsKICAgIGNvbnN0IHBpZCA9IHMuY3VycmVudFBsYXllcjsKICAgIGNvbnN0IGZvZSA9IDEgLSBwaWQ7CiAgICBzZXRTZWEocywgJ2NhbGlmb3JuaWFfY29hc3QnLCBwaWQsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgc2V0U2VhKHMsICd3ZXN0ZXJuX2d1bGYnLCBmb2UsIHsgZGVzdHJveWVyOiAxIH0pOwogICAgcy50ZXJyaXRvcmllc1snd2VzdGVybl9ndWxmJ10udW5pdHMuZmlnaHRlciA9IDE7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIGV4cGVjdChjb21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ2NhbGlmb3JuaWFfY29hc3QnLCB0bzogJ3dlc3Rlcm5fZ3VsZicsIHVuaXRzOiB7IHN1Ym1hcmluZTogMSB9IH1dKS5vaykudG9CZSh0cnVlKTsKICAgIGdvdG9Db21iYXQocyk7CiAgICAvLyBBdHRhY2tlcidzIHN1YiBpcyBjYW5jZWxsZWQgYnkgdGhlIGRlc3Ryb3llciAobm8gc3VycHJpc2UpLCBidXQgdGhlCiAgICAvLyBnZW5lcmFsLWV4Y2hhbmdlIGNvbnN0cmFpbnQgc3RpbGwgYXBwbGllczogc3ViIGhpdHMgYXJlIHNlYS1vbmx5LgogICAgY29uc3QgYiA9IHMuYmF0dGxlcy5maW5kKCh4KSA9PiB4LnRlcnJpdG9yeUlkID09PSAnd2VzdGVybl9ndWxmJykhOwogICAgYi5wZW5kaW5nRGVmZW5kZXIgPSAxOwogICAgYi5wZW5kRGVmQWlyID0gMDsKICAgIGIuZGVmZW5kZXJSZXNvbHZlZCA9IGZhbHNlOwogICAgY29uc3QgciA9IGF1dG9DYXN1YWx0aWVzKHMsIHBpZCwgJ3dlc3Rlcm5fZ3VsZicsICdkZWZlbmRlcicpOwogICAgZXhwZWN0KHIub2ssIGAke3IuY29kZX0gJHtyLmVycm9yfWApLnRvQmUodHJ1ZSk7CiAgICAvLyBUaGUgZmlnaHRlciBtdXN0IHN1cnZpdmU7IHRoZSBoaXQgd2VudCB0byB0aGUgZGVzdHJveWVyIChzZWEgdW5pdCkuCiAgICBleHBlY3Qocy50ZXJyaXRvcmllc1snd2VzdGVybl9ndWxmJ10udW5pdHMuZmlnaHRlcikudG9CZSgxKTsKICB9KTsKCiAgaXQoJ2FpciBjYW5ub3QgaGl0IHN1YnMgd2l0aG91dCBhIGZyaWVuZGx5IGRlc3Ryb3llciBwcmVzZW50JywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMTcpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnY2FsaWZvcm5pYV9jb2FzdCcsIHBpZCwge30pOwogICAgcy50ZXJyaXRvcmllc1snY2FsaWZvcm5pYV9jb2FzdCddLnVuaXRzLmZpZ2h0ZXIgPSAxOwogICAgc2V0U2VhKHMsICd3ZXN0ZXJuX2d1bGYnLCBmb2UsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBleHBlY3QoY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdjYWxpZm9ybmlhX2NvYXN0JywgdG86ICd3ZXN0ZXJuX2d1bGYnLCB1bml0czogeyBmaWdodGVyOiAxIH0gfV0pLm9rKS50b0JlKHRydWUpOwogICAgZ290b0NvbWJhdChzKTsKICAgIGNvbnN0IGIgPSBzLmJhdHRsZXMuZmluZCgoeCkgPT4geC50ZXJyaXRvcnlJZCA9PT0gJ3dlc3Rlcm5fZ3VsZicpITsKICAgIGIucGVuZGluZ0RlZmVuZGVyID0gMTsKICAgIGIucGVuZERlZkFpciA9IDE7CiAgICBiLmRlZmVuZGVyUmVzb2x2ZWQgPSBmYWxzZTsKICAgIGNvbnN0IHIgPSBhdXRvQ2FzdWFsdGllcyhzLCBwaWQsICd3ZXN0ZXJuX2d1bGYnLCAnZGVmZW5kZXInKTsKICAgIC8vIFRoZSBwb2xpY3kgY2Fubm90IGFzc2lnbiB0aGUgYWlyIGhpdCB0byB0aGUgc3ViOyB0aGUgc3ViIHN1cnZpdmVzLgogICAgaWYgKHIub2spIHsKICAgICAgZXhwZWN0KHMudGVycml0b3JpZXNbJ3dlc3Rlcm5fZ3VsZiddLnVuaXRzLnN1Ym1hcmluZSkudG9CZSgxKTsKICAgIH0KICB9KTsKCiAgaXQoJ21hbnVhbCBjYXN1YWx0eSBzZWxlY3Rpb24gcmVqZWN0cyBhaXItdnMtc3ViIGFzc2lnbm1lbnQnLCAoKSA9PiB7CiAgICBjb25zdCBzID0gZnJlc2hHYW1lKDIsIDExOCk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBmb2UgPSAxIC0gcGlkOwogICAgc2V0U2VhKHMsICdjYWxpZm9ybmlhX2NvYXN0JywgcGlkLCB7fSk7CiAgICBzLnRlcnJpdG9yaWVzWydjYWxpZm9ybmlhX2NvYXN0J10udW5pdHMuZmlnaHRlciA9IDE7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyBzdWJtYXJpbmU6IDEsIGRlc3Ryb3llcjogMSB9KTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgZXhwZWN0KGNvbWJhdE1vdmUocywgcGlkLCBbeyBmcm9tOiAnY2FsaWZvcm5pYV9jb2FzdCcsIHRvOiAnd2VzdGVybl9ndWxmJywgdW5pdHM6IHsgZmlnaHRlcjogMSB9IH1dKS5vaykudG9CZSh0cnVlKTsKICAgIGdvdG9Db21iYXQocyk7CiAgICBjb25zdCBiID0gcy5iYXR0bGVzLmZpbmQoKHgpID0+IHgudGVycml0b3J5SWQgPT09ICd3ZXN0ZXJuX2d1bGYnKSE7CiAgICBiLnBlbmRpbmdEZWZlbmRlciA9IDE7CiAgICBiLnBlbmREZWZBaXIgPSAxOwogICAgYi5kZWZlbmRlclJlc29sdmVkID0gZmFsc2U7CiAgICAvLyBObyBhdHRhY2tpbmcgZGVzdHJveWVyIHByZXNlbnQ6IGFpciBjYW5ub3QgYmUgYXNzaWduZWQgdG8gdGhlIHN1Yi4KICAgIGNvbnN0IHIgPSBjaG9vc2VDYXN1YWx0aWVzKHMsIHBpZCwgJ3dlc3Rlcm5fZ3VsZicsICdkZWZlbmRlcicsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgZXhwZWN0KHIub2spLnRvQmUoZmFsc2UpOwogICAgZXhwZWN0KHIuY29kZSkudG9CZSgnYWlyX3ZzX3N1YicpOwogIH0pOwp9KTsKCmRlc2NyaWJlKCdtb2JpbGl6YXRpb24gaW50byBob3N0aWxlIHdhdGVycyAoMTk0MiAyZSBwLjIxKScsICgpID0+IHsKICBpdCgnbmV3IHNlYSB1bml0cyBtYXkgYmUgcGxhY2VkIGV2ZW4gaW4gYSBob3N0aWxlIHNlYSB6b25lJywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMTkpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnZWFzdGVybl9ndWxmJywgZm9lLCB7IGRlc3Ryb3llcjogMSB9KTsKICAgIC8vIEdpdmUgcGlkIGEgZmFjdG9yeSBpbiBmbG9yaWRhIChhZGphY2VudCB0byB0aGUgZ3VsZikuCiAgICBzLnRlcnJpdG9yaWVzWydmbG9yaWRhJ10ub3duZXIgPSBwaWQ7CiAgICBzLnRlcnJpdG9yaWVzWydmbG9yaWRhJ10uZmFjdG9yeSA9IHRydWU7CiAgICBzLnBsYXllcnNbcGlkXS5pcGNzID0gMjAwOwogICAgY29uc3QgcHIgPSBwdXJjaGFzZShzLCBwaWQsIFt7IHR5cGU6ICdzdWJtYXJpbmUnLCBjb3VudDogMSB9XSk7CiAgICBleHBlY3QocHIub2ssIGAke3ByLmNvZGV9ICR7cHIuZXJyb3J9YCkudG9CZSh0cnVlKTsKICAgIGdvdG9Nb2JpbGl6ZShzKTsKICAgIGNvbnN0IG0gPSBtb2JpbGl6ZShzLCBwaWQsIFt7IHRlcnJpdG9yeTogJ2Zsb3JpZGEnLCBzZWFab25lOiAnZWFzdGVybl9ndWxmJywgdW5pdHM6IHsgc3VibWFyaW5lOiAxIH0gfV0pOwogICAgZXhwZWN0KG0ub2ssIGAke20uY29kZX0gJHttLmVycm9yfWApLnRvQmUodHJ1ZSk7CiAgICAvLyBCb3RoIGZvcmNlcyBhcmUgcHJlc2VudDsgbm8gY29tYmF0IG9jY3VycyBkdXJpbmcgbW9iaWxpemF0aW9uLgogICAgY29uc3QgeiA9IHMudGVycml0b3JpZXNbJ2Vhc3Rlcm5fZ3VsZiddOwogICAgY29uc3QgaGFzU3ViID0KICAgICAgei51bml0cy5zdWJtYXJpbmUgPT09IDEgfHwKICAgICAgKHouY29leGlzdCA/PyBbXSkuc29tZSgoZikgPT4gZi5vd25lciA9PT0gcGlkICYmIGYudW5pdHMuc3VibWFyaW5lID09PSAxKTsKICAgIGV4cGVjdChoYXNTdWIpLnRvQmUodHJ1ZSk7CiAgICBjb25zdCBoYXNEZXN0cm95ZXIgPQogICAgICB6LnVuaXRzLmRlc3Ryb3llciA9PT0gMSB8fAogICAgICAoei5jb2V4aXN0ID8/IFtdKS5zb21lKChmKSA9PiBmLm93bmVyID09PSBmb2UgJiYgZi51bml0cy5kZXN0cm95ZXIgPT09IDEpOwogICAgZXhwZWN0KGhhc0Rlc3Ryb3llcikudG9CZSh0cnVlKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnc3VibWVyZ2VUdXJuIFVJIGhlbHBlcicsICgpID0+IHsKICBpdCgncmV0dXJucyBudWxsIHdoZW4gbm8gZGVjaXNpb24gaXMgZHVlJywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCAxMjApOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHNldFNlYShzLCAnY2FsaWZvcm5pYV9jb2FzdCcsIHBpZCwgeyBkZXN0cm95ZXI6IDEgfSk7CiAgICBzZXRTZWEocywgJ3dlc3Rlcm5fZ3VsZicsIGZvZSwgeyBkZXN0cm95ZXI6IDEgfSk7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIGV4cGVjdChjb21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ2NhbGlmb3JuaWFfY29hc3QnLCB0bzogJ3dlc3Rlcm5fZ3VsZicsIHVuaXRzOiB7IGRlc3Ryb3llcjogMSB9IH1dKS5vaykudG9CZSh0cnVlKTsKICAgIGdvdG9Db21iYXQocyk7CiAgICAvLyBObyBzdWJzOiBubyBkZWNpc2lvbi4KICAgIGV4cGVjdChzdWJtZXJnZVR1cm4ocywgJ3dlc3Rlcm5fZ3VsZicpKS50b0JlKG51bGwpOwogIH0pOwp9KTsKCmRlc2NyaWJlKCdhbXBoaWJpb3VzIGFzc2F1bHQgZnJvbSBhIGNvbnRlc3RlZCBzZWEgem9uZSAoMTk0MiAyZSBwLjE1OiBzZWEgYmF0dGxlIGZpcnN0KScsICgpID0+IHsKICAvKioKICAgKiBSaWc6IHBpZCBob2xkcyB0aGUgZ3VsZiB3aXRoIGEgbG9hZGVkIHRyYW5zcG9ydCArIGRlc3Ryb3llciB3aGlsZSBhIGZvZQogICAqIHN1YiBsdXJrcyB0aGVyZSAoY29leGlzdCwgZS5nLiBpZ25vcmVkIG9uIGEgcHJpb3IgdHVybikuIEZsb3JpZGEgaXMgZm9lLWhlbGQuCiAgICovCiAgZnVuY3Rpb24gcmlnQ29udGVzdGVkQXNzYXVsdChzOiBHYW1lU3RhdGUsIHBpZDogbnVtYmVyLCBmb2U6IG51bWJlcikgewogICAgcy50ZXJyaXRvcmllc1snZmxvcmlkYSddLm93bmVyID0gZm9lOwogICAgc2V0VW5pdHMocywgJ2Zsb3JpZGEnLCB7IGluZmFudHJ5OiAyIH0pOwogICAgc2V0U2VhKHMsICdlYXN0ZXJuX2d1bGYnLCBwaWQsIHsgdHJhbnNwb3J0OiAxLCBkZXN0cm95ZXI6IDEgfSk7CiAgICBzLnRlcnJpdG9yaWVzWydlYXN0ZXJuX2d1bGYnXS5jYXJnbyA9IFsKICAgICAgeyBvd25lcjogcGlkLCB1bml0czogeyAuLi5lbXB0eVVuaXRzKCksIGluZmFudHJ5OiAyIH0gfSwKICAgIF07CiAgICBzLnRlcnJpdG9yaWVzWydlYXN0ZXJuX2d1bGYnXS5jb2V4aXN0ID0gWwogICAgICB7IG93bmVyOiBmb2UsIHVuaXRzOiB7IC4uLmVtcHR5VW5pdHMoKSwgc3VibWFyaW5lOiAxIH0gfSwKICAgIF07CiAgfQoKICBpdCgnZGVmZXJzIHRoZSBsYW5kaW5nIHVudGlsIHRoZSBzZWEgYmF0dGxlIGlzIHdvbjsgbm8gYm9tYmFyZG1lbnQgZnJvbSBjb250ZXN0ZWQgd2F0ZXJzJywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCA5MDEpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gMSAtIHBpZDsKICAgIHJpZ0NvbnRlc3RlZEFzc2F1bHQocywgcGlkLCBmb2UpOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBjb25zdCByID0gY29tYmF0TW92ZShzLCBwaWQsIFsKICAgICAgLy8gVGhlIGRlc3Ryb3llciB0dXJucyBvbiB0aGUgbHVya2luZyBzdWIgKHNhbWUtem9uZSBhdHRhY2spLi4uCiAgICAgIHsgZnJvbTogJ2Vhc3Rlcm5fZ3VsZicsIHRvOiAnZWFzdGVybl9ndWxmJywgdW5pdHM6IHsgZGVzdHJveWVyOiAxIH0sIGF0dGFjazogdHJ1ZSB9LAogICAgICAvLyAuLi53aGlsZSB0aGUgdHJhbnNwb3J0IGRlY2xhcmVzIHRoZSBhc3NhdWx0IG9uIGZsb3JpZGEuCiAgICAgIHsgZnJvbTogJ2Vhc3Rlcm5fZ3VsZicsIHRvOiAnZmxvcmlkYScsIHVuaXRzOiB7IGluZmFudHJ5OiAyIH0sIGRpc2VtYmFyazogdHJ1ZSB9LAogICAgXSk7CiAgICBleHBlY3Qoci5vaywgYCR7ci5jb2RlfSAke3IuZXJyb3J9YCkudG9CZSh0cnVlKTsKICAgIC8vIFRoZSBzZWEgYmF0dGxlIGlzIG9wZW4gaW4gdGhlIGd1bGY7IHRoZSBmbG9yaWRhIGxhbmRpbmcgc3RheXMgcGVuZGluZy4uLgogICAgZXhwZWN0KHMuYmF0dGxlcy5zb21lKChiKSA9PiBiLnRlcnJpdG9yeUlkID09PSAnZWFzdGVybl9ndWxmJyAmJiAhYi5vdmVyKSkudG9CZSh0cnVlKTsKICAgIGNvbnN0IGxhbmQgPSBzLmJhdHRsZXMuZmluZCgoYikgPT4gYi50ZXJyaXRvcnlJZCA9PT0gJ2Zsb3JpZGEnICYmICFiLm92ZXIpITsKICAgIGV4cGVjdChsYW5kKS50b0JlRGVmaW5lZCgpOwogICAgZXhwZWN0KGxhbmQucGVuZGluZ0Rpc2VtYmFyaykudG9CZURlZmluZWQoKTsKICAgIC8vIC4uLnAuMTUgZm9yYmlkcyBib21iYXJkbWVudCB3aGVuIGEgc2VhIGJhdHRsZSByYWdlcyBpbiB0aGUgbGF1bmNoIHpvbmUuCiAgICBleHBlY3QobGFuZC5ib21iYXJkKS50b0JlVW5kZWZpbmVkKCk7CiAgICAvLyBUaGUgbGFuZCBiYXR0bGUgY2Fubm90IGJlIGZvdWdodCBiZWZvcmUgdGhlIHNlYSBiYXR0bGUgcmVzb2x2ZXMuCiAgICBnb3RvQ29tYmF0KHMpOwogICAgY29uc3QgYmxvY2tlZCA9IHJlc29sdmVDb21iYXRSb3VuZChzLCBwaWQsICdmbG9yaWRhJyk7CiAgICBleHBlY3QoYmxvY2tlZC5vaykudG9CZShmYWxzZSk7CiAgICBleHBlY3QoYmxvY2tlZC5jb2RlKS50b0JlKCdzZWFfYmF0dGxlX3BlbmRpbmcnKTsKICAgIC8vIFdpbiB0aGUgc2VhIGJhdHRsZTogdGhlIGRlc3Ryb3llciBjYW5jZWxzIHRoZSBzdWIncyBzdXJwcmlzZSBzdHJpa2UgKHAuMjkpLgogICAgcmVzb2x2ZUJhdHRsZUF1dG8ocywgcGlkLCAnZWFzdGVybl9ndWxmJyk7CiAgICBleHBlY3Qocy5iYXR0bGVzLnNvbWUoKGIpID0+IGIudGVycml0b3J5SWQgPT09ICdlYXN0ZXJuX2d1bGYnICYmICFiLm92ZXIpKS50b0JlKGZhbHNlKTsKICAgIC8vIFRoZSBjYXJnbyBjb21lcyBhc2hvcmUgaW50byB0aGUgZmxvcmlkYSBiYXR0bGUuCiAgICBjb25zdCBsYW5kZWQgPSBzLmJhdHRsZXMuZmluZCgoYikgPT4gYi50ZXJyaXRvcnlJZCA9PT0gJ2Zsb3JpZGEnICYmICFiLm92ZXIpITsKICAgIGV4cGVjdChsYW5kZWQpLnRvQmVEZWZpbmVkKCk7CiAgICBleHBlY3QobGFuZGVkLnBlbmRpbmdEaXNlbWJhcmspLnRvQmVVbmRlZmluZWQoKTsKICAgIGV4cGVjdChsYW5kZWQuc2VhYm9ybmUpLnRvTWF0Y2hPYmplY3QoeyBpbmZhbnRyeTogMiB9KTsKICAgIHJlc29sdmVCYXR0bGVBdXRvKHMsIHBpZCwgJ2Zsb3JpZGEnKTsKICB9KTsKCiAgaXQoJ2FuIHVuZXNjb3J0ZWQgdHJhbnNwb3J0IGNhbm5vdCBldmVuIGVudGVyIHRoZSBjb250ZXN0ZWQgbGF1bmNoIHpvbmUnLCAoKSA9PiB7CiAgICBjb25zdCBzID0gZnJlc2hHYW1lKDIsIDkwMik7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBmb2UgPSAxIC0gcGlkOwogICAgcy50ZXJyaXRvcmllc1snZmxvcmlkYSddLm93bmVyID0gZm9lOwogICAgc2V0VW5pdHMocywgJ2Zsb3JpZGEnLCB7IGluZmFudHJ5OiAyIH0pOwogICAgc2V0U2VhKHMsICd3ZXN0ZXJuX2d1bGYnLCBmb2UsIHsgc3VibWFyaW5lOiAxIH0pOwogICAgc2V0U2VhKHMsICdjYWxpZm9ybmlhX2NvYXN0JywgcGlkLCB7IHRyYW5zcG9ydDogMSB9KTsKICAgIHMudGVycml0b3JpZXNbJ2NhbGlmb3JuaWFfY29hc3QnXS5jYXJnbyA9IFsKICAgICAgeyBvd25lcjogcGlkLCB1bml0czogeyAuLi5lbXB0eVVuaXRzKCksIGluZmFudHJ5OiAyIH0gfSwKICAgIF07CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIC8vIDE5NDIgMmUgcC4zMDogdHJhbnNwb3J0cyBtYXkgbm90IGF0dGFjayBhIGhvc3RpbGUgc2VhIHpvbmUgdW5lc2NvcnRlZCwKICAgIC8vIHNvIHRoZSBhc3NhdWx0IGNhbm5vdCBiZSBkZWNsYXJlZCBmcm9tIHRoZXNlIHdhdGVycyBhdCBhbGwuCiAgICBjb25zdCByID0gY29tYmF0TW92ZShzLCBwaWQsIFsKICAgICAgeyBmcm9tOiAnY2FsaWZvcm5pYV9jb2FzdCcsIHRvOiAnd2VzdGVybl9ndWxmJywgdW5pdHM6IHsgdHJhbnNwb3J0OiAxIH0gfSwKICAgICAgeyBmcm9tOiAnZWFzdGVybl9ndWxmJywgdG86ICdmbG9yaWRhJywgdW5pdHM6IHsgaW5mYW50cnk6IDIgfSwgZGlzZW1iYXJrOiB0cnVlIH0sCiAgICBdKTsKICAgIGV4cGVjdChyLm9rKS50b0JlKGZhbHNlKTsKICAgIGV4cGVjdChyLmNvZGUpLnRvQmUoJ25vX2VzY29ydCcpOwogIH0pOwp9KTsK
+import { describe, expect, it } from 'vitest';
+import {
+  autoCasualties,
+  chooseCasualties,
+  combatMove,
+  emptyUnits,
+  mobilize,
+  nonCombatMove,
+  purchase,
+  resolveCombatRound,
+  submergeSubs,
+  submergeTurn,
+} from '../engine/engine';
+import type { GameState, UnitCounts } from '../engine/types';
+import {
+  freshGame,
+  gotoCombat,
+  gotoCombatMove,
+  gotoMobilize,
+  gotoNonCombat,
+  resolveBattleAuto,
+} from './helpers';
+
+function setUnits(s: GameState, tid: string, units: Partial<UnitCounts>): void {
+  s.territories[tid].units = { ...emptyUnits(), ...units };
+}
+function setSea(s: GameState, zid: string, owner: number | null, units: Partial<UnitCounts>): void {
+  s.territories[zid].owner = owner;
+  setUnits(s, zid, units);
+}
+
+/**
+ * Navy phase 2 — 1942 2e submarine rules (pp.27-29) on the US map's sea zones.
+ *
+ * Covered: surprise strike ordering and no-return-fire, submerge timing
+ * (attacker-first, before dice) and removal from battle, destroyer cancelling
+ * all four sub abilities, sub pass-through movement, destroyer interception,
+ * the ignore-or-attack choice in subs/transports-only zones, air<->sub
+ * casualty constraints, and mobilization into hostile waters (p.21).
+ */
+
+describe('surprise strike (1942 2e p.29)', () => {
+  it('attacker subs fire before the general exchange', () => {
+    // Attacker: 1 sub. Defender: 1 cruiser (no destroyer, so surprise happens).
+    // The sub's surprise strike fires before the cruiser's return fire.
+    const s = freshGame(2, 101);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { cruiser: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    // Attacker declines to submerge; defender has no subs.
+    expect(submergeTurn(s, 'western_gulf')).toBe('attacker');
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+    // The battle resolves; the mechanics work (dice vary by seed).
+    const r = resolveCombatRound(s, pid, 'western_gulf');
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+  });
+
+  it('defender subs fire their surprise strike after the attacker\'s', () => {
+    // Both sides have subs, no destroyers. Attacker decides first, then defender.
+    const s = freshGame(2, 102);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1, cruiser: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    expect(submergeTurn(s, 'western_gulf')).toBe('attacker');
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe('defender');
+    expect(submergeSubs(s, foe, 'western_gulf', 'defender', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+    const r = resolveCombatRound(s, pid, 'western_gulf');
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+  });
+
+  it('a destroyer cancels only the enemy\'s surprise strike', () => {
+    // 1942 2e p.28: a destroyer cancels enemy subs' surprise strike, not friendly.
+    // Attacker: 1 sub. Defender: 1 destroyer + 1 sub.
+    // - Attacker's sub: cancelled (defender has destroyer). No decision.
+    // - Defender's sub: NOT cancelled (attacker has no destroyer). Gets decision.
+    const s = freshGame(2, 103);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1, submarine: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    // Attacker's sub is cancelled; defender's sub gets a decision.
+    expect(submergeTurn(s, 'western_gulf')).toBe('defender');
+    expect(submergeSubs(s, foe, 'western_gulf', 'defender', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+    const r = resolveCombatRound(s, pid, 'western_gulf');
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+  });
+});
+
+describe('submerge (1942 2e p.29)', () => {
+  it('attacker decides first, before any dice are rolled', () => {
+    const s = freshGame(2, 104);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    // Attacker's turn to decide.
+    expect(submergeTurn(s, 'western_gulf')).toBe('attacker');
+    // Defender cannot decide before the attacker.
+    expect(submergeSubs(s, foe, 'western_gulf', 'defender', 1).ok).toBe(false);
+    // Attacker submerges.
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 1).ok).toBe(true);
+    // Now defender's turn.
+    expect(submergeTurn(s, 'western_gulf')).toBe('defender');
+    expect(submergeSubs(s, foe, 'western_gulf', 'defender', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+    // The attacker's sub is removed from the battle.
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
+    expect(b.attack.submarine).toBe(0);
+    expect(b.submergedA).toBe(1);
+  });
+
+  it('a submerged sub is removed from the battle', () => {
+    const s = freshGame(2, 105);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1, destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { cruiser: 1 });
+    gotoCombatMove(s);
+    expect(
+      combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1, destroyer: 1 } }]).ok,
+    ).toBe(true);
+    gotoCombat(s);
+    // Attacker submerges the sub.
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 1).ok).toBe(true);
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
+    expect(b.attack.submarine).toBe(0);
+    expect(b.submergedA).toBe(1);
+    expect(b.attack.destroyer).toBe(1);
+    // The submerged sub stays out of the fight.
+    resolveBattleAuto(s, pid, 'western_gulf');
+    expect(b.over).toBe(true);
+  });
+
+  it('subs cannot submerge with an enemy destroyer present', () => {
+    // 1942 2e p.28: destroyer cancels Submersible.
+    const s = freshGame(2, 106);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    // No submerge decision is due (attacker's sub is cancelled).
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 1).ok).toBe(false);
+  });
+
+  it('invalid submerge actions never mutate state', () => {
+    const s = freshGame(2, 107);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    const before = JSON.stringify(s.battles);
+    // Too many subs.
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 5).ok).toBe(false);
+    // Wrong side.
+    expect(submergeSubs(s, pid, 'western_gulf', 'defender', 1).ok).toBe(false);
+    // Wrong player.
+    expect(submergeSubs(s, foe, 'western_gulf', 'attacker', 1).ok).toBe(false);
+    expect(JSON.stringify(s.battles)).toBe(before);
+  });
+});
+
+describe('destroyer cancels sub abilities (1942 2e p.28)', () => {
+  it('air hits CAN be assigned to subs when the attacker has a destroyer', () => {
+    // 1942 2e p.29: air cannot hit subs UNLESS a friendly destroyer is present.
+    const s = freshGame(2, 108);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    s.territories['california_coast'].units.fighter = 1;
+    gotoCombatMove(s);
+    expect(
+      combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 1, fighter: 1 } }]).ok,
+    ).toBe(true);
+    gotoCombat(s);
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
+    // Rig an air hit on the defender.
+    b.pendingDefender = 1;
+    b.pendDefAir = 1;
+    b.defenderResolved = false;
+    // With the attacker's destroyer present, air CAN hit the sub.
+    const r = autoCasualties(s, pid, 'western_gulf', 'defender');
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    expect(s.territories['western_gulf'].units.submarine).toBe(0);
+  });
+});
+
+describe('submarine movement (1942 2e pp.27, 29)', () => {
+  it('subs can attack into a hostile zone', () => {
+    const s = freshGame(2, 110);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { cruiser: 1 });
+    gotoCombatMove(s);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    expect(s.battles.some((b) => b.territoryId === 'western_gulf' && !b.over)).toBe(true);
+  });
+
+  it('zones with only enemy subs/transports do not block movement', () => {
+    const s = freshGame(2, 111);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'western_gulf', pid, { destroyer: 1 });
+    setSea(s, 'eastern_gulf', foe, { submarine: 1, transport: 1 });
+    setSea(s, 'south_atlantic', null, {});
+    gotoCombatMove(s);
+    // Destroyer moves western_gulf -> eastern_gulf -> south_atlantic, passing
+    // through the subs/transports-only zone without stopping.
+    const r = combatMove(s, pid, [{ from: 'western_gulf', to: 'south_atlantic', units: { destroyer: 1 } }]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    expect(s.territories['south_atlantic'].units.destroyer).toBe(1);
+  });
+
+  it('subs cannot pass through a zone with an enemy destroyer', () => {
+    // 1942 2e p.29: entering a zone with an enemy destroyer ends movement.
+    const s = freshGame(2, 112);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
+    setSea(s, 'north_atlantic', null, {});
+    gotoCombatMove(s);
+    // Sub tries pacific -> gulf -> atlantic. The destroyer in gulf blocks transit.
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'north_atlantic', units: { submarine: 1 } }]);
+    expect(r.ok).toBe(false);
+    expect(['destroyer_intercept', 'range']).toContain(r.code);
+  });
+});
+
+describe('ignore-or-attack choice (1942 2e p.29)', () => {
+  it('attacker can ignore subs/transports and coexist', () => {
+    const s = freshGame(2, 113);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    gotoCombatMove(s);
+    const r = combatMove(s, pid, [
+      { from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 }, attack: false },
+    ]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    // No battle; the destroyer coexists with the enemy sub.
+    expect(s.battles.filter((b) => b.territoryId === 'western_gulf' && !b.over)).toHaveLength(0);
+    expect(s.territories['western_gulf'].units.destroyer).toBe(1);
+    const coexist = s.territories['western_gulf'].coexist ?? [];
+    expect(coexist.some((f) => f.owner === foe && f.units.submarine === 1)).toBe(true);
+  });
+
+  it('attacker can choose to attack subs/transports', () => {
+    const s = freshGame(2, 114);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    gotoCombatMove(s);
+    const r = combatMove(s, pid, [
+      { from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 }, attack: true },
+    ]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    expect(s.battles.some((b) => b.territoryId === 'western_gulf' && !b.over)).toBe(true);
+  });
+
+  it('default is to attack (phase-1 behavior preserved)', () => {
+    const s = freshGame(2, 115);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { transport: 1 });
+    gotoCombatMove(s);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 } }]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    expect(s.battles.some((b) => b.territoryId === 'western_gulf' && !b.over)).toBe(true);
+  });
+});
+
+describe('air-sub casualty constraints (1942 2e p.29)', () => {
+  it('subs cannot hit air units', () => {
+    // The auto policy never assigns sub hits to air.
+    const s = freshGame(2, 116);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
+    s.territories['western_gulf'].units.fighter = 1;
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    // Attacker's sub is cancelled by the destroyer (no surprise), but the
+    // general-exchange constraint still applies: sub hits are sea-only.
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
+    b.pendingDefender = 1;
+    b.pendDefAir = 0;
+    b.defenderResolved = false;
+    const r = autoCasualties(s, pid, 'western_gulf', 'defender');
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    // The fighter must survive; the hit went to the destroyer (sea unit).
+    expect(s.territories['western_gulf'].units.fighter).toBe(1);
+  });
+
+  it('air cannot hit subs without a friendly destroyer present', () => {
+    const s = freshGame(2, 117);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, {});
+    s.territories['california_coast'].units.fighter = 1;
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { fighter: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
+    b.pendingDefender = 1;
+    b.pendDefAir = 1;
+    b.defenderResolved = false;
+    const r = autoCasualties(s, pid, 'western_gulf', 'defender');
+    // The policy cannot assign the air hit to the sub; the sub survives.
+    if (r.ok) {
+      expect(s.territories['western_gulf'].units.submarine).toBe(1);
+    }
+  });
+
+  it('manual casualty selection rejects air-vs-sub assignment', () => {
+    const s = freshGame(2, 118);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, {});
+    s.territories['california_coast'].units.fighter = 1;
+    setSea(s, 'western_gulf', foe, { submarine: 1, destroyer: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { fighter: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
+    b.pendingDefender = 1;
+    b.pendDefAir = 1;
+    b.defenderResolved = false;
+    // No attacking destroyer present: air cannot be assigned to the sub.
+    const r = chooseCasualties(s, pid, 'western_gulf', 'defender', { submarine: 1 });
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('air_vs_sub');
+  });
+});
+
+describe('mobilization into hostile waters (1942 2e p.21)', () => {
+  it('new sea units may be placed even in a hostile sea zone', () => {
+    const s = freshGame(2, 119);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'eastern_gulf', foe, { destroyer: 1 });
+    // Give pid a factory in florida (adjacent to the gulf).
+    s.territories['florida'].owner = pid;
+    s.territories['florida'].factory = true;
+    s.players[pid].ipcs = 200;
+    const pr = purchase(s, pid, [{ type: 'submarine', count: 1 }]);
+    expect(pr.ok, `${pr.code} ${pr.error}`).toBe(true);
+    gotoMobilize(s);
+    const m = mobilize(s, pid, [{ territory: 'florida', seaZone: 'eastern_gulf', units: { submarine: 1 } }]);
+    expect(m.ok, `${m.code} ${m.error}`).toBe(true);
+    // Both forces are present; no combat occurs during mobilization.
+    const z = s.territories['eastern_gulf'];
+    const hasSub =
+      z.units.submarine === 1 ||
+      (z.coexist ?? []).some((f) => f.owner === pid && f.units.submarine === 1);
+    expect(hasSub).toBe(true);
+    const hasDestroyer =
+      z.units.destroyer === 1 ||
+      (z.coexist ?? []).some((f) => f.owner === foe && f.units.destroyer === 1);
+    expect(hasDestroyer).toBe(true);
+  });
+});
+
+describe('submergeTurn UI helper', () => {
+  it('returns null when no decision is due', () => {
+    const s = freshGame(2, 120);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
+    gotoCombatMove(s);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 } }]).ok).toBe(true);
+    gotoCombat(s);
+    // No subs: no decision.
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+  });
+});
+
+describe('amphibious assault from a contested sea zone (1942 2e p.15: sea battle first)', () => {
+  /**
+   * Rig: pid holds the gulf with a loaded transport + destroyer while a foe
+   * sub lurks there (coexist, e.g. ignored on a prior turn). Florida is foe-held.
+   */
+  function rigContestedAssault(s: GameState, pid: number, foe: number) {
+    s.territories['florida'].owner = foe;
+    setUnits(s, 'florida', { infantry: 2 });
+    setSea(s, 'eastern_gulf', pid, { transport: 1, destroyer: 1 });
+    s.territories['eastern_gulf'].cargo = [
+      { owner: pid, units: { ...emptyUnits(), infantry: 2 } },
+    ];
+    s.territories['eastern_gulf'].coexist = [
+      { owner: foe, units: { ...emptyUnits(), submarine: 1 } },
+    ];
+  }
+
+  it('defers the landing until the sea battle is won; no bombardment from contested waters', () => {
+    const s = freshGame(2, 901);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    rigContestedAssault(s, pid, foe);
+    gotoCombatMove(s);
+    const r = combatMove(s, pid, [
+      // The destroyer turns on the lurking sub (same-zone attack)...
+      { from: 'eastern_gulf', to: 'eastern_gulf', units: { destroyer: 1 }, attack: true },
+      // ...while the transport declares the assault on florida.
+      { from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
+    ]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    // The sea battle is open in the gulf; the florida landing stays pending...
+    expect(s.battles.some((b) => b.territoryId === 'eastern_gulf' && !b.over)).toBe(true);
+    const land = s.battles.find((b) => b.territoryId === 'florida' && !b.over)!;
+    expect(land).toBeDefined();
+    expect(land.pendingDisembark).toBeDefined();
+    // ...p.15 forbids bombardment when a sea battle rages in the launch zone.
+    expect(land.bombard).toBeUndefined();
+    // The land battle cannot be fought before the sea battle resolves.
+    gotoCombat(s);
+    const blocked = resolveCombatRound(s, pid, 'florida');
+    expect(blocked.ok).toBe(false);
+    expect(blocked.code).toBe('sea_battle_pending');
+    // Win the sea battle: the destroyer cancels the sub's surprise strike (p.29).
+    resolveBattleAuto(s, pid, 'eastern_gulf');
+    expect(s.battles.some((b) => b.territoryId === 'eastern_gulf' && !b.over)).toBe(false);
+    // The cargo comes ashore into the florida battle.
+    const landed = s.battles.find((b) => b.territoryId === 'florida' && !b.over)!;
+    expect(landed).toBeDefined();
+    expect(landed.pendingDisembark).toBeUndefined();
+    expect(landed.seaborne).toMatchObject({ infantry: 2 });
+    resolveBattleAuto(s, pid, 'florida');
+  });
+
+  it('an unescorted transport cannot even enter the contested launch zone', () => {
+    const s = freshGame(2, 902);
+    const pid = s.currentPlayer;
+    const foe = 1 - pid;
+    s.territories['florida'].owner = foe;
+    setUnits(s, 'florida', { infantry: 2 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
+    s.territories['california_coast'].cargo = [
+      { owner: pid, units: { ...emptyUnits(), infantry: 2 } },
+    ];
+    gotoCombatMove(s);
+    // 1942 2e p.30: transports may not attack a hostile sea zone unescorted,
+    // so the assault cannot be declared from these waters at all.
+    const r = combatMove(s, pid, [
+      { from: 'california_coast', to: 'western_gulf', units: { transport: 1 } },
+      { from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
+    ]);
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('no_escort');
+  });
+});

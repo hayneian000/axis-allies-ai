@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UNITS, airDistance, ipcOf, neighborsOf } from '../data/data';
+import { UNITS, airDistance, ipcOf, isSea, neighborsOf } from '../data/data';
 import {
   autoCasualties,
   combatMove,
@@ -48,6 +48,12 @@ function subAvail(have: UnitCounts, used: Partial<UnitCounts>): UnitCounts {
     fighter: have.fighter - (used.fighter ?? 0),
     bomber: have.bomber - (used.bomber ?? 0),
     aa: have.aa - (used.aa ?? 0),
+    transport: have.transport - (used.transport ?? 0),
+    submarine: have.submarine - (used.submarine ?? 0),
+    destroyer: have.destroyer - (used.destroyer ?? 0),
+    cruiser: have.cruiser - (used.cruiser ?? 0),
+    carrier: have.carrier - (used.carrier ?? 0),
+    battleship: have.battleship - (used.battleship ?? 0),
   };
 }
 
@@ -56,6 +62,7 @@ function landTarget(s: GameState, pid: number, from: string): string | null {
   let best: string | null = null;
   let bestScore = Infinity;
   for (const n of neighborsOf(from)) {
+    if (isSea(n)) continue; // phase-1 bot runs no naval operations
     const t = s.territories[n];
     if (t.owner === pid) continue;
     const score = countUnits(t.units) * 10 - ipcOf(n);
@@ -125,6 +132,7 @@ function botCombatMove(s: GameState, pid: number, rng: () => number, stats: BotS
       if (n === 0) continue;
       const maxDist = Math.floor(UNITS[air].move / 2);
       const targets = neighborsOf(from)
+        .filter((t) => !isSea(t)) // phase-1 bot runs no naval operations
         .filter((t) => s.territories[t].owner !== pid)
         .filter((t) => airDistance(from, t) <= maxDist)
         .filter((t) => landing.some((l) => airDistance(t, l) <= UNITS[air].move - airDistance(from, t)));

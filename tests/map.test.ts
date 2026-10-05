@@ -1,1 +1,161 @@
-aW1wb3J0IHsgZGVzY3JpYmUsIGV4cGVjdCwgaXQgfSBmcm9tICd2aXRlc3QnOwppbXBvcnQgeyBNQVAsIG5laWdoYm9yc09mLCBzY2VuYXJpb0ZvciB9IGZyb20gJy4uL2RhdGEvZGF0YSc7CgpkZXNjcmliZSgnbWFwIGRhdGEnLCAoKSA9PiB7CiAgaXQoJ2hhcyAyNiBsYW5kIHRlcnJpdG9yaWVzIGFuZCA3IHNlYSB6b25lcycsICgpID0+IHsKICAgIGV4cGVjdChNQVAudGVycml0b3JpZXMpLnRvSGF2ZUxlbmd0aCgzMyk7CiAgICBjb25zdCBsYW5kID0gTUFQLnRlcnJpdG9yaWVzLmZpbHRlcigodCkgPT4gdC5kb21haW4gPT09ICdsYW5kJyk7CiAgICBjb25zdCBzZWEgPSBNQVAudGVycml0b3JpZXMuZmlsdGVyKCh0KSA9PiB0LmRvbWFpbiA9PT0gJ3NlYScpOwogICAgZXhwZWN0KGxhbmQpLnRvSGF2ZUxlbmd0aCgyNik7CiAgICBleHBlY3Qoc2VhKS50b0hhdmVMZW5ndGgoNyk7CiAgICBleHBlY3Qoc2VhLm1hcCgodCkgPT4gdC5pZCkuc29ydCgpKS50b0VxdWFsKFsKICAgICAgJ2NhbGlmb3JuaWFfY29hc3QnLCAnZWFzdGVybl9ndWxmJywgJ21pZF9hdGxhbnRpY193YXRlcnMnLCAnbm9ydGhfYXRsYW50aWMnLAogICAgICAncGFjaWZpY19udycsICdzb3V0aF9hdGxhbnRpYycsICd3ZXN0ZXJuX2d1bGYnLAogICAgXSk7CiAgfSk7CgogIGl0KCdzZWEgem9uZXMgYXJlIHdvcnRoIDAgSVBDcyBhbmQgdG91Y2ggY29hc3RhbCBsYW5kJywgKCkgPT4gewogICAgZm9yIChjb25zdCB0IG9mIE1BUC50ZXJyaXRvcmllcy5maWx0ZXIoKHgpID0+IHguZG9tYWluID09PSAnc2VhJykpIHsKICAgICAgZXhwZWN0KHQuaXBjKS50b0JlKDApOwogICAgICBjb25zdCBjb2FzdGFsID0gdC5uZWlnaGJvcnMuZmlsdGVyKAogICAgICAgIChuKSA9PiBNQVAudGVycml0b3JpZXMuZmluZCgoeCkgPT4geC5pZCA9PT0gbikhLmRvbWFpbiA9PT0gJ2xhbmQnLAogICAgICApOwogICAgICBleHBlY3QoY29hc3RhbC5sZW5ndGgsIGAke3QuaWR9IHNob3VsZCBib3JkZXIgY29hc3RhbCBsYW5kYCkudG9CZUdyZWF0ZXJUaGFuKDApOwogICAgfQogICAgLy8gU3BvdC1jaGVja3M6IGVhY2ggY29hc3QncyB3YXRlcnMgYm9yZGVyIHRoZSByaWdodCBsYW5kLgogICAgZXhwZWN0KG5laWdoYm9yc09mKCdwYWNpZmljX253JykpLnRvQ29udGFpbignd2FzaGluZ3RvbicpOwogICAgZXhwZWN0KG5laWdoYm9yc09mKCdjYWxpZm9ybmlhX2NvYXN0JykpLnRvQ29udGFpbignY2FsaWZvcm5pYScpOwogICAgZXhwZWN0KG5laWdoYm9yc09mKCdub3J0aF9hdGxhbnRpYycpKS50b0NvbnRhaW4oJ25ld195b3JrJyk7CiAgICBleHBlY3QobmVpZ2hib3JzT2YoJ3dlc3Rlcm5fZ3VsZicpKS50b0NvbnRhaW4oJ3RleGFzJyk7CiAgICAvLyBTZWEgem9uZXMgY2hhaW4gYXJvdW5kIHRoZSBjb250aW5lbnQgKFBhbmFtYS1jYW5hbCBhYnN0cmFjdGlvbikuCiAgICBleHBlY3QobmVpZ2hib3JzT2YoJ3BhY2lmaWNfbncnKSkudG9Db250YWluKCdjYWxpZm9ybmlhX2NvYXN0Jyk7CiAgICBleHBlY3QobmVpZ2hib3JzT2YoJ2NhbGlmb3JuaWFfY29hc3QnKSkudG9Db250YWluKCd3ZXN0ZXJuX2d1bGYnKTsKICAgIGV4cGVjdChuZWlnaGJvcnNPZignd2VzdGVybl9ndWxmJykpLnRvQ29udGFpbignZWFzdGVybl9ndWxmJyk7CiAgICBleHBlY3QobmVpZ2hib3JzT2YoJ2Vhc3Rlcm5fZ3VsZicpKS50b0NvbnRhaW4oJ3NvdXRoX2F0bGFudGljJyk7CiAgfSk7CgogIGl0KCdzdW1zIHRvIDYxIElQQ3MgKHNwZWMgdGFibGUgYXJpdGhtZXRpYzsgc3BlYyB0ZXh0IHNheXMgNjQpJywgKCkgPT4gewogICAgY29uc3QgdG90YWwgPSBNQVAudGVycml0b3JpZXMucmVkdWNlKChzLCB0KSA9PiBzICsgdC5pcGMsIDApOwogICAgZXhwZWN0KHRvdGFsKS50b0JlKDYxKTsKICB9KTsKCiAgaXQoJ2hhcyBzeW1tZXRyaWMgYWRqYWNlbmN5IHdpdGggbm8gc2VsZi1sb29wcyBvciB1bmtub3duIGlkcycsICgpID0+IHsKICAgIGNvbnN0IGlkcyA9IG5ldyBTZXQoTUFQLnRlcnJpdG9yaWVzLm1hcCgodCkgPT4gdC5pZCkpOwogICAgZm9yIChjb25zdCB0IG9mIE1BUC50ZXJyaXRvcmllcykgewogICAgICBleHBlY3QodC5uZWlnaGJvcnMpLm5vdC50b0NvbnRhaW4odC5pZCk7CiAgICAgIGZvciAoY29uc3QgbiBvZiB0Lm5laWdoYm9ycykgewogICAgICAgIGV4cGVjdChpZHMuaGFzKG4pKS50b0JlKHRydWUpOwogICAgICAgIGV4cGVjdChuZWlnaGJvcnNPZihuKSwgYCR7dC5pZH0gbGlzdHMgJHtufSBidXQgbm90IHZpY2UgdmVyc2FgKS50b0NvbnRhaW4odC5pZCk7CiAgICAgIH0KICAgIH0KICB9KTsKCiAgaXQoJ2lzIGZ1bGx5IGNvbm5lY3RlZCBhY3Jvc3MgbGFuZCBhbmQgc2VhJywgKCkgPT4gewogICAgY29uc3QgdmlzaXRlZCA9IG5ldyBTZXQ8c3RyaW5nPihbTUFQLnRlcnJpdG9yaWVzWzBdLmlkXSk7CiAgICBjb25zdCBxdWV1ZSA9IFsuLi52aXNpdGVkXTsKICAgIHdoaWxlIChxdWV1ZS5sZW5ndGggPiAwKSB7CiAgICAgIGZvciAoY29uc3QgbiBvZiBuZWlnaGJvcnNPZihxdWV1ZS5wb3AoKSEpKSB7CiAgICAgICAgaWYgKCF2aXNpdGVkLmhhcyhuKSkgewogICAgICAgICAgdmlzaXRlZC5hZGQobik7CiAgICAgICAgICBxdWV1ZS5wdXNoKG4pOwogICAgICAgIH0KICAgICAgfQogICAgfQogICAgZXhwZWN0KHZpc2l0ZWQuc2l6ZSkudG9CZSgzMyk7CiAgfSk7CgogIGl0KCdkb2VzIG5vdCB0cmVhdCBGb3VyIENvcm5lcnMgcG9pbnQtY29udGFjdHMgYXMgYWRqYWNlbmN5JywgKCkgPT4gewogICAgZXhwZWN0KG5laWdoYm9yc09mKCdjb2xvcmFkbycpKS5ub3QudG9Db250YWluKCdhcml6b25hJyk7CiAgICBleHBlY3QobmVpZ2hib3JzT2YoJ25ld19tZXhpY28nKSkubm90LnRvQ29udGFpbignbmV2YWRhX3V0YWgnKTsKICAgIGV4cGVjdChuZWlnaGJvcnNPZignY29sb3JhZG8nKSkudG9Db250YWluKCduZXdfbWV4aWNvJyk7CiAgICBleHBlY3QobmVpZ2hib3JzT2YoJ2FyaXpvbmEnKSkudG9Db250YWluKCduZXdfbWV4aWNvJyk7CiAgfSk7CgogIGl0KCd1c2VzIG9yZ2FuaWMgcG9seWdvbnMgKDUrIHBvaW50cykgZm9yIHJlY29nbml6YWJsZSBjb2FzdGxpbmVzJywgKCkgPT4gewogICAgZm9yIChjb25zdCB0IG9mIE1BUC50ZXJyaXRvcmllcykgewogICAgICBleHBlY3QodC5wb2ludHMubGVuZ3RoLCBgJHt0LmlkfSBuZWVkcyA1KyBwb2ludHNgKS50b0JlR3JlYXRlclRoYW5PckVxdWFsKDUpOwogICAgfQogIH0pOwoKICBpdCgnbGF5cyBldmVyeSBwb2x5Z29uIGFuZCBsYWJlbCBpbnNpZGUgdGhlIHZpZXdCb3gnLCAoKSA9PiB7CiAgICBmb3IgKGNvbnN0IHQgb2YgTUFQLnRlcnJpdG9yaWVzKSB7CiAgICAgIGV4cGVjdCh0LnBvaW50cy5sZW5ndGgpLnRvQmVHcmVhdGVyVGhhbk9yRXF1YWwoMyk7CiAgICAgIGZvciAoY29uc3QgW3gsIHldIG9mIHQucG9pbnRzKSB7CiAgICAgICAgZXhwZWN0KHgpLnRvQmVHcmVhdGVyVGhhbk9yRXF1YWwoMCk7CiAgICAgICAgZXhwZWN0KHkpLnRvQmVHcmVhdGVyVGhhbk9yRXF1YWwoMCk7CiAgICAgICAgZXhwZWN0KHgpLnRvQmVMZXNzVGhhbk9yRXF1YWwoTUFQLnZpZXdCb3gud2lkdGgpOwogICAgICAgIGV4cGVjdCh5KS50b0JlTGVzc1RoYW5PckVxdWFsKE1BUC52aWV3Qm94LmhlaWdodCk7CiAgICAgIH0KICAgICAgY29uc3QgW2x4LCBseV0gPSB0LmxhYmVsOwogICAgICBleHBlY3QobHgpLnRvQmVHcmVhdGVyVGhhbk9yRXF1YWwoMCk7CiAgICAgIGV4cGVjdChseSkudG9CZUdyZWF0ZXJUaGFuT3JFcXVhbCgwKTsKICAgICAgZXhwZWN0KGx4KS50b0JlTGVzc1RoYW5PckVxdWFsKE1BUC52aWV3Qm94LndpZHRoKTsKICAgICAgZXhwZWN0KGx5KS50b0JlTGVzc1RoYW5PckVxdWFsKE1BUC52aWV3Qm94LmhlaWdodCk7CiAgICB9CiAgfSk7Cn0pOwoKZGVzY3JpYmUoJ3NjZW5hcmlvcycsICgpID0+IHsKICBmb3IgKGNvbnN0IG4gb2YgWzIsIDMsIDRdKSB7CiAgICBpdChgc2NlbmFyaW8gJHtufXAgY292ZXJzIGFsbCAyNiB0ZXJyaXRvcmllcyBleGFjdGx5IG9uY2VgLCAoKSA9PiB7CiAgICAgIGNvbnN0IHMgPSBzY2VuYXJpb0ZvcihuKTsKICAgICAgY29uc3Qgc2VlbiA9IG5ldyBTZXQ8c3RyaW5nPigpOwogICAgICBmb3IgKGNvbnN0IGggb2Ygcy5ob2xkaW5ncykgewogICAgICAgIGV4cGVjdChzZWVuLmhhcyhoLnRlcnJpdG9yeSkpLnRvQmUoZmFsc2UpOwogICAgICAgIHNlZW4uYWRkKGgudGVycml0b3J5KTsKICAgICAgfQogICAgICBmb3IgKGNvbnN0IHRpZCBvZiBPYmplY3Qua2V5cyhzLm5ldXRyYWxzKSkgewogICAgICAgIGV4cGVjdChzZWVuLmhhcyh0aWQpKS50b0JlKGZhbHNlKTsKICAgICAgICBzZWVuLmFkZCh0aWQpOwogICAgICB9CiAgICAgIGV4cGVjdChzZWVuLnNpemUpLnRvQmUoMjYpOwogICAgfSk7CgogICAgaXQoYHNjZW5hcmlvICR7bn1wIGdpdmVzIGV2ZXJ5IGNhcGl0YWwgYSBmYWN0b3J5YCwgKCkgPT4gewogICAgICBjb25zdCBzID0gc2NlbmFyaW9Gb3Iobik7CiAgICAgIHMuY2FwaXRhbHMuZm9yRWFjaCgoY2FwLCBpKSA9PiB7CiAgICAgICAgY29uc3QgaCA9IHMuaG9sZGluZ3MuZmluZCgoeCkgPT4geC50ZXJyaXRvcnkgPT09IGNhcCk7CiAgICAgICAgZXhwZWN0KGgsIGAke2NhcH0gbXVzdCBiZSBwbGF5ZXItb3duZWRgKS50b0JlRGVmaW5lZCgpOwogICAgICAgIGV4cGVjdChoIS5vd25lcikudG9CZShpKTsKICAgICAgICBleHBlY3QoaCEuZmFjdG9yeSkudG9CZSh0cnVlKTsKICAgICAgfSk7CiAgICB9KTsKCiAgICBpdChgc2NlbmFyaW8gJHtufXAgaG9sZGluZ3MgYXJlIGNvbnRpZ3VvdXMgcGVyIHBsYXllcmAsICgpID0+IHsKICAgICAgY29uc3QgcyA9IHNjZW5hcmlvRm9yKG4pOwogICAgICBjb25zdCBvd25lck9mID0gKHRpZDogc3RyaW5nKTogbnVtYmVyIHwgbnVsbCA9PiB7CiAgICAgICAgY29uc3QgaCA9IHMuaG9sZGluZ3MuZmluZCgoeCkgPT4geC50ZXJyaXRvcnkgPT09IHRpZCk7CiAgICAgICAgcmV0dXJuIGggPyBoLm93bmVyIDogbnVsbDsKICAgICAgfTsKICAgICAgZm9yIChsZXQgcCA9IDA7IHAgPCBuOyBwKyspIHsKICAgICAgICBjb25zdCBtaW5lID0gcy5ob2xkaW5ncy5maWx0ZXIoKGgpID0+IGgub3duZXIgPT09IHApLm1hcCgoaCkgPT4gaC50ZXJyaXRvcnkpOwogICAgICAgIGV4cGVjdChtaW5lLmxlbmd0aCkudG9CZUdyZWF0ZXJUaGFuKDApOwogICAgICAgIGNvbnN0IHZpc2l0ZWQgPSBuZXcgU2V0PHN0cmluZz4oW21pbmVbMF1dKTsKICAgICAgICBjb25zdCBxdWV1ZSA9IFttaW5lWzBdXTsKICAgICAgICB3aGlsZSAocXVldWUubGVuZ3RoID4gMCkgewogICAgICAgICAgZm9yIChjb25zdCBuYiBvZiBuZWlnaGJvcnNPZihxdWV1ZS5wb3AoKSEpKSB7CiAgICAgICAgICAgIGlmICghdmlzaXRlZC5oYXMobmIpICYmIG93bmVyT2YobmIpID09PSBwKSB7CiAgICAgICAgICAgICAgdmlzaXRlZC5hZGQobmIpOwogICAgICAgICAgICAgIHF1ZXVlLnB1c2gobmIpOwogICAgICAgICAgICB9CiAgICAgICAgICB9CiAgICAgICAgfQogICAgICAgIGV4cGVjdCh2aXNpdGVkLnNpemUsIGBwbGF5ZXIgJHtwfSBob2xkaW5ncyBub3QgY29udGlndW91c2ApLnRvQmUobWluZS5sZW5ndGgpOwogICAgICB9CiAgICB9KTsKCiAgICBpdChgc2NlbmFyaW8gJHtufXAgbmV1dHJhbCBnYXJyaXNvbnMgYXJlIDMgaW5mYW50cnkgYnkgZGVmYXVsdCAobm8gYWlyL2ZhY3RvcmllcylgLCAoKSA9PiB7CiAgICAgIGNvbnN0IHMgPSBzY2VuYXJpb0ZvcihuKTsKICAgICAgZm9yIChjb25zdCBbdGlkLCB1XSBvZiBPYmplY3QuZW50cmllcyhzLm5ldXRyYWxzKSkgewogICAgICAgIC8vIG51bGwgbWVhbnMgInVzZSBzY2VuYXJpbyBuZXV0cmFsR2Fycmlzb24gZGVmYXVsdCIgKDMgaW5mYW50cnkpCiAgICAgICAgY29uc3QgZyA9IHUgPz8gcy5uZXV0cmFsR2Fycmlzb24gPz8geyBpbmZhbnRyeTogMyB9OwogICAgICAgIGNvbnN0IHRvdGFsID0gKGcuaW5mYW50cnkgPz8gMCkgKyAoZy5hcnRpbGxlcnkgPz8gMCkgKyAoZy50YW5rID8/IDApOwogICAgICAgIGV4cGVjdCh0b3RhbCwgdGlkKS50b0JlR3JlYXRlclRoYW5PckVxdWFsKDEpOwogICAgICAgIGV4cGVjdCh0b3RhbCwgdGlkKS50b0JlTGVzc1RoYW5PckVxdWFsKDQpOwogICAgICAgIGV4cGVjdChnLmZpZ2h0ZXIgPz8gMCkudG9CZSgwKTsKICAgICAgICBleHBlY3QoZy5ib21iZXIgPz8gMCkudG9CZSgwKTsKICAgICAgICBleHBlY3QoZy5hYSA/PyAwKS50b0JlKDApOwogICAgICB9CiAgICB9KTsKICB9Cn0pOwo=
+import { describe, expect, it } from 'vitest';
+import { MAP, neighborsOf, scenarioFor } from '../data/data';
+
+describe('map data', () => {
+  it('has 26 land territories and 7 sea zones', () => {
+    expect(MAP.territories).toHaveLength(33);
+    const land = MAP.territories.filter((t) => t.domain === 'land');
+    const sea = MAP.territories.filter((t) => t.domain === 'sea');
+    expect(land).toHaveLength(26);
+    expect(sea).toHaveLength(7);
+    expect(sea.map((t) => t.id).sort()).toEqual([
+      'california_coast', 'eastern_gulf', 'mid_atlantic_waters', 'north_atlantic',
+      'pacific_nw', 'south_atlantic', 'western_gulf',
+    ]);
+  });
+
+  it('sea zones are worth 0 IPCs and touch coastal land', () => {
+    for (const t of MAP.territories.filter((x) => x.domain === 'sea')) {
+      expect(t.ipc).toBe(0);
+      const coastal = t.neighbors.filter(
+        (n) => MAP.territories.find((x) => x.id === n)!.domain === 'land',
+      );
+      expect(coastal.length, `${t.id} should border coastal land`).toBeGreaterThan(0);
+    }
+    // Spot-checks: each coast's waters border the right land.
+    expect(neighborsOf('pacific_nw')).toContain('washington');
+    expect(neighborsOf('california_coast')).toContain('california');
+    expect(neighborsOf('north_atlantic')).toContain('new_york');
+    expect(neighborsOf('western_gulf')).toContain('texas');
+    // Sea zones chain around the continent (Panama-canal abstraction).
+    expect(neighborsOf('pacific_nw')).toContain('california_coast');
+    expect(neighborsOf('california_coast')).toContain('western_gulf');
+    expect(neighborsOf('western_gulf')).toContain('eastern_gulf');
+    expect(neighborsOf('eastern_gulf')).toContain('south_atlantic');
+  });
+
+  it('sums to 61 IPCs (spec table arithmetic; spec text says 64)', () => {
+    const total = MAP.territories.reduce((s, t) => s + t.ipc, 0);
+    expect(total).toBe(61);
+  });
+
+  it('has symmetric adjacency with no self-loops or unknown ids', () => {
+    const ids = new Set(MAP.territories.map((t) => t.id));
+    for (const t of MAP.territories) {
+      expect(t.neighbors).not.toContain(t.id);
+      for (const n of t.neighbors) {
+        expect(ids.has(n)).toBe(true);
+        expect(neighborsOf(n), `${t.id} lists ${n} but not vice versa`).toContain(t.id);
+      }
+    }
+  });
+
+  it('is fully connected across land and sea', () => {
+    const visited = new Set<string>([MAP.territories[0].id]);
+    const queue = [...visited];
+    while (queue.length > 0) {
+      for (const n of neighborsOf(queue.pop()!)) {
+        if (!visited.has(n)) {
+          visited.add(n);
+          queue.push(n);
+        }
+      }
+    }
+    expect(visited.size).toBe(33);
+  });
+
+  it('does not treat Four Corners point-contacts as adjacency', () => {
+    expect(neighborsOf('colorado')).not.toContain('arizona');
+    expect(neighborsOf('new_mexico')).not.toContain('nevada_utah');
+    expect(neighborsOf('colorado')).toContain('new_mexico');
+    expect(neighborsOf('arizona')).toContain('new_mexico');
+  });
+
+  it('uses organic polygons (5+ points) for recognizable coastlines', () => {
+    for (const t of MAP.territories) {
+      expect(t.points.length, `${t.id} needs 5+ points`).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  it('lays every polygon and label inside the viewBox', () => {
+    for (const t of MAP.territories) {
+      expect(t.points.length).toBeGreaterThanOrEqual(3);
+      for (const [x, y] of t.points) {
+        expect(x).toBeGreaterThanOrEqual(0);
+        expect(y).toBeGreaterThanOrEqual(0);
+        expect(x).toBeLessThanOrEqual(MAP.viewBox.width);
+        expect(y).toBeLessThanOrEqual(MAP.viewBox.height);
+      }
+      const [lx, ly] = t.label;
+      expect(lx).toBeGreaterThanOrEqual(0);
+      expect(ly).toBeGreaterThanOrEqual(0);
+      expect(lx).toBeLessThanOrEqual(MAP.viewBox.width);
+      expect(ly).toBeLessThanOrEqual(MAP.viewBox.height);
+    }
+  });
+});
+
+describe('scenarios', () => {
+  for (const n of [2, 3, 4]) {
+    it(`scenario ${n}p covers all 26 territories exactly once`, () => {
+      const s = scenarioFor(n);
+      const seen = new Set<string>();
+      for (const h of s.holdings) {
+        expect(seen.has(h.territory)).toBe(false);
+        seen.add(h.territory);
+      }
+      for (const tid of Object.keys(s.neutrals)) {
+        expect(seen.has(tid)).toBe(false);
+        seen.add(tid);
+      }
+      expect(seen.size).toBe(26);
+    });
+
+    it(`scenario ${n}p gives every capital a factory`, () => {
+      const s = scenarioFor(n);
+      s.capitals.forEach((cap, i) => {
+        const h = s.holdings.find((x) => x.territory === cap);
+        expect(h, `${cap} must be player-owned`).toBeDefined();
+        expect(h!.owner).toBe(i);
+        expect(h!.factory).toBe(true);
+      });
+    });
+
+    it(`scenario ${n}p holdings are contiguous per player`, () => {
+      const s = scenarioFor(n);
+      const ownerOf = (tid: string): number | null => {
+        const h = s.holdings.find((x) => x.territory === tid);
+        return h ? h.owner : null;
+      };
+      for (let p = 0; p < n; p++) {
+        const mine = s.holdings.filter((h) => h.owner === p).map((h) => h.territory);
+        expect(mine.length).toBeGreaterThan(0);
+        const visited = new Set<string>([mine[0]]);
+        const queue = [mine[0]];
+        while (queue.length > 0) {
+          for (const nb of neighborsOf(queue.pop()!)) {
+            if (!visited.has(nb) && ownerOf(nb) === p) {
+              visited.add(nb);
+              queue.push(nb);
+            }
+          }
+        }
+        expect(visited.size, `player ${p} holdings not contiguous`).toBe(mine.length);
+      }
+    });
+
+    it(`scenario ${n}p neutral garrisons are 3 infantry by default (no air/factories)`, () => {
+      const s = scenarioFor(n);
+      for (const [tid, u] of Object.entries(s.neutrals)) {
+        // null means "use scenario neutralGarrison default" (3 infantry)
+        const g = u ?? s.neutralGarrison ?? { infantry: 3 };
+        const total = (g.infantry ?? 0) + (g.artillery ?? 0) + (g.tank ?? 0);
+        expect(total, tid).toBeGreaterThanOrEqual(1);
+        expect(total, tid).toBeLessThanOrEqual(4);
+        expect(g.fighter ?? 0).toBe(0);
+        expect(g.bomber ?? 0).toBe(0);
+        expect(g.aa ?? 0).toBe(0);
+      }
+    });
+  }
+});

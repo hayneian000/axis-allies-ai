@@ -1429,7 +1429,6 @@ body.ai-thinking #actionbar::after {
   pointer-events: none;
 }
 
-}
 body.ai-thinking #actionbar::after {
   content: "AI deliberating…";
   font-family: var(--font-text);

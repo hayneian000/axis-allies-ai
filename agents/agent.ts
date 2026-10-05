@@ -6,10 +6,12 @@
 
 import { summarizeState } from '../engine/engine';
 import type { GameState, Phase } from '../engine/types';
-import { buildPhasePrompt, buildSystemPrompt } from './prompts';
-import { toolsForPhase } from './tools';
+import { buildDiplomacyPrompt, buildPhasePrompt, buildSystemPrompt } from './prompts';
+import { TOOLS, toolsForPhase } from './tools';
 import {
+  emptyDiplomacyUsage,
   emptyUsage,
+  type DiplomacyUsage,
   type PlayerUsage,
   type ProviderAdapter,
   type TokenUsage,
@@ -76,6 +78,7 @@ export class Agent {
   /** Private conversation memory for THIS seat only. Never exposed. */
   private history: TranscriptMessage[] = [];
   private totalUsage: PlayerUsage = emptyUsage();
+  private diplomacyUsage: DiplomacyUsage = emptyDiplomacyUsage();
 
   constructor(opts: AgentOptions) {
     this.playerId = opts.playerId;
@@ -138,6 +141,73 @@ export class Agent {
   }
 
   /**
+   * One turn inside the diplomacy window: a single provider round-trip with
+   * only the chat tools exposed. Shares the seat's private history (so the
+   * model remembers the game). Token usage always accumulates into the
+   * totals; the diplomacy-budget breakout is charged separately via
+   * chargeDiplomacy, because the budget rule charges only round-trips that
+   * produced an accepted message or an end_diplomacy.
+   */
+  async diplomacyAct(state: GameState, budgetRemaining: number): Promise<ActResult> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) throw new MissingApiKeyError(this.playerId);
+
+    const me = state.players[this.playerId];
+    const playerName = me?.name ?? `Player ${this.playerId}`;
+    const system = buildSystemPrompt({ playerName, persona: this.persona });
+
+    const stateBrief = summarizeState(state, this.playerId);
+    const chat = visibleChat(state, playerName);
+    const prompt = buildDiplomacyPrompt({ stateBrief, visibleChat: chat, budgetRemaining });
+
+    const transcript: TranscriptMessage[] = [...this.history, { role: 'user', content: prompt }];
+    const tools = [TOOLS.send_message, TOOLS.end_diplomacy];
+    const delta: PlayerUsage = emptyUsage();
+
+    const resp = await this.provider.complete({
+      apiKey,
+      model: this.model,
+      system,
+      transcript,
+      tools,
+      ...(this.maxTokens !== undefined ? { maxTokens: this.maxTokens } : {}),
+    });
+    delta.inputTokens += resp.usage.inputTokens;
+    delta.outputTokens += resp.usage.outputTokens;
+    delta.calls += 1;
+
+    const assistantMsg: TranscriptMessage = { role: 'assistant', content: resp.text };
+    if (resp.toolCalls.length > 0) assistantMsg.toolCalls = resp.toolCalls;
+    this.history.push(assistantMsg);
+
+    this.totalUsage.inputTokens += delta.inputTokens;
+    this.totalUsage.outputTokens += delta.outputTokens;
+    this.totalUsage.calls += delta.calls;
+
+    return { toolCalls: resp.toolCalls, text: resp.text, usage: { ...delta } };
+  }
+
+  /**
+   * Charge tokens against the diplomacy budget breakout. Called by the
+   * diplomacy driver only for round-trips that produced at least one
+   * accepted send_message or an end_diplomacy — fully-rejected round-trips
+   * cost no budget (they still count in the totals above).
+   */
+  chargeDiplomacy(inputTokens: number, outputTokens: number): void {
+    this.diplomacyUsage.inputTokens += inputTokens;
+    this.diplomacyUsage.outputTokens += outputTokens;
+    this.diplomacyUsage.calls += 1;
+  }
+
+  /** Token usage accumulated across all act() calls for this seat. */
+  get usage(): PlayerUsage {
+    return {
+      ...this.totalUsage,
+      diplomacy: { ...this.diplomacyUsage },
+    };
+  }
+
+  /**
    * Record the outcomes of this seat's own tool calls into the private
    * history as `{role:'tool'}` messages. The driver calls this after
    * executing each batch returned from act().
@@ -156,11 +226,6 @@ export class Agent {
   /** Forget this seat's private conversation memory. */
   resetHistory(): void {
     this.history = [];
-  }
-
-  /** Token usage accumulated across all act() calls for this seat. */
-  get usage(): PlayerUsage {
-    return { ...this.totalUsage };
   }
 }
 

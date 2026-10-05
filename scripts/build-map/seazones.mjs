@@ -1,1 +1,142 @@
-IyEvdXNyL2Jpbi9lbnYgbm9kZQovKioKICogU2VhIHpvbmUgZ2VuZXJhdG9yOiBkZXJpdmVzIGdlb2dyYXBoaWNhbGx5IGFjY3VyYXRlIHNlYS16b25lIHBvbHlnb25zIGZvcgogKiB0aGUgQW1lcmljYSBtYXAgYnkgc3VidHJhY3RpbmcgdGhlIFVTIGxhbmRtYXNzIGZyb20gb2NlYW4gcmVnaW9ucy4KICoKICogICAxLiBMb2FkIHVzLWF0bGFzIHN0YXRlcyAoc2FtZSBncm91bmQgdHJ1dGggYXMgYnVpbGQubWpzKSwgdW5pb24gdG8gbGFuZC4KICogICAyLiBGb3IgZWFjaCBzZWEgem9uZSwgdGFrZSBpdHMgbG9uL2xhdCByZWdpb24gYW5kIHR1cmYuZGlmZmVyZW5jZSBvdXQgdGhlCiAqICAgICAgbGFuZCAtPiB3YXRlciBwb2x5Z29uIHRoYXQgdHJhY2VzIHRoZSByZWFsIGNvYXN0bGluZS4KICogICAzLiBQcm9qZWN0IHdpdGggdGhlIHNhbWUgZDMtZ2VvIEFsYmVycyBhcyBidWlsZC5tanMsIGNsaXAgdG8gdGhlIHZpZXdCb3gsCiAqICAgICAgc2ltcGxpZnksIGFuZCBwbGFjZSBsYWJlbHMgdmlhIHBvbGUtb2YtaW5hY2Nlc3NpYmlsaXR5LgogKiAgIDQuIEVtaXQgeyBpZCwgcG9pbnRzLCBsYWJlbCB9IEpTT04gZm9yIG1lcmdpbmcgaW50byBkYXRhL21hcC5qc29uLgogKgogKiBVc2FnZTogbm9kZSBzY3JpcHRzL2J1aWxkLW1hcC9zZWF6b25lcy5tanMgPiAvdG1wL3NlYXpvbmVzLmpzb24KICovCmltcG9ydCB7IGZlYXR1cmUgfSBmcm9tICd0b3BvanNvbi1jbGllbnQnOwppbXBvcnQgeyB1bmlvbiwgZGlmZmVyZW5jZSwgc2ltcGxpZnkgfSBmcm9tICdAdHVyZi90dXJmJzsKaW1wb3J0IHsgZ2VvQWxiZXJzIH0gZnJvbSAnZDMtZ2VvJzsKaW1wb3J0IGZzIGZyb20gJ25vZGU6ZnMnOwppbXBvcnQgcGF0aCBmcm9tICdub2RlOnBhdGgnOwppbXBvcnQgeyBmaWxlVVJMVG9QYXRoIH0gZnJvbSAnbm9kZTp1cmwnOwppbXBvcnQgeyBjcmVhdGVSZXF1aXJlIH0gZnJvbSAnbm9kZTptb2R1bGUnOwoKY29uc3QgcmVxdWlyZSA9IGNyZWF0ZVJlcXVpcmUoaW1wb3J0Lm1ldGEudXJsKTsKY29uc3QgSEVSRSA9IHBhdGguZGlybmFtZShmaWxlVVJMVG9QYXRoKGltcG9ydC5tZXRhLnVybCkpOwpjb25zdCBjb25maWcgPSBKU09OLnBhcnNlKGZzLnJlYWRGaWxlU3luYyhwYXRoLmpvaW4oSEVSRSwgJ3RlcnJpdG9yaWVzLmpzb24nKSwgJ3V0ZjgnKSk7CmNvbnN0IHsgd2lkdGg6IFcsIGhlaWdodDogSCB9ID0gY29uZmlnLnZpZXdCb3g7CmNvbnN0IFBBRCA9IGNvbmZpZy5wcm9qZWN0aW9uLnBhZGRpbmc7CgovLyAtLS0gbGFuZCBtYXNzIChzYW1lIGFzIGJ1aWxkLm1qcykgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KY29uc3QgdXMgPSByZXF1aXJlKCd1cy1hdGxhcy9zdGF0ZXMtMTBtLmpzb24nKTsKY29uc3QgU0tJUCA9IG5ldyBTZXQoWwogICdBbGFza2EnLCAnSGF3YWlpJywgJ1B1ZXJ0byBSaWNvJywgJ0FtZXJpY2FuIFNhbW9hJywgJ0d1YW0nLAogICdDb21tb253ZWFsdGggb2YgdGhlIE5vcnRoZXJuIE1hcmlhbmEgSXNsYW5kcycsICdVbml0ZWQgU3RhdGVzIFZpcmdpbiBJc2xhbmRzJywKXSk7CmNvbnN0IHN0YXRlcyA9IGZlYXR1cmUodXMsIHVzLm9iamVjdHMuc3RhdGVzKS5mZWF0dXJlcy5maWx0ZXIoCiAgKGYpID0+ICFTS0lQLmhhcyhmLnByb3BlcnRpZXMubmFtZSksCik7CmxldCBsYW5kID0gdW5pb24oeyB0eXBlOiAnRmVhdHVyZUNvbGxlY3Rpb24nLCBmZWF0dXJlczogc3RhdGVzIH0pOwoKLy8gLS0tIHByb2plY3Rpb24gKHNhbWUgYXMgYnVpbGQubWpzKSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpjb25zdCBhbGxGYyA9IHsgdHlwZTogJ0ZlYXR1cmVDb2xsZWN0aW9uJywgZmVhdHVyZXM6IHN0YXRlcyB9Owpjb25zdCBwcm9qZWN0ID0gZ2VvQWxiZXJzKCkKICAuY2VudGVyKGNvbmZpZy5wcm9qZWN0aW9uLmNlbnRlcikKICAucGFyYWxsZWxzKGNvbmZpZy5wcm9qZWN0aW9uLnBhcmFsbGVscykKICAuZml0RXh0ZW50KFtbUEFELCBQQURdLCBbVyAtIFBBRCwgSCAtIFBBRF1dLCBhbGxGYyk7CmNvbnN0IHB4ID0gKFtsb24sIGxhdF0pID0+IHsKICBjb25zdCBbeCwgeV0gPSBwcm9qZWN0KFtsb24sIGxhdF0pOwogIHJldHVybiBbTWF0aC5yb3VuZCh4ICogMTApIC8gMTAsIE1hdGgucm91bmQoeSAqIDEwKSAvIDEwXTsKfTsKCi8vIC0tLSBzZWEgem9uZSByZWdpb25zIChsb24vbGF0IGJveGVzLCBub24tb3ZlcmxhcHBpbmcpIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQovLyBEaXZpZGVycyBmb2xsb3cgc3RhdGUgbGluZXM6IDQyTiAoT1IvQ0EpLCAzOC41TiAoTkovREUpLCAzM04gKE5DL1NDKSwKLy8gLTg5IChMQS9NUykuIEJveGVzIGV4dGVuZCBpbnRvIHRoZSBvY2VhbjsgbGFuZCBpcyBkaWZmZXJlbmNlZCBvdXQuCmNvbnN0IFpPTkVTID0gWwogIHsgaWQ6ICdwYWNpZmljX253JywgICAgICAgbmFtZTogJ1BhY2lmaWMgTm9ydGh3ZXN0JywgYm94OiBbWy0xMjgsIDQyXSwgWy0xMjEsIDQyXSwgWy0xMjEsIDUwXSwgWy0xMjgsIDUwXV0gfSwKICB7IGlkOiAnY2FsaWZvcm5pYV9jb2FzdCcsIG5hbWU6ICdDYWxpZm9ybmlhIENvYXN0JywgIGJveDogW1stMTI4LCAzMl0sIFstMTE0LCAzMl0sIFstMTE0LCA0Ml0sIFstMTI4LCA0Ml1dIH0sCiAgeyBpZDogJ25vcnRoX2F0bGFudGljJywgICBuYW1lOiAnTm9ydGggQXRsYW50aWMnLCAgICBib3g6IFtbLTc2LCAzOC41XSwgWy02MywgMzguNV0sIFstNjMsIDQ3XSwgWy03NiwgNDddXSB9LAogIHsgaWQ6ICdtaWRfYXRsYW50aWNfd2F0ZXJzJywgbmFtZTogJ01pZC1BdGxhbnRpYyBXYXRlcnMnLCBib3g6IFtbLTc5LCAzM10sIFstNjksIDMzXSwgWy02OSwgMzguNV0sIFstNzksIDM4LjVdXSB9LAogIHsgaWQ6ICdzb3V0aF9hdGxhbnRpYycsICAgbmFtZTogJ1NvdXRoIEF0bGFudGljJywgICAgYm94OiBbWy04NCwgMjVdLCBbLTcyLCAyNV0sIFstNzIsIDMzXSwgWy04NCwgMzNdXSB9LAogIHsgaWQ6ICd3ZXN0ZXJuX2d1bGYnLCAgICAgbmFtZTogJ1dlc3Rlcm4gR3VsZicsICAgICAgYm94OiBbWy05OSwgMjRdLCBbLTg5LCAyNF0sIFstODksIDMxXSwgWy05OSwgMzFdXSB9LAogIHsgaWQ6ICdlYXN0ZXJuX2d1bGYnLCAgICAgbmFtZTogJ0Vhc3Rlcm4gR3VsZicsICAgICAgYm94OiBbWy04OSwgMjRdLCBbLTgwLCAyNF0sIFstODAsIDMxXSwgWy04OSwgMzFdXSB9LApdOwoKY29uc3QgYm94UG9seSA9IChib3gpID0+ICh7CiAgdHlwZTogJ0ZlYXR1cmUnLCBwcm9wZXJ0aWVzOiB7fSwKICBnZW9tZXRyeTogeyB0eXBlOiAnUG9seWdvbicsIGNvb3JkaW5hdGVzOiBbWy4uLmJveCwgYm94WzBdXV0gfSwKfSk7CgpmdW5jdGlvbiBsYXJnZXN0UmluZyhnZW9tKSB7CiAgY29uc3QgcG9seXMgPSBnZW9tLnR5cGUgPT09ICdQb2x5Z29uJyA/IFtnZW9tLmNvb3JkaW5hdGVzXSA6IGdlb20uY29vcmRpbmF0ZXM7CiAgcG9seXMuc29ydCgoYSwgYikgPT4gcmluZ0FyZWEoYlswXSkgLSByaW5nQXJlYShhWzBdKSk7CiAgcmV0dXJuIHBvbHlzWzBdWzBdOwp9CmZ1bmN0aW9uIHJpbmdBcmVhKHJpbmcpIHsKICBsZXQgYSA9IDA7CiAgZm9yIChsZXQgaSA9IDA7IGkgPCByaW5nLmxlbmd0aCAtIDE7IGkrKykKICAgIGEgKz0gcmluZ1tpXVswXSAqIHJpbmdbaSArIDFdWzFdIC0gcmluZ1tpICsgMV1bMF0gKiByaW5nW2ldWzFdOwogIHJldHVybiBNYXRoLmFicyhhIC8gMik7Cn0KLy8gUG9sZSBvZiBpbmFjY2Vzc2liaWxpdHkgKGdyaWQgc2VhcmNoKSwgcGl4ZWwgc3BhY2UuCmZ1bmN0aW9uIHBvbHlsYWJlbChyaW5nKSB7CiAgbGV0IG1pblggPSAxZTksIG1heFggPSAtMWU5LCBtaW5ZID0gMWU5LCBtYXhZID0gLTFlOTsKICBmb3IgKGNvbnN0IFt4LCB5XSBvZiByaW5nKSB7CiAgICBpZiAoeCA8IG1pblgpIG1pblggPSB4OyBpZiAoeCA+IG1heFgpIG1heFggPSB4OwogICAgaWYgKHkgPCBtaW5ZKSBtaW5ZID0geTsgaWYgKHkgPiBtYXhZKSBtYXhZID0geTsKICB9CiAgY29uc3Qgc2VnID0gKHB4LCBweSwgYXgsIGF5LCBieCwgYnkpID0+IHsKICAgIGNvbnN0IGR4ID0gYnggLSBheCwgZHkgPSBieSAtIGF5LCBsMiA9IGR4ICogZHggKyBkeSAqIGR5OwogICAgbGV0IHQgPSBsMiA+IDAgPyAoKHB4IC0gYXgpICogZHggKyAocHkgLSBheSkgKiBkeSkgLyBsMiA6IDA7CiAgICB0ID0gTWF0aC5tYXgoMCwgTWF0aC5taW4oMSwgdCkpOwogICAgcmV0dXJuIE1hdGguaHlwb3QocHggLSAoYXggKyB0ICogZHgpLCBweSAtIChheSArIHQgKiBkeSkpOwogIH07CiAgY29uc3QgaW5zaWRlID0gKHgsIHkpID0+IHsKICAgIGxldCBjID0gZmFsc2U7CiAgICBmb3IgKGxldCBpID0gMCwgaiA9IHJpbmcubGVuZ3RoIC0gMTsgaSA8IHJpbmcubGVuZ3RoOyBqID0gaSsrKSB7CiAgICAgIGNvbnN0IFt4aSwgeWldID0gcmluZ1tpXSwgW3hqLCB5al0gPSByaW5nW2pdOwogICAgICBpZiAoKHlpID4geSkgIT09ICh5aiA+IHkpICYmIHggPCAoKHhqIC0geGkpICogKHkgLSB5aSkpIC8gKHlqIC0geWkpICsgeGkpIGMgPSAhYzsKICAgIH0KICAgIHJldHVybiBjOwogIH07CiAgbGV0IGJ4ID0gMCwgYnkgPSAwLCBiZCA9IC0xOwogIGNvbnN0IHN0ZXAgPSA0OwogIGZvciAobGV0IHkgPSBtaW5ZOyB5IDw9IG1heFk7IHkgKz0gc3RlcCkKICAgIGZvciAobGV0IHggPSBtaW5YOyB4IDw9IG1heFg7IHggKz0gc3RlcCkgewogICAgICBpZiAoIWluc2lkZSh4LCB5KSkgY29udGludWU7CiAgICAgIGxldCBkID0gMWU5OwogICAgICBmb3IgKGxldCBpID0gMDsgaSA8IHJpbmcubGVuZ3RoIC0gMTsgaSsrKQogICAgICAgIGQgPSBNYXRoLm1pbihkLCBzZWcoeCwgeSwgcmluZ1tpXVswXSwgcmluZ1tpXVsxXSwgcmluZ1tpICsgMV1bMF0sIHJpbmdbaSArIDFdWzFdKSk7CiAgICAgIGlmIChkID4gYmQpIHsgYmQgPSBkOyBieCA9IHg7IGJ5ID0geTsgfQogICAgfQogIHJldHVybiBbTWF0aC5yb3VuZChieCAqIDEwKSAvIDEwLCBNYXRoLnJvdW5kKGJ5ICogMTApIC8gMTBdOwp9Cgpjb25zdCBvdXQgPSBbXTsKZm9yIChjb25zdCB6IG9mIFpPTkVTKSB7CiAgY29uc3QgcmVnaW9uID0gYm94UG9seSh6LmJveCk7CiAgY29uc3Qgd2F0ZXIgPSBkaWZmZXJlbmNlKHsgdHlwZTogJ0ZlYXR1cmVDb2xsZWN0aW9uJywgZmVhdHVyZXM6IFtyZWdpb24sIGxhbmRdIH0pOwogIGlmICghd2F0ZXIpIHsgY29uc29sZS5lcnJvcihgbm8gd2F0ZXIgZm9yICR7ei5pZH1gKTsgY29udGludWU7IH0KICAvLyBQcm9qZWN0IHRvIHBpeGVsIHNwYWNlLgogIGNvbnN0IHByb2ogPSAoZ2VvbSkgPT4gewogICAgaWYgKGdlb20udHlwZSA9PT0gJ1BvbHlnb24nKQogICAgICByZXR1cm4geyB0eXBlOiAnUG9seWdvbicsIGNvb3JkaW5hdGVzOiBnZW9tLmNvb3JkaW5hdGVzLm1hcCgocikgPT4gci5tYXAocHgpKSB9OwogICAgcmV0dXJuIHsgdHlwZTogJ011bHRpUG9seWdvbicsIGNvb3JkaW5hdGVzOiBnZW9tLmNvb3JkaW5hdGVzLm1hcCgocCkgPT4gcC5tYXAoKHIpID0+IHIubWFwKHB4KSkpIH07CiAgfTsKICBjb25zdCBwZ2VvbSA9IHByb2ood2F0ZXIuZ2VvbWV0cnkpOwogIGxldCByaW5nID0gbGFyZ2VzdFJpbmcocGdlb20pOwogIC8vIENsaXAgdG8gdmlld0JveC4KICByaW5nID0gcmluZy5tYXAoKFt4LCB5XSkgPT4gWwogICAgTWF0aC5tYXgoMCwgTWF0aC5taW4oVywgeCkpLCBNYXRoLm1heCgwLCBNYXRoLm1pbihILCB5KSksCiAgXSk7CiAgLy8gU2ltcGxpZnkgKHRvbGVyYW5jZSBpbiBweCkuCiAgY29uc3Qgc2ltcCA9IHNpbXBsaWZ5KAogICAgeyB0eXBlOiAnRmVhdHVyZScsIHByb3BlcnRpZXM6IHt9LCBnZW9tZXRyeTogeyB0eXBlOiAnUG9seWdvbicsIGNvb3JkaW5hdGVzOiBbcmluZ10gfSB9LAogICAgeyB0b2xlcmFuY2U6IDIsIGhpZ2hRdWFsaXR5OiBmYWxzZSB9LAogICk7CiAgY29uc3Qgc3JpbmcgPSBzaW1wLmdlb21ldHJ5LmNvb3JkaW5hdGVzWzBdLm1hcCgoW3gsIHldKSA9PiBbCiAgICBNYXRoLnJvdW5kKHggKiAxMCkgLyAxMCwgTWF0aC5yb3VuZCh5ICogMTApIC8gMTAsCiAgXSk7CiAgb3V0LnB1c2goeyBpZDogei5pZCwgbmFtZTogei5uYW1lLCBwb2ludHM6IHNyaW5nLCBsYWJlbDogcG9seWxhYmVsKHNyaW5nKSB9KTsKICBjb25zb2xlLmVycm9yKGAke3ouaWR9OiAke3NyaW5nLmxlbmd0aH0gcG9pbnRzYCk7Cn0KY29uc29sZS5sb2coSlNPTi5zdHJpbmdpZnkob3V0LCBudWxsLCAxKSk7Cg==
+#!/usr/bin/env node
+/**
+ * Sea zone generator: derives geographically accurate sea-zone polygons for
+ * the America map by subtracting the US landmass from ocean regions.
+ *
+ *   1. Load us-atlas states (same ground truth as build.mjs), union to land.
+ *   2. For each sea zone, take its lon/lat region and turf.difference out the
+ *      land -> water polygon that traces the real coastline.
+ *   3. Project with the same d3-geo Albers as build.mjs, clip to the viewBox,
+ *      simplify, and place labels via pole-of-inaccessibility.
+ *   4. Emit { id, points, label } JSON for merging into data/map.json.
+ *
+ * Usage: node scripts/build-map/seazones.mjs > /tmp/seazones.json
+ */
+import { feature } from 'topojson-client';
+import { union, difference, simplify } from '@turf/turf';
+import { geoAlbers } from 'd3-geo';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const config = JSON.parse(fs.readFileSync(path.join(HERE, 'territories.json'), 'utf8'));
+const { width: W, height: H } = config.viewBox;
+const PAD = config.projection.padding;
+
+// --- land mass (same as build.mjs) -----------------------------------------
+const us = require('us-atlas/states-10m.json');
+const SKIP = new Set([
+  'Alaska', 'Hawaii', 'Puerto Rico', 'American Samoa', 'Guam',
+  'Commonwealth of the Northern Mariana Islands', 'United States Virgin Islands',
+]);
+const states = feature(us, us.objects.states).features.filter(
+  (f) => !SKIP.has(f.properties.name),
+);
+let land = union({ type: 'FeatureCollection', features: states });
+
+// --- projection (same as build.mjs) -----------------------------------------
+const allFc = { type: 'FeatureCollection', features: states };
+const project = geoAlbers()
+  .center(config.projection.center)
+  .parallels(config.projection.parallels)
+  .fitExtent([[PAD, PAD], [W - PAD, H - PAD]], allFc);
+const px = ([lon, lat]) => {
+  const [x, y] = project([lon, lat]);
+  return [Math.round(x * 10) / 10, Math.round(y * 10) / 10];
+};
+
+// --- sea zone regions (lon/lat boxes, non-overlapping) ------------------------
+// Dividers follow state lines: 42N (OR/CA), 38.5N (NJ/DE), 33N (NC/SC),
+// -89 (LA/MS). Boxes extend into the ocean; land is differenced out.
+const ZONES = [
+  { id: 'pacific_nw',       name: 'Pacific Northwest', box: [[-128, 42], [-121, 42], [-121, 50], [-128, 50]] },
+  { id: 'california_coast', name: 'California Coast',  box: [[-128, 32], [-114, 32], [-114, 42], [-128, 42]] },
+  { id: 'north_atlantic',   name: 'North Atlantic',    box: [[-76, 38.5], [-63, 38.5], [-63, 47], [-76, 47]] },
+  { id: 'mid_atlantic_waters', name: 'Mid-Atlantic Waters', box: [[-79, 33], [-69, 33], [-69, 38.5], [-79, 38.5]] },
+  { id: 'south_atlantic',   name: 'South Atlantic',    box: [[-84, 25], [-72, 25], [-72, 33], [-84, 33]] },
+  { id: 'western_gulf',     name: 'Western Gulf',      box: [[-99, 24], [-89, 24], [-89, 31], [-99, 31]] },
+  { id: 'eastern_gulf',     name: 'Eastern Gulf',      box: [[-89, 24], [-80, 24], [-80, 31], [-89, 31]] },
+];
+
+const boxPoly = (box) => ({
+  type: 'Feature', properties: {},
+  geometry: { type: 'Polygon', coordinates: [[...box, box[0]]] },
+});
+
+function largestRing(geom) {
+  const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+  polys.sort((a, b) => ringArea(b[0]) - ringArea(a[0]));
+  return polys[0][0];
+}
+function ringArea(ring) {
+  let a = 0;
+  for (let i = 0; i < ring.length - 1; i++)
+    a += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
+  return Math.abs(a / 2);
+}
+// Pole of inaccessibility (grid search), pixel space.
+function polylabel(ring) {
+  let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  for (const [x, y] of ring) {
+    if (x < minX) minX = x; if (x > maxX) maxX = x;
+    if (y < minY) minY = y; if (y > maxY) maxY = y;
+  }
+  const seg = (px, py, ax, ay, bx, by) => {
+    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    let t = l2 > 0 ? ((px - ax) * dx + (py - ay) * dy) / l2 : 0;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+  };
+  const inside = (x, y) => {
+    let c = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i], [xj, yj] = ring[j];
+      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  };
+  let bx = 0, by = 0, bd = -1;
+  const step = 4;
+  for (let y = minY; y <= maxY; y += step)
+    for (let x = minX; x <= maxX; x += step) {
+      if (!inside(x, y)) continue;
+      let d = 1e9;
+      for (let i = 0; i < ring.length - 1; i++)
+        d = Math.min(d, seg(x, y, ring[i][0], ring[i][1], ring[i + 1][0], ring[i + 1][1]));
+      if (d > bd) { bd = d; bx = x; by = y; }
+    }
+  return [Math.round(bx * 10) / 10, Math.round(by * 10) / 10];
+}
+
+const out = [];
+for (const z of ZONES) {
+  const region = boxPoly(z.box);
+  const water = difference({ type: 'FeatureCollection', features: [region, land] });
+  if (!water) { console.error(`no water for ${z.id}`); continue; }
+  // Project to pixel space.
+  const proj = (geom) => {
+    if (geom.type === 'Polygon')
+      return { type: 'Polygon', coordinates: geom.coordinates.map((r) => r.map(px)) };
+    return { type: 'MultiPolygon', coordinates: geom.coordinates.map((p) => p.map((r) => r.map(px))) };
+  };
+  const pgeom = proj(water.geometry);
+  let ring = largestRing(pgeom);
+  // Clip to viewBox.
+  ring = ring.map(([x, y]) => [
+    Math.max(0, Math.min(W, x)), Math.max(0, Math.min(H, y)),
+  ]);
+  // Simplify (tolerance in px).
+  const simp = simplify(
+    { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } },
+    { tolerance: 2, highQuality: false },
+  );
+  const sring = simp.geometry.coordinates[0].map(([x, y]) => [
+    Math.round(x * 10) / 10, Math.round(y * 10) / 10,
+  ]);
+  out.push({ id: z.id, name: z.name, points: sring, label: polylabel(sring) });
+  console.error(`${z.id}: ${sring.length} points`);
+}
+console.log(JSON.stringify(out, null, 1));

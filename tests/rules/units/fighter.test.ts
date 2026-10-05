@@ -1,1 +1,205 @@
-Ly8gQHZpdGVzdC1lbnZpcm9ubWVudCBub2RlCmltcG9ydCB7IGRlc2NyaWJlLCBleHBlY3QsIGl0IH0gZnJvbSAndml0ZXN0JzsKaW1wb3J0IHsKICBjb21iYXRNb3ZlLAogIG5vbkNvbWJhdE1vdmUsCiAgcHVyY2hhc2UsCiAgcmVzb2x2ZUNvbWJhdFJvdW5kLAp9IGZyb20gJy4uLy4uLy4uL2VuZ2luZS9lbmdpbmUnOwppbXBvcnQgeyBVTklUUyB9IGZyb20gJy4uLy4uLy4uL2RhdGEvZGF0YSc7CmltcG9ydCB7CiAgZnJlc2hHYW1lLAogIGdvdG9Db21iYXQsCiAgZ290b0NvbWJhdE1vdmUsCiAgZ290b05vbkNvbWJhdCwKICByZXNvbHZlQWxsQXV0bywKfSBmcm9tICcuLi8uLi9oZWxwZXJzJzsKCi8qKgogKiBGaWdodGVyIOKAlCAxOTQyIDJlIHAuMTAgKHVuaXQgcHJvZmlsZSkuCiAqIENvc3QgMTAsIGF0dGFjayAzLCBkZWZlbnNlIDQsIG1vdmUgNC4gRmlnaHRlcnMgYXJlIGFpciB1bml0czogdGhleSBuZWVkCiAqIGEgbGFuZGluZyBzcG90IGFuZCBjYW5ub3QgY2FwdHVyZSB0ZXJyaXRvcnkgYWxvbmUuCiAqLwpkZXNjcmliZSgnZmlnaHRlciBwcm9maWxlJywgKCkgPT4gewogIGl0KCdjb3N0cyAxMCBJUENzICgxOTQyIDJlIHAuMTApJywgKCkgPT4gewogICAgZXhwZWN0KFVOSVRTLmZpZ2h0ZXIuY29zdCkudG9CZSgxMCk7CiAgICBjb25zdCBzID0gZnJlc2hHYW1lKDIsIDEpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgYmFuayA9IHMucGxheWVyc1twaWRdLmlwY3M7CiAgICBleHBlY3QocHVyY2hhc2UocywgcGlkLCBbeyB0eXBlOiAnZmlnaHRlcicsIGNvdW50OiAxIH1dKS5vaykudG9CZSh0cnVlKTsKICAgIGV4cGVjdChzLnBsYXllcnNbcGlkXS5pcGNzKS50b0JlKGJhbmsgLSAxMCk7CiAgfSk7CgogIGl0KCdoYXMgYXR0YWNrIDMsIGRlZmVuc2UgNCwgbW92ZSA0ICgxOTQyIDJlIHAuMTApJywgKCkgPT4gewogICAgZXhwZWN0KFVOSVRTLmZpZ2h0ZXIuYXR0YWNrKS50b0JlKDMpOwogICAgZXhwZWN0KFVOSVRTLmZpZ2h0ZXIuZGVmZW5zZSkudG9CZSg0KTsKICAgIGV4cGVjdChVTklUUy5maWdodGVyLm1vdmUpLnRvQmUoNCk7CiAgfSk7CgogIGl0KCdpcyBhbiBhaXIgdW5pdCAoMTk0MiAyZSBwLjEwOiBmaWdodGVycyBhcmUgYWlyIHVuaXRzKScsICgpID0+IHsKICAgIGV4cGVjdChVTklUUy5maWdodGVyLmFpcikudG9CZSh0cnVlKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnZmlnaHRlciBjb21iYXQgdmFsdWVzJywgKCkgPT4gewogIGl0KCdhdHRhY2sgZGljZSBoaXQgb24gMyBvciBsZXNzICgxOTQyIDJlIHAuMTA6IGF0dGFjayAzKScsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgNDIpOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBmb2UgPSAocGlkICsgMSkgJSAyOwogICAgcy50ZXJyaXRvcmllc1snaWRhaG8nXS5vd25lciA9IHBpZDsKICAgIHMudGVycml0b3JpZXNbJ2lkYWhvJ10udW5pdHMuZmlnaHRlciA9IDI7CiAgICBzLm93bmVkQXRUdXJuU3RhcnQucHVzaCgnaWRhaG8nKTsKICAgIHMudGVycml0b3JpZXNbJ21vbnRhbmEnXS5vd25lciA9IGZvZTsKICAgIHMudGVycml0b3JpZXNbJ21vbnRhbmEnXS51bml0cy5pbmZhbnRyeSA9IDM7CiAgICBleHBlY3QoY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdpZGFobycsIHRvOiAnbW9udGFuYScsIHVuaXRzOiB7IGZpZ2h0ZXI6IDIgfSB9XSkub2spLnRvQmUodHJ1ZSk7CiAgICBnb3RvQ29tYmF0KHMpOwogICAgY29uc3QgciA9IHJlc29sdmVDb21iYXRSb3VuZChzLCBwaWQsICdtb250YW5hJyk7CiAgICBleHBlY3Qoci5vaykudG9CZSh0cnVlKTsKICAgIGNvbnN0IGMgPSByLmNvbWJhdCE7CiAgICBjb25zdCBleHBlY3RlZCA9IGMuYXR0YWNrUm9sbHMuZmlsdGVyKChkKSA9PiBkIDw9IDMpLmxlbmd0aDsKICAgIGV4cGVjdChjLmF0dGFja0hpdHMpLnRvQmUoZXhwZWN0ZWQpOwogIH0pOwoKICBpdCgnZGVmZW5zZSBkaWNlIGhpdCBvbiA0IG9yIGxlc3Mg4oCUIGJlc3QgZGVmZW5kZXIgKDE5NDIgMmUgcC4xMDogZGVmZW5zZSA0KScsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgNDMpOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBmb2UgPSAocGlkICsgMSkgJSAyOwogICAgLy8gQXR0YWNrIHRoZSBmaWdodGVyOiBtb250YW5hIChmb2UsIDIgZmlnaHRlcnMpIDwtIGlkYWhvIChtaW5lLCAzIGluZikuCiAgICBzLnRlcnJpdG9yaWVzWydtb250YW5hJ10ub3duZXIgPSBmb2U7CiAgICBzLnRlcnJpdG9yaWVzWydtb250YW5hJ10udW5pdHMuZmlnaHRlciA9IDI7CiAgICBzLnRlcnJpdG9yaWVzWydpZGFobyddLm93bmVyID0gcGlkOwogICAgcy50ZXJyaXRvcmllc1snaWRhaG8nXS51bml0cy5pbmZhbnRyeSA9IDM7CiAgICBzLm93bmVkQXRUdXJuU3RhcnQucHVzaCgnaWRhaG8nKTsKICAgIGV4cGVjdChjb21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ2lkYWhvJywgdG86ICdtb250YW5hJywgdW5pdHM6IHsgaW5mYW50cnk6IDMgfSB9XSkub2spLnRvQmUodHJ1ZSk7CiAgICBnb3RvQ29tYmF0KHMpOwogICAgY29uc3QgciA9IHJlc29sdmVDb21iYXRSb3VuZChzLCBwaWQsICdtb250YW5hJyk7CiAgICBleHBlY3Qoci5vaykudG9CZSh0cnVlKTsKICAgIGNvbnN0IGMgPSByLmNvbWJhdCE7CiAgICBjb25zdCBleHBlY3RlZCA9IGMuZGVmZW5zZVJvbGxzLmZpbHRlcigoZCkgPT4gZCA8PSA0KS5sZW5ndGg7CiAgICBleHBlY3QoYy5kZWZlbnNlSGl0cykudG9CZShleHBlY3RlZCk7CiAgfSk7Cn0pOwoKZGVzY3JpYmUoJ2ZpZ2h0ZXIgbW92ZW1lbnQgYW5kIHJhbmdlJywgKCkgPT4gewogIGl0KCdtb3ZlcyB1cCB0byA0IHRlcnJpdG9yaWVzIGluIGNvbWJhdCBtb3ZlbWVudCAoMTk0MiAyZSBwLjEwOiBtb3ZlIDQpJywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCA0NCk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICAvLyBjYWxpZm9ybmlhIC0+IHVwcGVyX21pZHdlc3QgaXMgZXhhY3RseSA0IHN0ZXBzIChhaXIgY291bnRzIGVhY2gKICAgIC8vIHRlcnJpdG9yeSBhcyBhIHN0ZXApOyByaWcgYm90aCBmcmllbmRseSBCRUZPUkUgZ290b0NvbWJhdE1vdmUgc28KICAgIC8vIG93bmVkQXRUdXJuU3RhcnQgY292ZXJzIHRoZSBsYW5kaW5nIHNwb3QuCiAgICBmb3IgKGNvbnN0IHQgb2YgWydjYWxpZm9ybmlhJywgJ3VwcGVyX21pZHdlc3QnXSkgcy50ZXJyaXRvcmllc1t0XS5vd25lciA9IHBpZDsKICAgIHMudGVycml0b3JpZXNbJ2NhbGlmb3JuaWEnXS51bml0cy5maWdodGVyID0gMTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgLy8gNCBzdGVwcyBvdXQsIDAgcmVtYWluaW5nOiBtdXN0IGxhbmQgYXQgdGhlIGRlc3RpbmF0aW9uIGl0c2VsZi4KICAgIGNvbnN0IHIgPSBjb21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ2NhbGlmb3JuaWEnLCB0bzogJ3VwcGVyX21pZHdlc3QnLCB1bml0czogeyBmaWdodGVyOiAxIH0gfV0pOwogICAgZXhwZWN0KHIub2ssIGAke3IuY29kZX0gJHtyLmVycm9yfWApLnRvQmUodHJ1ZSk7CiAgICBleHBlY3Qocy50ZXJyaXRvcmllc1sndXBwZXJfbWlkd2VzdCddLnVuaXRzLmZpZ2h0ZXIpLnRvQmUoMSk7CiAgfSk7CgogIGl0KCdjYW5ub3QgbW92ZSA1IHRlcnJpdG9yaWVzICgxOTQyIDJlIHAuMTA6IG1vdmUgNCknLCAoKSA9PiB7CiAgICBjb25zdCBzID0gZnJlc2hHYW1lKDIsIDQ1KTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgLy8gbW9udGFuYSAtPiBmbG9yaWRhIGlzIDUgc3RlcHM6IGJleW9uZCBmaWdodGVyIHJhbmdlLgogICAgZm9yIChjb25zdCB0IG9mIFsnbW9udGFuYScsICdmbG9yaWRhJ10pIHMudGVycml0b3JpZXNbdF0ub3duZXIgPSBwaWQ7CiAgICBzLnRlcnJpdG9yaWVzWydtb250YW5hJ10udW5pdHMuZmlnaHRlciA9IDE7CiAgICBjb25zdCByID0gY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdtb250YW5hJywgdG86ICdmbG9yaWRhJywgdW5pdHM6IHsgZmlnaHRlcjogMSB9IH1dKTsKICAgIGV4cGVjdChyLm9rKS50b0JlKGZhbHNlKTsKICAgIGV4cGVjdChyLmNvZGUpLnRvQmUoJ3JhbmdlJyk7CiAgfSk7CgogIGl0KCduZWVkcyBhIHJlYWNoYWJsZSBsYW5kaW5nIHNwb3QgKDE5NDIgMmUgcC4xNTogYWlyIHVuaXRzIG11c3QgbGFuZCknLCAoKSA9PiB7CiAgICBjb25zdCBzID0gZnJlc2hHYW1lKDIsIDQ2KTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gKHBpZCArIDEpICUgMjsKICAgIHMudGVycml0b3JpZXNbJ2NhbGlmb3JuaWEnXS5vd25lciA9IHBpZDsKICAgIHMudGVycml0b3JpZXNbJ2NhbGlmb3JuaWEnXS51bml0cy5maWdodGVyID0gMTsKICAgIHMudGVycml0b3JpZXNbJ21vbnRhbmEnXS5vd25lciA9IGZvZTsKICAgIHMudGVycml0b3JpZXNbJ21vbnRhbmEnXS51bml0cy5pbmZhbnRyeSA9IDE7CiAgICAvLyAzIHN0ZXBzIG91dCwgMSByZW1haW5pbmcsIGJ1dCB0aGUgb25seSB0dXJuLXN0YXJ0IGZyaWVuZGx5IGdyb3VuZAogICAgLy8gKGNhbGlmb3JuaWEpIGlzIDMgc3RlcHMgYmFjazogbm8gbGVnYWwgbGFuZGluZy4KICAgIHMub3duZWRBdFR1cm5TdGFydCA9IFsnY2FsaWZvcm5pYSddOwogICAgZXhwZWN0KGNvbWJhdE1vdmUocywgcGlkLCBbeyBmcm9tOiAnY2FsaWZvcm5pYScsIHRvOiAnbW9udGFuYScsIHVuaXRzOiB7IGZpZ2h0ZXI6IDEgfSB9XSkuY29kZSkudG9CZSgKICAgICAgJ25vX2xhbmRpbmcnLAogICAgKTsKICB9KTsKCiAgaXQoJ2NhbiBhdHRhY2sgd2hlbiBhIGxhbmRpbmcgc3BvdCBpcyBpbiByYW5nZSAoMTk0MiAyZSBwLjE1KScsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgNDcpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgY29uc3QgZm9lID0gKHBpZCArIDEpICUgMjsKICAgIHMudGVycml0b3JpZXNbJ2lkYWhvJ10ub3duZXIgPSBwaWQ7CiAgICBzLnRlcnJpdG9yaWVzWydpZGFobyddLnVuaXRzLmZpZ2h0ZXIgPSAxOwogICAgcy50ZXJyaXRvcmllc1snbW9udGFuYSddLm93bmVyID0gZm9lOwogICAgcy50ZXJyaXRvcmllc1snbW9udGFuYSddLnVuaXRzLmluZmFudHJ5ID0gMTsKICAgIGdvdG9Db21iYXRNb3ZlKHMpOwogICAgLy8gMSBzdGVwIG91dCwgMyByZW1haW5pbmc6IGlkYWhvICh0dXJuLXN0YXJ0IGZyaWVuZGx5KSBpcyByZWFjaGFibGUuCiAgICBjb25zdCByID0gY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdpZGFobycsIHRvOiAnbW9udGFuYScsIHVuaXRzOiB7IGZpZ2h0ZXI6IDEgfSB9XSk7CiAgICBleHBlY3Qoci5vaywgYCR7ci5jb2RlfSAke3IuZXJyb3J9YCkudG9CZSh0cnVlKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnZmlnaHRlciBzdHJhdGVnaWMgYm9tYmluZyByYWlkcycsICgpID0+IHsKICBpdCgnY2Fubm90IGVzY29ydCBhIGJvbWJpbmcgcmFpZCDigJQgZW5naW5lIHJlcXVpcmVzIGJvbWJlcnMgb25seSAoMTk0MiAyZSBwLjE3IHZzIGVuZ2luZSknLCAoKSA9PiB7CiAgICAvLyAxOTQyIDJlIHAuMTcgYWxsb3dzIGZpZ2h0ZXJzIHRvIGVzY29ydCBTQlJzLCBidXQgdGhpcyBlbmdpbmUncwogICAgLy8gY29tYmF0TW92ZSByZWplY3RzIGFueSBub24tYm9tYmVyIGluIGFuIFNCUiBkZWNsYXJhdGlvbgogICAgLy8gKHNicl9ib21iZXJzKS4gVGhpcyB0ZXN0IHBpbnMgdGhlIGVuZ2luZSdzIGFjdHVhbCBiZWhhdmlvci4KICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgNDgpOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBmb2UgPSAocGlkICsgMSkgJSAyOwogICAgcy50ZXJyaXRvcmllc1sncGFfbmonXS5vd25lciA9IHBpZDsKICAgIHMudGVycml0b3JpZXNbJ3BhX25qJ10udW5pdHMuYm9tYmVyID0gMTsKICAgIHMudGVycml0b3JpZXNbJ3BhX25qJ10udW5pdHMuZmlnaHRlciA9IDE7CiAgICBzLm93bmVkQXRUdXJuU3RhcnQucHVzaCgncGFfbmonKTsKICAgIHMudGVycml0b3JpZXNbJ25ld195b3JrJ10ub3duZXIgPSBmb2U7CiAgICBzLnRlcnJpdG9yaWVzWyduZXdfeW9yayddLmZhY3RvcnkgPSB0cnVlOwogICAgY29uc3QgciA9IGNvbWJhdE1vdmUocywgcGlkLCBbCiAgICAgIHsgZnJvbTogJ3BhX25qJywgdG86ICduZXdfeW9yaycsIHVuaXRzOiB7IGJvbWJlcjogMSwgZmlnaHRlcjogMSB9LCBzYnI6IHRydWUgfSwKICAgIF0pOwogICAgZXhwZWN0KHIub2spLnRvQmUoZmFsc2UpOwogICAgZXhwZWN0KHIuY29kZSkudG9CZSgnc2JyX2JvbWJlcnMnKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnZmlnaHRlciBub25jb21iYXQgbW92ZW1lbnQnLCAoKSA9PiB7CiAgaXQoJ3JlcG9zaXRpb25zIGluIG5vbmNvbWJhdCBtb3ZlbWVudCAoMTk0MiAyZSBwLjIyKScsICgpID0+IHsKICAgIGNvbnN0IHMgPSBmcmVzaEdhbWUoMiwgNDkpOwogICAgY29uc3QgcGlkID0gcy5jdXJyZW50UGxheWVyOwogICAgcy50ZXJyaXRvcmllc1snY2FsaWZvcm5pYSddLm93bmVyID0gcGlkOwogICAgcy50ZXJyaXRvcmllc1snY2FsaWZvcm5pYSddLnVuaXRzLmZpZ2h0ZXIgPSAxOwogICAgcy50ZXJyaXRvcmllc1snYXJpem9uYSddLm93bmVyID0gcGlkOwogICAgZ290b0NvbWJhdE1vdmUocyk7CiAgICBnb3RvQ29tYmF0KHMpOwogICAgcmVzb2x2ZUFsbEF1dG8ocywgcGlkKTsKICAgIGdvdG9Ob25Db21iYXQocyk7CiAgICBjb25zdCByID0gbm9uQ29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdjYWxpZm9ybmlhJywgdG86ICdhcml6b25hJywgdW5pdHM6IHsgZmlnaHRlcjogMSB9IH1dKTsKICAgIGV4cGVjdChyLm9rLCBgJHtyLmNvZGV9ICR7ci5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHMudGVycml0b3JpZXNbJ2FyaXpvbmEnXS51bml0cy5maWdodGVyKS50b0JlKDEpOwogIH0pOwoKICBpdCgnbGFuZHMgYWZ0ZXIgY29tYmF0IGR1cmluZyBub25jb21iYXQgbW92ZW1lbnQgKDE5NDIgMmUgcC4yMjogYWlyIHVuaXRzIGxhbmQpJywgKCkgPT4gewogICAgY29uc3QgcyA9IGZyZXNoR2FtZSgyLCA1MCk7CiAgICBjb25zdCBwaWQgPSBzLmN1cnJlbnRQbGF5ZXI7CiAgICBjb25zdCBmb2UgPSAocGlkICsgMSkgJSAyOwogICAgcy50ZXJyaXRvcmllc1snaWRhaG8nXS5vd25lciA9IHBpZDsKICAgIHMudGVycml0b3JpZXNbJ2lkYWhvJ10udW5pdHMuZmlnaHRlciA9IDE7CiAgICBzLnRlcnJpdG9yaWVzWydpZGFobyddLnVuaXRzLmluZmFudHJ5ID0gMjsKICAgIHMudGVycml0b3JpZXNbJ21vbnRhbmEnXS5vd25lciA9IGZvZTsKICAgIHMudGVycml0b3JpZXNbJ21vbnRhbmEnXS51bml0cy5pbmZhbnRyeSA9IDE7CiAgICBnb3RvQ29tYmF0TW92ZShzKTsKICAgIGV4cGVjdCgKICAgICAgY29tYmF0TW92ZShzLCBwaWQsIFt7IGZyb206ICdpZGFobycsIHRvOiAnbW9udGFuYScsIHVuaXRzOiB7IGZpZ2h0ZXI6IDEsIGluZmFudHJ5OiAyIH0gfV0pLm9rLAogICAgKS50b0JlKHRydWUpOwogICAgZ290b0NvbWJhdChzKTsKICAgIHJlc29sdmVBbGxBdXRvKHMsIHBpZCk7CiAgICBnb3RvTm9uQ29tYmF0KHMpOwogICAgLy8gVGhlIGZpZ2h0ZXIgaXMgYWxvZnQgb3ZlciBtb250YW5hOyBsYW5kIGl0IGJhY2sgYXQgaWRhaG8gKGZyaWVuZGx5KS4KICAgIGNvbnN0IHIgPSBub25Db21iYXRNb3ZlKHMsIHBpZCwgW3sgZnJvbTogJ21vbnRhbmEnLCB0bzogJ2lkYWhvJywgdW5pdHM6IHsgZmlnaHRlcjogMSB9IH1dKTsKICAgIGV4cGVjdChyLm9rLCBgJHtyLmNvZGV9ICR7ci5lcnJvcn1gKS50b0JlKHRydWUpOwogICAgZXhwZWN0KHMudGVycml0b3JpZXNbJ2lkYWhvJ10udW5pdHMuZmlnaHRlcikudG9CZSgxKTsKICB9KTsKfSk7Cg==
+// @vitest-environment node
+import { describe, expect, it } from 'vitest';
+import {
+  combatMove,
+  nonCombatMove,
+  purchase,
+  resolveCombatRound,
+} from '../../../engine/engine';
+import { UNITS } from '../../../data/data';
+import {
+  freshGame,
+  gotoCombat,
+  gotoCombatMove,
+  gotoNonCombat,
+  resolveAllAuto,
+} from '../../helpers';
+
+/**
+ * Fighter — 1942 2e p.10 (unit profile).
+ * Cost 10, attack 3, defense 4, move 4. Fighters are air units: they need
+ * a landing spot and cannot capture territory alone.
+ */
+describe('fighter profile', () => {
+  it('costs 10 IPCs (1942 2e p.10)', () => {
+    expect(UNITS.fighter.cost).toBe(10);
+    const s = freshGame(2, 1);
+    const pid = s.currentPlayer;
+    const bank = s.players[pid].ipcs;
+    expect(purchase(s, pid, [{ type: 'fighter', count: 1 }]).ok).toBe(true);
+    expect(s.players[pid].ipcs).toBe(bank - 10);
+  });
+
+  it('has attack 3, defense 4, move 4 (1942 2e p.10)', () => {
+    expect(UNITS.fighter.attack).toBe(3);
+    expect(UNITS.fighter.defense).toBe(4);
+    expect(UNITS.fighter.move).toBe(4);
+  });
+
+  it('is an air unit (1942 2e p.10: fighters are air units)', () => {
+    expect(UNITS.fighter.air).toBe(true);
+  });
+});
+
+describe('fighter combat values', () => {
+  it('attack dice hit on 3 or less (1942 2e p.10: attack 3)', () => {
+    const s = freshGame(2, 42);
+    gotoCombatMove(s);
+    const pid = s.currentPlayer;
+    const foe = (pid + 1) % 2;
+    s.territories['idaho'].owner = pid;
+    s.territories['idaho'].units.fighter = 2;
+    s.ownedAtTurnStart.push('idaho');
+    s.territories['montana'].owner = foe;
+    s.territories['montana'].units.infantry = 3;
+    expect(combatMove(s, pid, [{ from: 'idaho', to: 'montana', units: { fighter: 2 } }]).ok).toBe(true);
+    gotoCombat(s);
+    const r = resolveCombatRound(s, pid, 'montana');
+    expect(r.ok).toBe(true);
+    const c = r.combat!;
+    const expected = c.attackRolls.filter((d) => d <= 3).length;
+    expect(c.attackHits).toBe(expected);
+  });
+
+  it('defense dice hit on 4 or less — best defender (1942 2e p.10: defense 4)', () => {
+    const s = freshGame(2, 43);
+    gotoCombatMove(s);
+    const pid = s.currentPlayer;
+    const foe = (pid + 1) % 2;
+    // Attack the fighter: montana (foe, 2 fighters) <- idaho (mine, 3 inf).
+    s.territories['montana'].owner = foe;
+    s.territories['montana'].units.fighter = 2;
+    s.territories['idaho'].owner = pid;
+    s.territories['idaho'].units.infantry = 3;
+    s.ownedAtTurnStart.push('idaho');
+    expect(combatMove(s, pid, [{ from: 'idaho', to: 'montana', units: { infantry: 3 } }]).ok).toBe(true);
+    gotoCombat(s);
+    const r = resolveCombatRound(s, pid, 'montana');
+    expect(r.ok).toBe(true);
+    const c = r.combat!;
+    const expected = c.defenseRolls.filter((d) => d <= 4).length;
+    expect(c.defenseHits).toBe(expected);
+  });
+});
+
+describe('fighter movement and range', () => {
+  it('moves up to 4 territories in combat movement (1942 2e p.10: move 4)', () => {
+    const s = freshGame(2, 44);
+    const pid = s.currentPlayer;
+    // california -> upper_midwest is exactly 4 steps (air counts each
+    // territory as a step); rig both friendly BEFORE gotoCombatMove so
+    // ownedAtTurnStart covers the landing spot.
+    for (const t of ['california', 'upper_midwest']) s.territories[t].owner = pid;
+    s.territories['california'].units.fighter = 1;
+    gotoCombatMove(s);
+    // 4 steps out, 0 remaining: must land at the destination itself.
+    const r = combatMove(s, pid, [{ from: 'california', to: 'upper_midwest', units: { fighter: 1 } }]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    expect(s.territories['upper_midwest'].units.fighter).toBe(1);
+  });
+
+  it('cannot move 5 territories (1942 2e p.10: move 4)', () => {
+    const s = freshGame(2, 45);
+    gotoCombatMove(s);
+    const pid = s.currentPlayer;
+    // montana -> florida is 5 steps: beyond fighter range.
+    for (const t of ['montana', 'florida']) s.territories[t].owner = pid;
+    s.territories['montana'].units.fighter = 1;
+    const r = combatMove(s, pid, [{ from: 'montana', to: 'florida', units: { fighter: 1 } }]);
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('range');
+  });
+
+  it('needs a reachable landing spot (1942 2e p.15: air units must land)', () => {
+    const s = freshGame(2, 46);
+    gotoCombatMove(s);
+    const pid = s.currentPlayer;
+    const foe = (pid + 1) % 2;
+    s.territories['california'].owner = pid;
+    s.territories['california'].units.fighter = 1;
+    s.territories['montana'].owner = foe;
+    s.territories['montana'].units.infantry = 1;
+    // 3 steps out, 1 remaining, but the only turn-start friendly ground
+    // (california) is 3 steps back: no legal landing.
+    s.ownedAtTurnStart = ['california'];
+    expect(combatMove(s, pid, [{ from: 'california', to: 'montana', units: { fighter: 1 } }]).code).toBe(
+      'no_landing',
+    );
+  });
+
+  it('can attack when a landing spot is in range (1942 2e p.15)', () => {
+    const s = freshGame(2, 47);
+    const pid = s.currentPlayer;
+    const foe = (pid + 1) % 2;
+    s.territories['idaho'].owner = pid;
+    s.territories['idaho'].units.fighter = 1;
+    s.territories['montana'].owner = foe;
+    s.territories['montana'].units.infantry = 1;
+    gotoCombatMove(s);
+    // 1 step out, 3 remaining: idaho (turn-start friendly) is reachable.
+    const r = combatMove(s, pid, [{ from: 'idaho', to: 'montana', units: { fighter: 1 } }]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+  });
+});
+
+describe('fighter strategic bombing raids', () => {
+  it('cannot escort a bombing raid — engine requires bombers only (1942 2e p.17 vs engine)', () => {
+    // 1942 2e p.17 allows fighters to escort SBRs, but this engine's
+    // combatMove rejects any non-bomber in an SBR declaration
+    // (sbr_bombers). This test pins the engine's actual behavior.
+    const s = freshGame(2, 48);
+    gotoCombatMove(s);
+    const pid = s.currentPlayer;
+    const foe = (pid + 1) % 2;
+    s.territories['pa_nj'].owner = pid;
+    s.territories['pa_nj'].units.bomber = 1;
+    s.territories['pa_nj'].units.fighter = 1;
+    s.ownedAtTurnStart.push('pa_nj');
+    s.territories['new_york'].owner = foe;
+    s.territories['new_york'].factory = true;
+    const r = combatMove(s, pid, [
+      { from: 'pa_nj', to: 'new_york', units: { bomber: 1, fighter: 1 }, sbr: true },
+    ]);
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('sbr_bombers');
+  });
+});
+
+describe('fighter noncombat movement', () => {
+  it('repositions in noncombat movement (1942 2e p.22)', () => {
+    const s = freshGame(2, 49);
+    const pid = s.currentPlayer;
+    s.territories['california'].owner = pid;
+    s.territories['california'].units.fighter = 1;
+    s.territories['arizona'].owner = pid;
+    gotoCombatMove(s);
+    gotoCombat(s);
+    resolveAllAuto(s, pid);
+    gotoNonCombat(s);
+    const r = nonCombatMove(s, pid, [{ from: 'california', to: 'arizona', units: { fighter: 1 } }]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    expect(s.territories['arizona'].units.fighter).toBe(1);
+  });
+
+  it('lands after combat during noncombat movement (1942 2e p.22: air units land)', () => {
+    const s = freshGame(2, 50);
+    const pid = s.currentPlayer;
+    const foe = (pid + 1) % 2;
+    s.territories['idaho'].owner = pid;
+    s.territories['idaho'].units.fighter = 1;
+    s.territories['idaho'].units.infantry = 2;
+    s.territories['montana'].owner = foe;
+    s.territories['montana'].units.infantry = 1;
+    gotoCombatMove(s);
+    expect(
+      combatMove(s, pid, [{ from: 'idaho', to: 'montana', units: { fighter: 1, infantry: 2 } }]).ok,
+    ).toBe(true);
+    gotoCombat(s);
+    resolveAllAuto(s, pid);
+    gotoNonCombat(s);
+    // The fighter is aloft over montana; land it back at idaho (friendly).
+    const r = nonCombatMove(s, pid, [{ from: 'montana', to: 'idaho', units: { fighter: 1 } }]);
+    expect(r.ok, `${r.code} ${r.error}`).toBe(true);
+    expect(s.territories['idaho'].units.fighter).toBe(1);
+  });
+});

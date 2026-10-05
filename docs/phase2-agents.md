@@ -114,9 +114,13 @@ can see another's system prompt, reasoning, or history — this is structural
   runner, spectator panel (rationale, tool calls, per-seat usage), human
   seats via the existing hot-seat UI, seat-level failure recovery, pause /
   resume. No negotiation.
-- **M3** (out of scope for M2): negotiation on, heterogeneous model
-  matchups (Claude vs ChatGPT vs Meta), Elo + replay export, per-game cost
-  budgets.
+- **M3**: diplomacy — see [the M3 diplomacy spec](m3-diplomacy.md).
+  Freeform talk (public + private DMs) with per-seat token budgets instead
+  of chat rules, plus an end-of-game JSON dump as the raw material for later
+  analysis. Commitment extraction, betrayal detection, alliance graphs, and
+  the reputation ledger are deferred until the dump exists to parse.
+  Heterogeneous model matchups (Claude vs ChatGPT vs Meta), Elo + replay
+  export, per-game cost budgets.
 - **M4**: hosted runner (for players without keys / tournament play).
 
 ## Non-goals

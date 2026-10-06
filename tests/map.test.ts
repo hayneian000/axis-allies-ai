@@ -39,6 +39,17 @@ describe('map data', () => {
     expect(total).toBe(61);
   });
 
+  it('display name matches the actual land/sea counts', () => {
+    // The name is derived from the territory list by the map pipeline on
+    // every run (scripts/build-map/build.mjs) — this pins the format so a
+    // stale count is caught here instead of shipping in data/map.json.
+    const land = MAP.territories.filter((t) => t.domain === 'land').length;
+    const sea = MAP.territories.filter((t) => t.domain === 'sea').length;
+    expect(MAP.name).toBe(
+      `Continental US (simplified, ${land} land territories + ${sea} sea zones)`,
+    );
+  });
+
   it('has symmetric adjacency with no self-loops or unknown ids', () => {
     const ids = new Set(MAP.territories.map((t) => t.id));
     for (const t of MAP.territories) {

@@ -45,6 +45,19 @@ Anthropic `claude-sonnet-5` (default), `claude-opus-5`, `claude-haiku-4-5`,
 `gpt-5-mini`, `gpt-4.1`; Meta `muse-spark-1.3` (default), `muse-spark-1.2`,
 `muse-spark-1.1` (live-verified 2026-10-04; contributor/voice/image variants skipped for v1).
 
+## Streaming
+
+`CompleteRequest.onToken`, when set, makes the OpenAI-compatible adapter send
+`stream: true` and forward each text delta to the callback as it arrives; the
+returned `CompleteResponse` is identical in shape to a non-streaming call.
+`Agent.act()` / `diplomacyAct()` accept it as an optional trailing argument
+and forward it — callers that don't pass it get the plain non-streaming
+round-trip, unchanged. The browser UI (`ui/aiGame.ts` `UiAgent`) streams every
+turn into the seat card's rationale live, so a 30s turn shows its thinking
+instead of a dead "Thinking…" status. Streaming also dodges Meta's
+504-on-long-non-streaming-requests behavior. The Anthropic adapter ignores
+`onToken` (non-streaming only) for now.
+
 ## Per-player isolation
 
 Each AI seat gets its own `Agent` instance (`agents/agent.ts`). Prompts are

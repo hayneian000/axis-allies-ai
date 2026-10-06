@@ -223,6 +223,45 @@ describe('openai adapter', () => {
     expect(body).not.toHaveProperty('max_tokens');
   });
 
+  it('sends prompt_cache_key/retention when provided, omits when absent', async () => {
+    responder = () => jsonResponse(canned);
+    await openaiAdapter.complete(makeRequest({ maxTokens: undefined }));
+    let body = JSON.parse(lastBodyText) as Record<string, unknown>;
+    expect(body).not.toHaveProperty('prompt_cache_key');
+    expect(body).not.toHaveProperty('prompt_cache_retention');
+
+    await openaiAdapter.complete(
+      makeRequest({
+        maxTokens: undefined,
+        promptCacheKey: 'aaa-static-deadbeef',
+        promptCacheRetention: '24h',
+      }),
+    );
+    body = JSON.parse(lastBodyText) as Record<string, unknown>;
+    expect(body['prompt_cache_key']).toBe('aaa-static-deadbeef');
+    expect(body['prompt_cache_retention']).toBe('24h');
+  });
+
+  it('parses cached_tokens into usage.cachedInputTokens', async () => {
+    responder = () =>
+      jsonResponse({
+        choices: [{ message: { content: 'Done.' }, finish_reason: 'stop' }],
+        usage: {
+          prompt_tokens: 100,
+          completion_tokens: 7,
+          prompt_tokens_details: { cached_tokens: 80 },
+        },
+      });
+    const res = await openaiAdapter.complete(makeRequest({ maxTokens: undefined }));
+    expect(res.usage).toEqual({ inputTokens: 100, outputTokens: 7, cachedInputTokens: 80 });
+  });
+
+  it('leaves cachedInputTokens undefined when the provider does not report it', async () => {
+    responder = () => jsonResponse(canned);
+    const res = await openaiAdapter.complete(makeRequest({ maxTokens: undefined }));
+    expect(res.usage.cachedInputTokens).toBeUndefined();
+  });
+
   it('parses content, tool calls, usage, and finish reason', async () => {
     responder = () => jsonResponse(canned);
     const res = await openaiAdapter.complete(makeRequest());

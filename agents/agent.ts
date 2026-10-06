@@ -6,7 +6,7 @@
 
 import { summarizeState } from '../engine/engine';
 import type { GameState, Phase } from '../engine/types';
-import { buildDiplomacyPrompt, buildPhasePrompt, buildSystemPrompt } from './prompts';
+import { buildDiplomacyPrompt, buildPhasePrompt, buildSystemPrompt, PROMPT_CACHE_RETENTION, staticReferenceCacheKey } from './prompts';
 import { TOOLS, toolsForPhase } from './tools';
 import {
   emptyDiplomacyUsage,
@@ -168,6 +168,11 @@ export class Agent {
       transcript,
       tools,
       ...(this.maxTokens !== undefined ? { maxTokens: this.maxTokens } : {}),
+      // Prompt-cache routing for the static prefix (system prompt incl. the
+      // map reference — byte-identical every call). One shared key across
+      // seats; the retention hint keeps it warm across idle gaps.
+      promptCacheKey: staticReferenceCacheKey(),
+      promptCacheRetention: PROMPT_CACHE_RETENTION,
     });
     delta.inputTokens += resp.usage.inputTokens;
     delta.outputTokens += resp.usage.outputTokens;
@@ -222,6 +227,11 @@ export class Agent {
       transcript,
       tools,
       ...(this.maxTokens !== undefined ? { maxTokens: this.maxTokens } : {}),
+      // Prompt-cache routing for the static prefix (system prompt incl. the
+      // map reference — byte-identical every call). One shared key across
+      // seats; the retention hint keeps it warm across idle gaps.
+      promptCacheKey: staticReferenceCacheKey(),
+      promptCacheRetention: PROMPT_CACHE_RETENTION,
     });
     delta.inputTokens += resp.usage.inputTokens;
     delta.outputTokens += resp.usage.outputTokens;

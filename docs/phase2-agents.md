@@ -85,7 +85,17 @@ can see another's system prompt, reasoning, or history — this is structural
 - Every provider round-trip records `{inputTokens, outputTokens, calls}`;
   engine-validation rejections increment `errors`. `runGame` returns
   per-player usage — the raw material for per-game budgets and tournament
-  cost attribution.
+  cost attribution. Providers that report it also fill `cachedInputTokens`
+  (subset of `inputTokens`).
+- **Prompt caching (Meta):** the system prompt ends with a static map/unit
+  reference (`agents/prompts.ts`: `STATIC_REFERENCE`) that is byte-identical
+  on every call, so api.meta.ai reuses the leading prefix automatically —
+  cached input tokens are ~8x cheaper and skip prefill work. Everything
+  volatile (history window, fresh state brief) stays after it. The agent sends
+  a stable `prompt_cache_key` derived from the reference (shared across
+  seats; any map/data change re-keys automatically) plus a `"24h"` retention
+  hint for the bursty gaps between games. Watch `cachedInputTokens /
+  inputTokens` to confirm the prefix is actually being reused.
 - `MaxRoundsExceeded` guards runaway games (default `max(turnCap + 5, 60)`).
 - Engine RNG stays seeded and replayable; prompts + responses should be
   logged per game for audit (tournament harness work).

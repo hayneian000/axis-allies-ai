@@ -72,7 +72,11 @@ interface CompatResponse {
     };
     finish_reason?: string;
   }>;
-  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    prompt_tokens_details?: { cached_tokens?: number };
+  };
 }
 
 /**
@@ -96,6 +100,12 @@ export async function openAiCompatComplete(
     // the driver can dispatch the phase's tool calls, so an uncapped model
     // can single-handedly make a turn feel stuck.
     max_completion_tokens: req.maxTokens ?? DEFAULT_MAX_COMPLETION_TOKENS,
+    // Prompt-cache routing: the static prefix (system prompt incl. the map
+    // reference) is byte-identical across calls, so the server reuses it
+    // automatically; the stable key keeps same-prefix requests on the same
+    // backend to raise the hit rate at scale. Omitted when not provided.
+    ...(req.promptCacheKey ? { prompt_cache_key: req.promptCacheKey } : {}),
+    ...(req.promptCacheRetention ? { prompt_cache_retention: req.promptCacheRetention } : {}),
   };
 
   const res = await fetch(url, {
@@ -138,6 +148,11 @@ export async function openAiCompatComplete(
     usage: {
       inputTokens: json.usage?.prompt_tokens ?? 0,
       outputTokens: json.usage?.completion_tokens ?? 0,
+      // The number to watch for prompt-cache health: how much of the static
+      // prefix the server served from cache instead of recomputing.
+      ...(json.usage?.prompt_tokens_details?.cached_tokens !== undefined
+        ? { cachedInputTokens: json.usage.prompt_tokens_details.cached_tokens }
+        : {}),
     },
     stopReason: choice?.finish_reason ?? 'unknown',
   };

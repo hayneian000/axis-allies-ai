@@ -90,7 +90,6 @@ input::placeholder { color: var(--faint); }
   inset: 0;
   overflow-y: auto;
   display: flex;
-  align-items: center;
   justify-content: center;
   padding: clamp(16px, 3vmin, 40px);
 }
@@ -120,6 +119,7 @@ input::placeholder { color: var(--faint); }
 }
 .setup-dossier {
   position: relative;
+  margin: auto;
   width: min(680px, 94vw);
   padding: clamp(24px, 4vmin, 44px) clamp(20px, 4vmin, 48px);
   /* aged dossier paper */

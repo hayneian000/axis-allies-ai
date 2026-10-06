@@ -58,13 +58,19 @@ const ZONES = [
   { id: 'mid_atlantic_waters', name: 'Mid-Atlantic Waters', box: [[-79, 33], [-69, 33], [-69, 38.5], [-79, 38.5]] },
   { id: 'south_atlantic',   name: 'South Atlantic',    box: [[-82.5, 25], [-72, 25], [-72, 33], [-82.5, 33]] },
   { id: 'western_gulf',     name: 'Western Gulf',      box: [[-99, 24], [-89, 24], [-89, 31], [-99, 31]] },
-  { id: 'eastern_gulf',     name: 'Eastern Gulf',      box: [[-89, 24], [-82.5, 24], [-82.5, 31], [-89, 31]] },
+  { id: 'eastern_gulf',     name: 'Eastern Gulf',      boxes: [[[-89, 24], [-82.5, 24], [-82.5, 31], [-89, 31]], [[-82.5, 24], [-81, 24], [-81, 25.5], [-82.5, 25.5]]] },
 ];
 
 const boxPoly = (box) => ({
   type: 'Feature', properties: {},
   geometry: { type: 'Polygon', coordinates: [[...box, box[0]]] },
 });
+const regionPoly = (z) => {
+  const boxes = z.boxes || [z.box];
+  const polys = boxes.map(boxPoly);
+  if (polys.length === 1) return polys[0];
+  return union({ type: 'FeatureCollection', features: polys });
+};
 
 function largestRing(geom) {
   const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
@@ -113,7 +119,7 @@ function polylabel(ring) {
 
 const out = [];
 for (const z of ZONES) {
-  const region = boxPoly(z.box);
+  const region = regionPoly(z);
   const water = difference({ type: 'FeatureCollection', features: [region, land] });
   if (!water) { console.error(`no water for ${z.id}`); continue; }
   // Project to pixel space.

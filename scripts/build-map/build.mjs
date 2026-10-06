@@ -257,6 +257,17 @@ const territories = built.map((b) => {
   if (!p) throw new Error(`no metadata for ${b.id}`);
   return { ...p, points: b.points, label: b.label, ipc: ipcFloor.get(b.id) };
 });
-const out = { ...prev, territories, lakes };
+// Preserve territories the land pipeline doesn't rebuild (sea zones): a
+// land-geometry rebuild must not silently delete them from map.json.
+const rebuiltIds = new Set(territories.map((t) => t.id));
+for (const t of prev.territories) {
+  if (!rebuiltIds.has(t.id)) territories.push(t);
+}
+// Derive the display name from the actual territory list every run, so map
+// metadata can't go stale when sea zones are added or removed.
+const landCount = territories.filter((t) => t.domain !== 'sea').length;
+const seaCount = territories.length - landCount;
+const name = `Continental US (simplified, ${landCount} land territories + ${seaCount} sea zones)`;
+const out = { ...prev, name, territories, lakes };
 fs.writeFileSync(path.join(ROOT, 'data/map.json'), JSON.stringify(out, null, 2) + '\n');
 console.log(`wrote data/map.json (${territories.length} territories, ${lakes.length} lakes)`);

@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { MAP, neighborsOf, scenarioFor } from '../data/data';
 
 describe('map data', () => {
-  it('has 26 land territories and 3 sea zones', () => {
-    expect(MAP.territories).toHaveLength(29);
+  it('has 26 land territories and 7 sea zones', () => {
+    expect(MAP.territories).toHaveLength(33);
     const land = MAP.territories.filter((t) => t.domain === 'land');
     const sea = MAP.territories.filter((t) => t.domain === 'sea');
     expect(land).toHaveLength(26);
-    expect(sea).toHaveLength(3);
-    expect(sea.map((t) => t.id).sort()).toEqual(['atlantic', 'gulf', 'pacific']);
+    expect(sea).toHaveLength(7);
+    expect(sea.map((t) => t.id).sort()).toEqual([
+      'california_coast', 'eastern_gulf', 'mid_atlantic_waters', 'north_atlantic',
+      'pacific_nw', 'south_atlantic', 'western_gulf',
+    ]);
   });
 
   it('sea zones are worth 0 IPCs and touch coastal land', () => {
@@ -19,13 +22,16 @@ describe('map data', () => {
       );
       expect(coastal.length, `${t.id} should border coastal land`).toBeGreaterThan(0);
     }
-    // Spot-checks: pacific borders the west coast, atlantic the east, gulf the south.
-    expect(neighborsOf('pacific')).toContain('california');
-    expect(neighborsOf('atlantic')).toContain('new_york');
-    expect(neighborsOf('gulf')).toContain('texas');
-    // Sea zones link to each other via the gulf (Panama-canal abstraction).
-    expect(neighborsOf('pacific')).toContain('gulf');
-    expect(neighborsOf('atlantic')).toContain('gulf');
+    // Spot-checks: each coast's waters border the right land.
+    expect(neighborsOf('pacific_nw')).toContain('washington');
+    expect(neighborsOf('california_coast')).toContain('california');
+    expect(neighborsOf('north_atlantic')).toContain('new_york');
+    expect(neighborsOf('western_gulf')).toContain('texas');
+    // Sea zones chain around the continent (Panama-canal abstraction).
+    expect(neighborsOf('pacific_nw')).toContain('california_coast');
+    expect(neighborsOf('california_coast')).toContain('western_gulf');
+    expect(neighborsOf('western_gulf')).toContain('eastern_gulf');
+    expect(neighborsOf('eastern_gulf')).toContain('south_atlantic');
   });
 
   it('sums to 61 IPCs (spec table arithmetic; spec text says 64)', () => {
@@ -55,7 +61,7 @@ describe('map data', () => {
         }
       }
     }
-    expect(visited.size).toBe(29);
+    expect(visited.size).toBe(33);
   });
 
   it('does not treat Four Corners point-contacts as adjacency', () => {

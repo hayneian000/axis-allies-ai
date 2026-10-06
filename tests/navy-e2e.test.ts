@@ -41,9 +41,9 @@ describe('navy end-to-end on the America map', () => {
     gotoCombatMove(s);
     gotoNonCombat(s);
     gotoMobilize(s);
-    const m = mobilize(s, pid, [{ territory: 'california', seaZone: 'pacific', units: { transport: 1 } }]);
+    const m = mobilize(s, pid, [{ territory: 'california', seaZone: 'california_coast', units: { transport: 1 } }]);
     expect(m.ok, `${m.code} ${m.error}`).toBe(true);
-    expect(s.territories['pacific'].units.transport).toBe(1);
+    expect(s.territories['california_coast'].units.transport).toBe(1);
 
     // P1 takes a quiet turn; P0 is up again.
     expect(endPhase(s, pid).ok).toBe(true); // mobilize -> P1 purchase
@@ -54,30 +54,30 @@ describe('navy end-to-end on the America map', () => {
     // --- Turn 2: embark 2 infantry from california and sail pacific -> gulf.
     gotoCombatMove(s);
     const cm = combatMove(s, pid, [
-      { from: 'california', to: 'pacific', units: { infantry: 2 }, embark: true },
-      { from: 'pacific', to: 'gulf', units: { transport: 1 } },
+      { from: 'california', to: 'california_coast', units: { infantry: 2 }, embark: true },
+      { from: 'california_coast', to: 'western_gulf', units: { transport: 1 } },
     ]);
     expect(cm.ok, `${cm.code} ${cm.error}`).toBe(true);
-    expect(s.territories['gulf'].units.transport).toBe(1);
-    expect(cargoN(s, 'gulf', pid, 'infantry')).toBe(2);
+    expect(s.territories['western_gulf'].units.transport).toBe(1);
+    expect(cargoN(s, 'western_gulf', pid, 'infantry')).toBe(2);
     expect(s.territories['california'].units.infantry).toBe(1); // 3 - 2
 
     // Non-combat: unload into friendly texas (P0 holds it in the 2p scenario).
     gotoNonCombat(s);
     const nc = nonCombatMove(s, pid, [
-      { from: 'gulf', to: 'texas', units: { infantry: 2 }, disembark: true },
+      { from: 'western_gulf', to: 'texas', units: { infantry: 2 }, disembark: true },
     ]);
     expect(nc.ok, `${nc.code} ${nc.error}`).toBe(true);
     expect(s.territories['texas'].units.infantry).toBe(4); // 2 + 2
-    expect(cargoN(s, 'gulf', pid, 'infantry')).toBe(0);
-    expect(s.territories['gulf'].units.transport).toBe(1); // ship stays at sea
+    expect(cargoN(s, 'western_gulf', pid, 'infantry')).toBe(0);
+    expect(s.territories['western_gulf'].units.transport).toBe(1); // ship stays at sea
   });
 
   it('a purchased warship can sail and fight on the shipped map', () => {
     const s = freshGame(2, 4243);
     const pid = s.currentPlayer;
     const cap = s.players[pid].capital;
-    const homeWater = cap === 'california' ? 'pacific' : 'atlantic';
+    const homeWater = cap === 'california' ? 'california_coast' : 'north_atlantic';
     // Float a destroyer in the home water adjacent to the capital's factory...
     s.players[pid].ipcs = 100;
     expect(purchase(s, pid, [{ type: 'destroyer', count: 1 }]).ok).toBe(true);
@@ -91,8 +91,10 @@ describe('navy end-to-end on the America map', () => {
     noopTurn(s);
     // ...and on the next turn sail it onward through friendly waters.
     gotoCombatMove(s);
-    const cm = combatMove(s, pid, [{ from: homeWater, to: 'gulf', units: { destroyer: 1 } }]);
+    // Sail to an adjacent water: california_coast->western_gulf, north_atlantic->mid_atlantic_waters.
+    const away = homeWater === 'california_coast' ? 'western_gulf' : 'mid_atlantic_waters';
+    const cm = combatMove(s, pid, [{ from: homeWater, to: away, units: { destroyer: 1 } }]);
     expect(cm.ok, `${cm.code} ${cm.error}`).toBe(true);
-    expect(s.territories['gulf'].units.destroyer).toBe(1);
+    expect(s.territories[away].units.destroyer).toBe(1);
   });
 });

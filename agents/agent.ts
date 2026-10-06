@@ -19,6 +19,9 @@ import {
   type TranscriptMessage,
 } from './types';
 
+/** Default history window: the last 4 transcript turns per seat. */
+export const DEFAULT_HISTORY_WINDOW_TURNS = 4;
+
 export class MissingApiKeyError extends Error {
   readonly playerId: number;
   constructor(playerId: number) {
@@ -35,6 +38,20 @@ export interface AgentOptions {
   getApiKey: () => string | null;
   persona?: string;
   maxTokens?: number;
+  /**
+   * How many recent transcript turns to keep in the seat's private history.
+   * A "turn" is one act()/diplomacyAct() round-trip: its response plus the
+   * tool results the driver records for it. Older turns are dropped from the
+   * front, whole — so every assistant tool_calls entry stays paired with
+   * its tool responses, which provider APIs require.
+   *
+   * The bound that matters for turn speed: every act() re-sends the full
+   * history, so without a window input tokens (and prefill latency) grow
+   * every phase of every game. The current prompt already carries a full
+   * state snapshot (summarizeState), so dropped turns cost almost no
+   * decision context. Default 4; 0 restores the old unbounded behavior.
+   */
+  historyWindowTurns?: number;
 }
 
 export interface ActResult {
@@ -75,8 +92,16 @@ export class Agent {
   private readonly getApiKey: () => string | null;
   private readonly persona?: string;
   private readonly maxTokens?: number;
+  private readonly historyWindowTurns: number;
   /** Private conversation memory for THIS seat only. Never exposed. */
   private history: TranscriptMessage[] = [];
+  /**
+   * History entries appended by each act()/diplomacyAct() turn (plus the
+   * tool results recorded for it afterwards), oldest first. Drives the
+   * history window: entries are only ever dropped whole turns from the
+   * front, so tool_calls/tool-response pairing is never split.
+   */
+  private turnSizes: number[] = [];
   private totalUsage: PlayerUsage = emptyUsage();
   private diplomacyUsage: DiplomacyUsage = emptyDiplomacyUsage();
 
@@ -87,6 +112,21 @@ export class Agent {
     this.getApiKey = opts.getApiKey;
     this.persona = opts.persona;
     this.maxTokens = opts.maxTokens;
+    this.historyWindowTurns = opts.historyWindowTurns ?? DEFAULT_HISTORY_WINDOW_TURNS;
+  }
+
+  /**
+   * Drop transcript turns older than the window, whole turns from the
+   * front. Called at the start of every act()/diplomacyAct(), before the
+   * fresh prompt is appended — so the outgoing transcript never exceeds
+   * the window plus the current turn, no matter how long the game runs.
+   */
+  private trimHistory(): void {
+    const w = this.historyWindowTurns;
+    if (w <= 0) return; // 0 (or negative) = unbounded, the pre-window behavior
+    let drop = 0;
+    while (this.turnSizes.length > w) drop += this.turnSizes.shift()!;
+    if (drop > 0) this.history.splice(0, drop);
   }
 
   /**
@@ -103,6 +143,10 @@ export class Agent {
   async act(state: GameState, phase: Phase): Promise<ActResult> {
     const apiKey = this.getApiKey();
     if (!apiKey) throw new MissingApiKeyError(this.playerId);
+
+    // Bound the outgoing transcript before the fresh prompt goes on it.
+    this.trimHistory();
+    const historyBefore = this.history.length;
 
     const me = state.players[this.playerId];
     const playerName = me?.name ?? `Player ${this.playerId}`;
@@ -132,6 +176,9 @@ export class Agent {
     const assistantMsg: TranscriptMessage = { role: 'assistant', content: resp.text };
     if (resp.toolCalls.length > 0) assistantMsg.toolCalls = resp.toolCalls;
     this.history.push(assistantMsg);
+    // The driver records this turn's tool results afterwards via
+    // recordToolResults, which attributes them to this same turn entry.
+    this.turnSizes.push(this.history.length - historyBefore);
 
     this.totalUsage.inputTokens += delta.inputTokens;
     this.totalUsage.outputTokens += delta.outputTokens;
@@ -151,6 +198,10 @@ export class Agent {
   async diplomacyAct(state: GameState, budgetRemaining: number): Promise<ActResult> {
     const apiKey = this.getApiKey();
     if (!apiKey) throw new MissingApiKeyError(this.playerId);
+
+    // Same window as act(): diplomacy shares the seat's history.
+    this.trimHistory();
+    const historyBefore = this.history.length;
 
     const me = state.players[this.playerId];
     const playerName = me?.name ?? `Player ${this.playerId}`;
@@ -179,6 +230,9 @@ export class Agent {
     const assistantMsg: TranscriptMessage = { role: 'assistant', content: resp.text };
     if (resp.toolCalls.length > 0) assistantMsg.toolCalls = resp.toolCalls;
     this.history.push(assistantMsg);
+    // Attributed to this turn; recordToolResults adds this turn's tool
+    // results to the same entry afterwards.
+    this.turnSizes.push(this.history.length - historyBefore);
 
     this.totalUsage.inputTokens += delta.inputTokens;
     this.totalUsage.outputTokens += delta.outputTokens;
@@ -221,11 +275,17 @@ export class Agent {
     for (const r of results) {
       this.history.push({ role: 'tool', toolCallId: r.toolCallId, content: r.summary });
     }
+    // These belong to the turn that produced the tool calls (the most
+    // recent act()/diplomacyAct()), so the history window keeps dropping
+    // whole turns and never splits a tool_calls/tool-response pair.
+    if (this.turnSizes.length === 0) this.turnSizes.push(0);
+    this.turnSizes[this.turnSizes.length - 1] += results.length;
   }
 
   /** Forget this seat's private conversation memory. */
   resetHistory(): void {
     this.history = [];
+    this.turnSizes = [];
   }
 }
 

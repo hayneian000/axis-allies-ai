@@ -11,6 +11,15 @@ import type {
 
 export const OPENAI_BASE_URL = 'https://api.openai.com/v1';
 
+/**
+ * Default cap on generated tokens per request. Mirrors the Anthropic
+ * adapter's default max_tokens (2048). Generation is the serial latency
+ * bottleneck on every turn — without a cap, one rambly phase dominates the
+ * wait. Sent as max_completion_tokens (not max_tokens): Meta's Model API
+ * documents that preference, and OpenAI's current models accept it too.
+ */
+export const DEFAULT_MAX_COMPLETION_TOKENS = 2048;
+
 const MODELS: ModelInfo[] = [
   { id: 'gpt-5.6', label: 'GPT-5.6', default: true },
   { id: 'gpt-5.5', label: 'GPT-5.5' },
@@ -83,6 +92,10 @@ export async function openAiCompatComplete(
       function: { name: t.name, description: t.description, parameters: t.parameters },
     })),
     tool_choice: 'auto',
+    // Bound the output: every generated token is produced serially before
+    // the driver can dispatch the phase's tool calls, so an uncapped model
+    // can single-handedly make a turn feel stuck.
+    max_completion_tokens: req.maxTokens ?? DEFAULT_MAX_COMPLETION_TOKENS,
   };
 
   const res = await fetch(url, {

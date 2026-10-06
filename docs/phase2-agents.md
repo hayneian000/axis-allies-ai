@@ -42,8 +42,10 @@ adapters:
 Curated v1 models (verified 2026-10-03/04 — **IDs roll forward, refresh periodically**):
 Anthropic `claude-sonnet-5` (default), `claude-opus-5`, `claude-haiku-4-5`,
 `claude-fable-5-1`; OpenAI `gpt-5.6` (default), `gpt-5.5`, `gpt-5.4-mini`,
-`gpt-5-mini`, `gpt-4.1`; Meta `muse-spark-1.3` (default), `muse-spark-1.2`,
-`muse-spark-1.1` (live-verified 2026-10-04; contributor/voice/image variants skipped for v1).
+`gpt-5-mini`, `gpt-4.1`; Meta `muse-spark-1.3` (default), `muse-spark-1.3-contributor`,
+`muse-spark-1.2`, `muse-spark-1.1` (live-verified 2026-10-04; voice/image variants
+skipped — not chat models. The Contributor tier lets Meta train on your data;
+it's in the picker by request, not by default).
 
 ## Streaming
 

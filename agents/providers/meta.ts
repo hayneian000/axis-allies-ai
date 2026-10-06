@@ -18,10 +18,12 @@ export const META_BASE_URL = 'https://api.meta.ai/v1';
 
 const MODELS: ModelInfo[] = [
   { id: 'muse-spark-1.3', label: 'Muse Spark 1.3', default: true },
+  { id: 'muse-spark-1.3-contributor', label: 'Muse Spark 1.3 Contributor' },
   { id: 'muse-spark-1.2', label: 'Muse Spark 1.2' },
   { id: 'muse-spark-1.1', label: 'Muse Spark 1.1' },
-  // Deliberately skipped for v1: contributor variants (Meta may train on
-  // them), voice/image models (not chat), sam-3.1 (segmentation, not chat).
+  // Deliberately skipped: voice/image models (not chat), sam-3.1
+  // (segmentation, not chat). Note the Contributor tier lets Meta train on
+  // your data — it's in the picker by request, not by default.
 ];
 
 export const metaAdapter: ProviderAdapter = {

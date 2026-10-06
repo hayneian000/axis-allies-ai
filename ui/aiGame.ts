@@ -101,6 +101,9 @@ function endPhaseResult(text: string): ActResult {
  */
 class UiAgent extends Agent {
   private passRest = false;
+  // Live-stream buffer for the current act(): reset at the start of every
+  // attempt, appended to by the provider as text deltas arrive.
+  private tokenBuf = '';
 
   constructor(
     opts: AgentOptions,
@@ -120,7 +123,18 @@ class UiAgent extends Agent {
     for (;;) {
       await this.ctrl.waitIfPaused();
       try {
-        const r = await super.act(state, phase);
+        // Stream the rationale into the seat card as it generates, so a
+        // 30s turn shows its thinking instead of a dead "Thinking…" status.
+        // The final onThought below overwrites with the same truncation.
+        this.tokenBuf = '';
+        const r = await super.act(state, phase, (delta) => {
+          this.tokenBuf += delta;
+          const card = seatCards.get(this.pid);
+          if (card) {
+            card.rationale.textContent =
+              this.tokenBuf.length > 900 ? this.tokenBuf.slice(0, 900) + '…' : this.tokenBuf;
+          }
+        });
         this.seatUi.onThought(this.pid, phase, r.text, r.toolCalls, this.usage);
         return r;
       } catch (err) {

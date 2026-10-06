@@ -207,6 +207,22 @@ describe('openai adapter', () => {
     expect(messages[3]).toEqual({ role: 'tool', tool_call_id: 'tc_1', content: '{"ok":true}' });
   });
 
+  it('caps output tokens via max_completion_tokens (default 2048)', async () => {
+    responder = () => jsonResponse(canned);
+    await openaiAdapter.complete(makeRequest({ maxTokens: undefined }));
+    const body = JSON.parse(lastBodyText) as Record<string, unknown>;
+    expect(body['max_completion_tokens']).toBe(2048);
+    expect(body).not.toHaveProperty('max_tokens');
+  });
+
+  it('honors an explicit maxTokens override', async () => {
+    responder = () => jsonResponse(canned);
+    await openaiAdapter.complete(makeRequest({ maxTokens: 500 }));
+    const body = JSON.parse(lastBodyText) as Record<string, unknown>;
+    expect(body['max_completion_tokens']).toBe(500);
+    expect(body).not.toHaveProperty('max_tokens');
+  });
+
   it('parses content, tool calls, usage, and finish reason', async () => {
     responder = () => jsonResponse(canned);
     const res = await openaiAdapter.complete(makeRequest());

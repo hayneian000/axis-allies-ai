@@ -11,7 +11,11 @@ the codebase.
 | [`testing.md`](testing.md) | You're writing or running tests — per-phase suites, the sim bot, what's covered where |
 | [`browser-testing.md`](browser-testing.md) | You're touching the UI — the jsdom playthrough, the DOM contract it enforces, and the real-browser screenshot harness |
 | [`ui-guide.md`](ui-guide.md) | You're restyling or adding UI — design tokens, DOM conventions, review workflow |
-| [`phase2-agents.md`](phase2-agents.md) | You're scoping Phase 2 — how LLM agents will drive turns (sketch, not spec) |
+| [`phase2-agents.md`](phase2-agents.md) | You're working on the agent system — providers, prompts, driver, streaming, performance (implemented, not a sketch) |
+| [`m3-diplomacy.md`](m3-diplomacy.md) | You're working on diplomacy — the freeform-talk spec, token budgets, JSON dump |
+| [`rules-test-plan.md`](rules-test-plan.md) | You're writing rule tests — the rulebook-cited plan behind `tests/rules/` |
+| [`style-guide.md`](style-guide.md) | You're doing visual work — the "war room, not board-game café" direction |
+| [`muse-workflow.md`](muse-workflow.md) | You're an AI contributor — repo-specific operating notes (generic conventions live in root `AGENTS.md`) |
 | [`history/`](history/) | You need superseded specs or old decisions |
 | [`screenshots/`](screenshots/) | You want reviewed before/after contact sheets from past UI work |
 

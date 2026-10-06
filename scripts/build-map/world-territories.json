@@ -1,0 +1,2099 @@
+{
+  "name": "1942 Second Edition",
+  "projection": {
+    "type": "naturalEarth1",
+    "rotate": [
+      0,
+      0
+    ],
+    "padding": 16
+  },
+  "viewBox": {
+    "width": 1600,
+    "height": 840
+  },
+  "simplify": {
+    "tolerancePx": 1.6,
+    "minPoints": 5,
+    "maxPoints": 90
+  },
+  "landSource": {
+    "file": "cache/ne_50m_admin_0_countries.geojson",
+    "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson",
+    "key": "ADM0_A3",
+    "skip": [
+      "ATA"
+    ]
+  },
+  "notes": [
+    "Territory inventory: ~/workspace/map-1942/inventory.md (transcribed from the physical 1942 2e board).",
+    "countries[] are Natural Earth ADM0_A3 codes. clip[] is an array of lon/lat rings;",
+    "a territory takes (union of its countries) intersected with its clips.",
+    "Order matters only within a shared-country group: each territory's geometry is",
+    "differenced against everything already claimed, so the LAST territory sharing a",
+    "country needs no clip and takes the remainder. No gaps, no overlaps, by construction.",
+    "Tiny islands use countries+clip too; if the clip finds no country geometry the raw",
+    "clip box is used as a fallback polygon (warns).",
+    "Assumed attachments (not on the board as separate territories, assigned to the",
+    "most plausible neighbor so no land renders unclaimed): DNK->northwestern_europe,",
+    "FRO->norway, KOS->southern_europe, MDA->ukraine_ssr, AND->spain_portugal, MCO->france,",
+    "LIE->switzerland, SMR/VAT->italy, KAZ group takes UZB/TKM/KGZ/TJK, GEO/ARM/AZE->caucasus,",
+    "IRQ->persia, ISR/PSE/LBN/SYR->trans_jordan, SAU group takes YEM/OMN/ARE/QAT/KWT/BHR,",
+    "PAK/BGD/LKA->india, PRK/KOR->manchuria, SOL/DJI/KEN/UGA/TZA->italian_east_africa,",
+    "RWA/BDI->belgian_congo, MWI->rhodesia, BWA/NAM/LSO/SWZ->union_of_south_africa,",
+    "GNB/SLE/LBR/NGA/GHA/TGO/GMB->french_west_africa, GNQ->french_equatorial_africa,",
+    "SGP->malaya, BRN->borneo, TLS->east_indies, PRI->west_indies.",
+    "Unclaimed (no polygon rendered; documented holes): French Guiana (clipped out of FRA),",
+    "CYP, MLT, MDV, GUM, Pacific micro-islands, Caribbean micro-islands, STP/COM/SYC/MUS/CPV."
+  ],
+  "wrapPairs": [
+    [
+      "western_canada",
+      "eastern_canada"
+    ],
+    [
+      "western_united_states",
+      "central_united_states"
+    ],
+    [
+      "mexico",
+      "east_mexico"
+    ]
+  ],
+  "extraNeighbors": [
+    [
+      "germany",
+      "baltic_states"
+    ],
+    [
+      "russia",
+      "vologda"
+    ],
+    [
+      "manchuria",
+      "soviet_far_east"
+    ],
+    [
+      "gibraltar",
+      "spain_portugal"
+    ]
+  ],
+  "nonNeighbors": [
+    [
+      "united_kingdom",
+      "eire"
+    ],
+    [
+      "japan",
+      "okinawa"
+    ]
+  ],
+  "territories": [
+    {
+      "id": "iwo_jima",
+      "name": "Iwo Jima",
+      "countries": [
+        "JPN"
+      ],
+      "clip": [
+        [
+          [
+            141.0,
+            24.3
+          ],
+          [
+            141.6,
+            24.3
+          ],
+          [
+            141.6,
+            25.1
+          ],
+          [
+            141.0,
+            25.1
+          ],
+          [
+            141.0,
+            24.3
+          ]
+        ]
+      ],
+      "ipc": 0,
+      "owner": "japan",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "okinawa",
+      "name": "Okinawa",
+      "countries": [
+        "JPN"
+      ],
+      "clip": [
+        [
+          [
+            127.4,
+            26.0
+          ],
+          [
+            128.4,
+            26.0
+          ],
+          [
+            128.4,
+            26.7
+          ],
+          [
+            127.4,
+            26.7
+          ],
+          [
+            127.4,
+            26.0
+          ]
+        ]
+      ],
+      "ipc": 0,
+      "owner": "japan",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "japan",
+      "name": "Japan",
+      "countries": [
+        "JPN"
+      ],
+      "ipc": 8,
+      "owner": "japan",
+      "capital": "Tokyo",
+      "victoryCity": "Tokyo",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "manchuria",
+      "name": "Manchuria",
+      "countries": [
+        "CHN",
+        "PRK",
+        "KOR"
+      ],
+      "clip": [
+        [
+          [
+            118,
+            34
+          ],
+          [
+            131,
+            34
+          ],
+          [
+            131,
+            49
+          ],
+          [
+            118,
+            49
+          ],
+          [
+            118,
+            34
+          ]
+        ]
+      ],
+      "ipc": 3,
+      "owner": "japan",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "sinkiang",
+      "name": "Sinkiang",
+      "countries": [
+        "CHN"
+      ],
+      "clip": [
+        [
+          [
+            74,
+            35
+          ],
+          [
+            96,
+            35
+          ],
+          [
+            96,
+            49
+          ],
+          [
+            74,
+            49
+          ],
+          [
+            74,
+            35
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "us",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "szechwan",
+      "name": "Szechwan",
+      "countries": [
+        "CHN"
+      ],
+      "clip": [
+        [
+          [
+            97,
+            26
+          ],
+          [
+            110,
+            26
+          ],
+          [
+            110,
+            35
+          ],
+          [
+            97,
+            35
+          ],
+          [
+            97,
+            26
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "us",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "yunnan",
+      "name": "Yunnan",
+      "countries": [
+        "CHN"
+      ],
+      "clip": [
+        [
+          [
+            97,
+            21
+          ],
+          [
+            107,
+            21
+          ],
+          [
+            107,
+            30
+          ],
+          [
+            97,
+            30
+          ],
+          [
+            97,
+            21
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "us",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "kiangsu",
+      "name": "Kiangsu",
+      "countries": [
+        "CHN"
+      ],
+      "clip": [
+        [
+          [
+            116,
+            30
+          ],
+          [
+            123,
+            30
+          ],
+          [
+            123,
+            36
+          ],
+          [
+            116,
+            36
+          ],
+          [
+            116,
+            30
+          ]
+        ]
+      ],
+      "ipc": 2,
+      "owner": "japan",
+      "victoryCity": "Shanghai",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "kwangtung",
+      "name": "Kwangtung",
+      "countries": [
+        "CHN",
+        "HKG",
+        "MAC"
+      ],
+      "clip": [
+        [
+          [
+            108,
+            20
+          ],
+          [
+            118,
+            20
+          ],
+          [
+            118,
+            27
+          ],
+          [
+            108,
+            27
+          ],
+          [
+            108,
+            20
+          ]
+        ]
+      ],
+      "ipc": 2,
+      "owner": "japan",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "anhwei",
+      "name": "Anhwei",
+      "countries": [
+        "CHN"
+      ],
+      "ipc": 1,
+      "owner": "us",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "germany",
+      "name": "Germany",
+      "countries": [
+        "DEU",
+        "LIE",
+        "AUT",
+        "CZE"
+      ],
+      "ipc": 10,
+      "owner": "germany",
+      "capital": "Berlin",
+      "victoryCity": "Berlin",
+      "neutral": false,
+      "region": "europe",
+      "extras": [
+        {
+          "countries": [
+            "RUS"
+          ],
+          "clip": [
+            [
+              [
+                19.5,
+                54.2
+              ],
+              [
+                23.0,
+                54.2
+              ],
+              [
+                23.0,
+                55.4
+              ],
+              [
+                19.5,
+                55.4
+              ],
+              [
+                19.5,
+                54.2
+              ]
+            ]
+          ],
+          "note": "Kaliningrad (East Prussia): in NE 50m it is part of RUS, not DEU"
+        }
+      ]
+    },
+    {
+      "id": "soviet_far_east",
+      "name": "Soviet Far East",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            131,
+            42
+          ],
+          [
+            192,
+            42
+          ],
+          [
+            192,
+            72
+          ],
+          [
+            131,
+            72
+          ],
+          [
+            131,
+            42
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "buryatia_ssr",
+      "name": "Buryatia S.S.R.",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            100,
+            49
+          ],
+          [
+            114,
+            49
+          ],
+          [
+            114,
+            58
+          ],
+          [
+            100,
+            58
+          ],
+          [
+            100,
+            49
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "yakut_ssr",
+      "name": "Yakut S.S.R.",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            110,
+            58
+          ],
+          [
+            140,
+            58
+          ],
+          [
+            140,
+            73
+          ],
+          [
+            110,
+            73
+          ],
+          [
+            110,
+            58
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "evenki",
+      "name": "Evenki National Okrug",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            93,
+            60
+          ],
+          [
+            112,
+            60
+          ],
+          [
+            112,
+            70
+          ],
+          [
+            93,
+            70
+          ],
+          [
+            93,
+            60
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "novosibirsk",
+      "name": "Novosibirsk",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            70,
+            55
+          ],
+          [
+            95,
+            55
+          ],
+          [
+            95,
+            62
+          ],
+          [
+            70,
+            62
+          ],
+          [
+            70,
+            55
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "kazakh_ssr",
+      "name": "Kazakh S.S.R.",
+      "countries": [
+        "KAZ",
+        "UZB",
+        "TKM",
+        "KGZ",
+        "TJK"
+      ],
+      "ipc": 2,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "caucasus",
+      "name": "Caucasus",
+      "countries": [
+        "RUS",
+        "GEO",
+        "ARM",
+        "AZE"
+      ],
+      "clip": [
+        [
+          [
+            37,
+            38
+          ],
+          [
+            52,
+            38
+          ],
+          [
+            52,
+            47
+          ],
+          [
+            37,
+            47
+          ],
+          [
+            37,
+            38
+          ]
+        ]
+      ],
+      "ipc": 4,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "middle_east"
+    },
+    {
+      "id": "vologda",
+      "name": "Vologda",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            35,
+            58
+          ],
+          [
+            52,
+            58
+          ],
+          [
+            52,
+            66
+          ],
+          [
+            35,
+            66
+          ],
+          [
+            35,
+            58
+          ]
+        ]
+      ],
+      "ipc": 2,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "archangel",
+      "name": "Archangel",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            32,
+            63
+          ],
+          [
+            58,
+            63
+          ],
+          [
+            58,
+            77
+          ],
+          [
+            32,
+            77
+          ],
+          [
+            32,
+            63
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "ussr",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "karelia_ssr",
+      "name": "Karelia S.S.R.",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            28,
+            60
+          ],
+          [
+            42,
+            60
+          ],
+          [
+            42,
+            71
+          ],
+          [
+            28,
+            71
+          ],
+          [
+            28,
+            60
+          ]
+        ]
+      ],
+      "ipc": 2,
+      "owner": "ussr",
+      "victoryCity": "Leningrad",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "west_russia",
+      "name": "West Russia",
+      "countries": [
+        "RUS"
+      ],
+      "clip": [
+        [
+          [
+            38,
+            50
+          ],
+          [
+            60,
+            50
+          ],
+          [
+            60,
+            60
+          ],
+          [
+            38,
+            60
+          ],
+          [
+            38,
+            50
+          ]
+        ]
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "ukraine_ssr",
+      "name": "Ukraine S.S.R.",
+      "countries": [
+        "UKR",
+        "MDA"
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "belorussia",
+      "name": "Belorussia",
+      "countries": [
+        "BLR"
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "russia",
+      "name": "Russia",
+      "countries": [
+        "RUS"
+      ],
+      "ipc": 8,
+      "owner": "ussr",
+      "capital": "Moscow",
+      "victoryCity": "Moscow",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "france",
+      "name": "France",
+      "countries": [
+        "FRA",
+        "MCO"
+      ],
+      "clip": [
+        [
+          [
+            -5,
+            41
+          ],
+          [
+            10,
+            41
+          ],
+          [
+            10,
+            52
+          ],
+          [
+            -5,
+            52
+          ],
+          [
+            -5,
+            41
+          ]
+        ]
+      ],
+      "ipc": 6,
+      "owner": "germany",
+      "victoryCity": "Paris",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "northwestern_europe",
+      "name": "Northwestern Europe",
+      "countries": [
+        "NLD",
+        "BEL",
+        "LUX",
+        "DNK"
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "norway",
+      "name": "Norway",
+      "countries": [
+        "NOR",
+        "FRO"
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "finland",
+      "name": "Finland",
+      "countries": [
+        "FIN",
+        "ALD"
+      ],
+      "ipc": 1,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "baltic_states",
+      "name": "Baltic States",
+      "countries": [
+        "EST",
+        "LVA",
+        "LTU"
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "poland",
+      "name": "Poland",
+      "countries": [
+        "POL",
+        "SVK"
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "bulgaria_romania",
+      "name": "Bulgaria Romania",
+      "countries": [
+        "BGR",
+        "ROU",
+        "HUN"
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "italy",
+      "name": "Italy",
+      "countries": [
+        "ITA",
+        "SMR",
+        "VAT"
+      ],
+      "ipc": 3,
+      "owner": "germany",
+      "victoryCity": "Rome",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "southern_europe",
+      "name": "Southern Europe",
+      "countries": [
+        "GRC",
+        "ALB",
+        "SRB",
+        "MKD",
+        "MNE",
+        "BIH",
+        "HRV",
+        "SVN",
+        "KOS"
+      ],
+      "ipc": 2,
+      "owner": "germany",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "morocco",
+      "name": "Morocco",
+      "countries": [
+        "MAR"
+      ],
+      "ipc": 1,
+      "owner": "germany",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "algeria",
+      "name": "Algeria",
+      "countries": [
+        "DZA",
+        "TUN"
+      ],
+      "ipc": 1,
+      "owner": "germany",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "libya",
+      "name": "Libya",
+      "countries": [
+        "LBY"
+      ],
+      "ipc": 1,
+      "owner": "germany",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "united_kingdom",
+      "name": "United Kingdom",
+      "countries": [
+        "GBR",
+        "GGY",
+        "JEY",
+        "IMN"
+      ],
+      "ipc": 8,
+      "owner": "uk",
+      "capital": "London",
+      "victoryCity": "London",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "western_canada",
+      "name": "Western Canada",
+      "countries": [
+        "CAN"
+      ],
+      "clip": [
+        [
+          [
+            -141,
+            40
+          ],
+          [
+            -100,
+            40
+          ],
+          [
+            -100,
+            84
+          ],
+          [
+            -141,
+            84
+          ],
+          [
+            -141,
+            40
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "eastern_canada",
+      "name": "Eastern Canada",
+      "countries": [
+        "CAN",
+        "SPM"
+      ],
+      "ipc": 3,
+      "owner": "uk",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "egypt",
+      "name": "Egypt",
+      "countries": [
+        "EGY"
+      ],
+      "ipc": 2,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "union_of_south_africa",
+      "name": "Union of South Africa",
+      "countries": [
+        "ZAF",
+        "BWA",
+        "NAM",
+        "LSO",
+        "SWZ"
+      ],
+      "ipc": 2,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "trans_jordan",
+      "name": "Trans-Jordan",
+      "countries": [
+        "JOR",
+        "ISR",
+        "PSX",
+        "LBN",
+        "SYR"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "middle_east"
+    },
+    {
+      "id": "persia",
+      "name": "Persia",
+      "countries": [
+        "IRN",
+        "IRQ"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "middle_east"
+    },
+    {
+      "id": "india",
+      "name": "India",
+      "countries": [
+        "IND",
+        "PAK",
+        "BGD",
+        "LKA",
+        "KAS"
+      ],
+      "ipc": 3,
+      "owner": "uk",
+      "victoryCity": "Calcutta",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "burma",
+      "name": "Burma",
+      "countries": [
+        "MMR"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "western_australia",
+      "name": "Western Australia",
+      "countries": [
+        "AUS"
+      ],
+      "clip": [
+        [
+          [
+            113,
+            -40
+          ],
+          [
+            129,
+            -40
+          ],
+          [
+            129,
+            -10
+          ],
+          [
+            113,
+            -10
+          ],
+          [
+            113,
+            -40
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "eastern_australia",
+      "name": "Eastern Australia",
+      "countries": [
+        "AUS"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "new_zealand",
+      "name": "New Zealand",
+      "countries": [
+        "NZL"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "iceland",
+      "name": "Iceland",
+      "countries": [
+        "ISL"
+      ],
+      "ipc": 0,
+      "owner": "uk",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "gibraltar",
+      "name": "Gibraltar",
+      "countries": [
+        "ESP"
+      ],
+      "clip": [
+        [
+          [
+            -5.6,
+            35.9
+          ],
+          [
+            -5.2,
+            35.9
+          ],
+          [
+            -5.2,
+            36.2
+          ],
+          [
+            -5.6,
+            36.2
+          ],
+          [
+            -5.6,
+            35.9
+          ]
+        ]
+      ],
+      "ipc": 0,
+      "owner": "uk",
+      "neutral": false,
+      "region": "europe"
+    },
+    {
+      "id": "french_west_africa",
+      "name": "French West Africa",
+      "countries": [
+        "MRT",
+        "SEN",
+        "GMB",
+        "MLI",
+        "GIN",
+        "GNB",
+        "SLE",
+        "LBR",
+        "CIV",
+        "BFA",
+        "NER",
+        "BEN",
+        "NGA",
+        "GHA",
+        "TGO"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "french_equatorial_africa",
+      "name": "French Equatorial Africa",
+      "countries": [
+        "TCD",
+        "CAF",
+        "COG",
+        "GAB",
+        "CMR",
+        "GNQ"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "belgian_congo",
+      "name": "Belgian Congo",
+      "countries": [
+        "COD",
+        "RWA",
+        "BDI"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "rhodesia",
+      "name": "Rhodesia",
+      "countries": [
+        "ZMB",
+        "ZWE",
+        "MWI"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "anglo_egyptian_sudan",
+      "name": "Anglo-Egyptian Sudan",
+      "countries": [
+        "SDN",
+        "SDS"
+      ],
+      "ipc": 0,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "italian_east_africa",
+      "name": "Italian East Africa",
+      "countries": [
+        "ETH",
+        "ERI",
+        "SOM",
+        "SOL",
+        "DJI",
+        "KEN",
+        "UGA",
+        "TZA"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "french_madagascar",
+      "name": "French Madagascar",
+      "countries": [
+        "MDG"
+      ],
+      "ipc": 1,
+      "owner": "uk",
+      "neutral": false,
+      "region": "africa"
+    },
+    {
+      "id": "malaya",
+      "name": "Malaya",
+      "countries": [
+        "MYS",
+        "SGP"
+      ],
+      "clip": [
+        [
+          [
+            99,
+            0
+          ],
+          [
+            105,
+            0
+          ],
+          [
+            105,
+            8
+          ],
+          [
+            99,
+            8
+          ],
+          [
+            99,
+            0
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "japan",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "borneo",
+      "name": "Borneo",
+      "countries": [
+        "IDN",
+        "MYS",
+        "BRN"
+      ],
+      "clip": [
+        [
+          [
+            109,
+            -5
+          ],
+          [
+            120,
+            -5
+          ],
+          [
+            120,
+            8
+          ],
+          [
+            109,
+            8
+          ],
+          [
+            109,
+            -5
+          ]
+        ]
+      ],
+      "ipc": 4,
+      "owner": "japan",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "new_guinea",
+      "name": "New Guinea",
+      "countries": [
+        "PNG",
+        "IDN"
+      ],
+      "clip": [
+        [
+          [
+            131,
+            -9
+          ],
+          [
+            148,
+            -9
+          ],
+          [
+            148,
+            1
+          ],
+          [
+            131,
+            1
+          ],
+          [
+            131,
+            -9
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "japan",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "east_indies",
+      "name": "East Indies",
+      "countries": [
+        "IDN",
+        "TLS"
+      ],
+      "ipc": 4,
+      "owner": "japan",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "french_indo_china_thailand",
+      "name": "French Indo-China Thailand",
+      "countries": [
+        "VNM",
+        "LAO",
+        "KHM",
+        "THA"
+      ],
+      "ipc": 2,
+      "owner": "japan",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "solomon_islands",
+      "name": "Solomon Islands",
+      "countries": [
+        "SLB"
+      ],
+      "ipc": 0,
+      "owner": "japan",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "caroline_islands",
+      "name": "Caroline Islands",
+      "countries": [
+        "FSM",
+        "PLW"
+      ],
+      "ipc": 0,
+      "owner": "japan",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "philippine_islands",
+      "name": "Philippine Islands",
+      "countries": [
+        "PHL"
+      ],
+      "ipc": 3,
+      "owner": "japan",
+      "victoryCity": "Manila",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "formosa",
+      "name": "Formosa",
+      "countries": [
+        "TWN"
+      ],
+      "ipc": 0,
+      "owner": "japan",
+      "neutral": false,
+      "region": "asia"
+    },
+    {
+      "id": "wake_island",
+      "name": "Wake Island",
+      "countries": [
+        "USA"
+      ],
+      "clip": [
+        [
+          [
+            166.3,
+            19.1
+          ],
+          [
+            166.8,
+            19.1
+          ],
+          [
+            166.8,
+            19.5
+          ],
+          [
+            166.3,
+            19.5
+          ],
+          [
+            166.3,
+            19.1
+          ]
+        ]
+      ],
+      "ipc": 0,
+      "owner": "japan",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "hawaiian_islands",
+      "name": "Hawaiian Islands",
+      "countries": [
+        "USA"
+      ],
+      "clip": [
+        [
+          [
+            -161,
+            18
+          ],
+          [
+            -154,
+            18
+          ],
+          [
+            -154,
+            23
+          ],
+          [
+            -161,
+            23
+          ],
+          [
+            -161,
+            18
+          ]
+        ]
+      ],
+      "ipc": 1,
+      "owner": "us",
+      "victoryCity": "Honolulu",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "midway",
+      "name": "Midway",
+      "countries": [
+        "USA"
+      ],
+      "clip": [
+        [
+          [
+            -178.5,
+            28
+          ],
+          [
+            -177,
+            28
+          ],
+          [
+            -177,
+            29
+          ],
+          [
+            -178.5,
+            29
+          ],
+          [
+            -178.5,
+            28
+          ]
+        ]
+      ],
+      "ipc": 0,
+      "owner": "us",
+      "neutral": false,
+      "region": "oceania"
+    },
+    {
+      "id": "alaska",
+      "name": "Alaska",
+      "countries": [
+        "USA"
+      ],
+      "clip": [
+        [
+          [
+            -188,
+            50
+          ],
+          [
+            -127,
+            50
+          ],
+          [
+            -127,
+            72
+          ],
+          [
+            -188,
+            72
+          ],
+          [
+            -188,
+            50
+          ]
+        ]
+      ],
+      "ipc": 2,
+      "owner": "us",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "western_united_states",
+      "name": "Western United States",
+      "countries": [
+        "USA"
+      ],
+      "clip": [
+        [
+          [
+            -125,
+            25
+          ],
+          [
+            -114,
+            25
+          ],
+          [
+            -114,
+            50
+          ],
+          [
+            -125,
+            50
+          ],
+          [
+            -125,
+            25
+          ]
+        ]
+      ],
+      "ipc": 10,
+      "owner": "us",
+      "victoryCity": "San Francisco",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "central_united_states",
+      "name": "Central United States",
+      "countries": [
+        "USA"
+      ],
+      "clip": [
+        [
+          [
+            -114,
+            25
+          ],
+          [
+            -95,
+            25
+          ],
+          [
+            -95,
+            50
+          ],
+          [
+            -114,
+            50
+          ],
+          [
+            -114,
+            25
+          ]
+        ]
+      ],
+      "ipc": 6,
+      "owner": "us",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "eastern_united_states",
+      "name": "Eastern United States",
+      "countries": [
+        "USA"
+      ],
+      "ipc": 12,
+      "owner": "us",
+      "capital": "Washington",
+      "victoryCity": "Washington",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "east_mexico",
+      "name": "East Mexico",
+      "countries": [
+        "MEX"
+      ],
+      "clip": [
+        [
+          [
+            -92,
+            17
+          ],
+          [
+            -86,
+            17
+          ],
+          [
+            -86,
+            22
+          ],
+          [
+            -92,
+            22
+          ],
+          [
+            -92,
+            17
+          ]
+        ]
+      ],
+      "ipc": 0,
+      "owner": "us",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "mexico",
+      "name": "Mexico",
+      "countries": [
+        "MEX"
+      ],
+      "ipc": 2,
+      "owner": "us",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "central_america",
+      "name": "Central America",
+      "countries": [
+        "GTM",
+        "BLZ",
+        "HND",
+        "SLV",
+        "NIC",
+        "CRI",
+        "PAN"
+      ],
+      "ipc": 1,
+      "owner": "us",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "west_indies",
+      "name": "West Indies",
+      "countries": [
+        "CUB",
+        "HTI",
+        "DOM",
+        "BHS",
+        "JAM",
+        "TTO",
+        "PRI",
+        "BMU",
+        "CYM",
+        "TCA",
+        "VGB",
+        "VIR",
+        "MSR"
+      ],
+      "ipc": 1,
+      "owner": "us",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "greenland",
+      "name": "Greenland",
+      "countries": [
+        "GRL"
+      ],
+      "ipc": 0,
+      "owner": "us",
+      "neutral": false,
+      "region": "north_america"
+    },
+    {
+      "id": "brazil",
+      "name": "Brazil",
+      "countries": [
+        "BRA",
+        "GUY",
+        "SUR"
+      ],
+      "ipc": 3,
+      "owner": "us",
+      "neutral": false,
+      "region": "south_america"
+    },
+    {
+      "id": "spain_portugal",
+      "name": "Spain Portugal",
+      "countries": [
+        "ESP",
+        "PRT",
+        "AND"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "europe"
+    },
+    {
+      "id": "sweden",
+      "name": "Sweden",
+      "countries": [
+        "SWE"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "europe"
+    },
+    {
+      "id": "switzerland",
+      "name": "Switzerland",
+      "countries": [
+        "CHE",
+        "LIE"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "europe"
+    },
+    {
+      "id": "turkey",
+      "name": "Turkey",
+      "countries": [
+        "TUR",
+        "CYP",
+        "CYN"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "middle_east"
+    },
+    {
+      "id": "saudi_arabia",
+      "name": "Saudi Arabia",
+      "countries": [
+        "SAU",
+        "YEM",
+        "OMN",
+        "ARE",
+        "QAT",
+        "KWT",
+        "BHR"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "middle_east"
+    },
+    {
+      "id": "sahara",
+      "name": "Sahara",
+      "countries": [
+        "SAH"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "africa"
+    },
+    {
+      "id": "afghanistan",
+      "name": "Afghanistan",
+      "countries": [
+        "AFG"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "asia"
+    },
+    {
+      "id": "himalaya",
+      "name": "Himalaya",
+      "countries": [
+        "NPL",
+        "BTN"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "asia"
+    },
+    {
+      "id": "mongolia",
+      "name": "Mongolia",
+      "countries": [
+        "MNG"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "asia"
+    },
+    {
+      "id": "venezuela",
+      "name": "Venezuela",
+      "countries": [
+        "VEN"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "south_america"
+    },
+    {
+      "id": "colombia_ecuador",
+      "name": "Colombia Ecuador",
+      "countries": [
+        "COL",
+        "ECU"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "south_america"
+    },
+    {
+      "id": "peru_argentina",
+      "name": "Peru Argentina",
+      "countries": [
+        "PER",
+        "ARG",
+        "BOL",
+        "PRY",
+        "URY",
+        "FLK"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "south_america"
+    },
+    {
+      "id": "chile",
+      "name": "Chile",
+      "countries": [
+        "CHL"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "south_america"
+    },
+    {
+      "id": "angola",
+      "name": "Angola",
+      "countries": [
+        "AGO"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "africa"
+    },
+    {
+      "id": "mozambique",
+      "name": "Mozambique",
+      "countries": [
+        "MOZ"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "africa"
+    },
+    {
+      "id": "eire",
+      "name": "Eire",
+      "countries": [
+        "IRL"
+      ],
+      "ipc": 0,
+      "owner": "neutral",
+      "neutral": true,
+      "region": "europe"
+    }
+  ]
+}

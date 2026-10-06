@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "simulate": "vitest run tests/simulation.test.ts",
     "screenshots": "node scripts/screenshots.mjs",
-    "probe": "node scripts/probe-branch.mjs"
+    "probe": "node scripts/probe-branch.mjs",
+    "build:map1942": "node scripts/build-map/build-world.mjs"
   },
   "devDependencies": {
     "jsdom": "^29.1.1",

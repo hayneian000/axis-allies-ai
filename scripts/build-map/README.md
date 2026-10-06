@@ -45,3 +45,32 @@ map needs it.
 - `simplify` — `tolerancePx`, `minPoints`, `maxPoints`
 - `territories[]` — `{ id, states[] }` (state names as in us-atlas)
 - `lakes` — Natural Earth source URL, lake names, simplify tolerance
+
+## World map pipeline (1942 Second Edition)
+
+`build-world.mjs` + `world-territories.json` generate `data/map-1942.json`
+(the 96-territory 1942 2e board) from Natural Earth 50m country boundaries.
+Run: `npm run build:map1942` (needs `@turf/turf` and `d3-geo` installed).
+
+How it differs from the US pipeline:
+
+- **Source** — Natural Earth `ne_50m_admin_0_countries.geojson` (cached in
+  `cache/`), keyed by `ADM0_A3`. No GDP stage: IPCs, owners, capitals, and
+  victory cities come straight from the board inventory in the config.
+- **Splits** — where the game divides a modern country (USSR republics,
+  Chinas, Mexicos, Borneo, New Guinea…), the config hand-authors a `clip`
+  polygon; the territory takes (countries ∩ clip). Each territory is
+  differenced against already-claimed geometry sharing its countries, so
+  there are no gaps or overlaps by construction.
+- **Neighbors** — exact shared-segment matching in lon/lat space (no
+  distance thresholds): shared NE borders and shared clip edges produce
+  bit-identical vertices. `extraNeighbors`/`nonNeighbors` in the config patch
+  the few cases geometry can't see (data gaps like Kaliningrad, islands
+  sharing NE vertices across a strait). `wrapPairs` adds the board's
+  horizontal wrap edges.
+- **Projection** — d3-geo NaturalEarth1 (config-driven `projection.type`,
+  switchable later), cut at the antimeridian.
+- **Sea zones deferred** — the 65 numbered sea zones are pure game
+  constructs with no geographic source; the pipeline ships land-only and
+  preserves any existing sea zones in `data/map-1942.json` on rebuild (it
+  never clobbers territories it didn't build).

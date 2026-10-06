@@ -46,17 +46,17 @@ describe('surprise strike (1942 2e p.29)', () => {
     const s = freshGame(2, 101);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { cruiser: 1 });
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { cruiser: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
     gotoCombat(s);
     // Attacker declines to submerge; defender has no subs.
-    expect(submergeTurn(s, 'gulf')).toBe('attacker');
-    expect(submergeSubs(s, pid, 'gulf', 'attacker', 0).ok).toBe(true);
-    expect(submergeTurn(s, 'gulf')).toBe(null);
+    expect(submergeTurn(s, 'western_gulf')).toBe('attacker');
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
     // The battle resolves; the mechanics work (dice vary by seed).
-    const r = resolveCombatRound(s, pid, 'gulf');
+    const r = resolveCombatRound(s, pid, 'western_gulf');
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
   });
 
@@ -65,17 +65,17 @@ describe('surprise strike (1942 2e p.29)', () => {
     const s = freshGame(2, 102);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { submarine: 1, cruiser: 1 });
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1, cruiser: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
     gotoCombat(s);
-    expect(submergeTurn(s, 'gulf')).toBe('attacker');
-    expect(submergeSubs(s, pid, 'gulf', 'attacker', 0).ok).toBe(true);
-    expect(submergeTurn(s, 'gulf')).toBe('defender');
-    expect(submergeSubs(s, foe, 'gulf', 'defender', 0).ok).toBe(true);
-    expect(submergeTurn(s, 'gulf')).toBe(null);
-    const r = resolveCombatRound(s, pid, 'gulf');
+    expect(submergeTurn(s, 'western_gulf')).toBe('attacker');
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe('defender');
+    expect(submergeSubs(s, foe, 'western_gulf', 'defender', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+    const r = resolveCombatRound(s, pid, 'western_gulf');
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
   });
 
@@ -87,16 +87,16 @@ describe('surprise strike (1942 2e p.29)', () => {
     const s = freshGame(2, 103);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1, submarine: 1 });
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1, submarine: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
     gotoCombat(s);
     // Attacker's sub is cancelled; defender's sub gets a decision.
-    expect(submergeTurn(s, 'gulf')).toBe('defender');
-    expect(submergeSubs(s, foe, 'gulf', 'defender', 0).ok).toBe(true);
-    expect(submergeTurn(s, 'gulf')).toBe(null);
-    const r = resolveCombatRound(s, pid, 'gulf');
+    expect(submergeTurn(s, 'western_gulf')).toBe('defender');
+    expect(submergeSubs(s, foe, 'western_gulf', 'defender', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+    const r = resolveCombatRound(s, pid, 'western_gulf');
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
   });
 });
@@ -106,23 +106,23 @@ describe('submerge (1942 2e p.29)', () => {
     const s = freshGame(2, 104);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { submarine: 1 });
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
     gotoCombat(s);
     // Attacker's turn to decide.
-    expect(submergeTurn(s, 'gulf')).toBe('attacker');
+    expect(submergeTurn(s, 'western_gulf')).toBe('attacker');
     // Defender cannot decide before the attacker.
-    expect(submergeSubs(s, foe, 'gulf', 'defender', 1).ok).toBe(false);
+    expect(submergeSubs(s, foe, 'western_gulf', 'defender', 1).ok).toBe(false);
     // Attacker submerges.
-    expect(submergeSubs(s, pid, 'gulf', 'attacker', 1).ok).toBe(true);
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 1).ok).toBe(true);
     // Now defender's turn.
-    expect(submergeTurn(s, 'gulf')).toBe('defender');
-    expect(submergeSubs(s, foe, 'gulf', 'defender', 0).ok).toBe(true);
-    expect(submergeTurn(s, 'gulf')).toBe(null);
+    expect(submergeTurn(s, 'western_gulf')).toBe('defender');
+    expect(submergeSubs(s, foe, 'western_gulf', 'defender', 0).ok).toBe(true);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
     // The attacker's sub is removed from the battle.
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     expect(b.attack.submarine).toBe(0);
     expect(b.submergedA).toBe(1);
   });
@@ -131,21 +131,21 @@ describe('submerge (1942 2e p.29)', () => {
     const s = freshGame(2, 105);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1, destroyer: 1 });
-    setSea(s, 'gulf', foe, { cruiser: 1 });
+    setSea(s, 'california_coast', pid, { submarine: 1, destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { cruiser: 1 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1, destroyer: 1 } }]).ok,
+      combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1, destroyer: 1 } }]).ok,
     ).toBe(true);
     gotoCombat(s);
     // Attacker submerges the sub.
-    expect(submergeSubs(s, pid, 'gulf', 'attacker', 1).ok).toBe(true);
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 1).ok).toBe(true);
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     expect(b.attack.submarine).toBe(0);
     expect(b.submergedA).toBe(1);
     expect(b.attack.destroyer).toBe(1);
     // The submerged sub stays out of the fight.
-    resolveBattleAuto(s, pid, 'gulf');
+    resolveBattleAuto(s, pid, 'western_gulf');
     expect(b.over).toBe(true);
   });
 
@@ -154,32 +154,32 @@ describe('submerge (1942 2e p.29)', () => {
     const s = freshGame(2, 106);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
     gotoCombat(s);
     // No submerge decision is due (attacker's sub is cancelled).
-    expect(submergeTurn(s, 'gulf')).toBe(null);
-    expect(submergeSubs(s, pid, 'gulf', 'attacker', 1).ok).toBe(false);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 1).ok).toBe(false);
   });
 
   it('invalid submerge actions never mutate state', () => {
     const s = freshGame(2, 107);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { submarine: 1 });
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
     gotoCombat(s);
     const before = JSON.stringify(s.battles);
     // Too many subs.
-    expect(submergeSubs(s, pid, 'gulf', 'attacker', 5).ok).toBe(false);
+    expect(submergeSubs(s, pid, 'western_gulf', 'attacker', 5).ok).toBe(false);
     // Wrong side.
-    expect(submergeSubs(s, pid, 'gulf', 'defender', 1).ok).toBe(false);
+    expect(submergeSubs(s, pid, 'western_gulf', 'defender', 1).ok).toBe(false);
     // Wrong player.
-    expect(submergeSubs(s, foe, 'gulf', 'attacker', 1).ok).toBe(false);
+    expect(submergeSubs(s, foe, 'western_gulf', 'attacker', 1).ok).toBe(false);
     expect(JSON.stringify(s.battles)).toBe(before);
   });
 });
@@ -190,23 +190,23 @@ describe('destroyer cancels sub abilities (1942 2e p.28)', () => {
     const s = freshGame(2, 108);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { submarine: 1 });
-    s.territories['pacific'].units.fighter = 1;
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    s.territories['california_coast'].units.fighter = 1;
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { destroyer: 1, fighter: 1 } }]).ok,
+      combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 1, fighter: 1 } }]).ok,
     ).toBe(true);
     gotoCombat(s);
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     // Rig an air hit on the defender.
     b.pendingDefender = 1;
     b.pendDefAir = 1;
     b.defenderResolved = false;
     // With the attacker's destroyer present, air CAN hit the sub.
-    const r = autoCasualties(s, pid, 'gulf', 'defender');
+    const r = autoCasualties(s, pid, 'western_gulf', 'defender');
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.territories['gulf'].units.submarine).toBe(0);
+    expect(s.territories['western_gulf'].units.submarine).toBe(0);
   });
 });
 
@@ -215,27 +215,27 @@ describe('submarine movement (1942 2e pp.27, 29)', () => {
     const s = freshGame(2, 110);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { cruiser: 1 });
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { cruiser: 1 });
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.battles.some((b) => b.territoryId === 'gulf' && !b.over)).toBe(true);
+    expect(s.battles.some((b) => b.territoryId === 'western_gulf' && !b.over)).toBe(true);
   });
 
   it('zones with only enemy subs/transports do not block movement', () => {
     const s = freshGame(2, 111);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { submarine: 1, transport: 1 });
-    setSea(s, 'atlantic', null, {});
+    setSea(s, 'western_gulf', pid, { destroyer: 1 });
+    setSea(s, 'eastern_gulf', foe, { submarine: 1, transport: 1 });
+    setSea(s, 'south_atlantic', null, {});
     gotoCombatMove(s);
-    // Destroyer moves pacific -> gulf -> atlantic, passing through the
-    // subs/transports-only zone without stopping.
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'atlantic', units: { destroyer: 1 } }]);
+    // Destroyer moves western_gulf -> eastern_gulf -> south_atlantic, passing
+    // through the subs/transports-only zone without stopping.
+    const r = combatMove(s, pid, [{ from: 'western_gulf', to: 'south_atlantic', units: { destroyer: 1 } }]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.territories['atlantic'].units.destroyer).toBe(1);
+    expect(s.territories['south_atlantic'].units.destroyer).toBe(1);
   });
 
   it('subs cannot pass through a zone with an enemy destroyer', () => {
@@ -243,12 +243,12 @@ describe('submarine movement (1942 2e pp.27, 29)', () => {
     const s = freshGame(2, 112);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
-    setSea(s, 'atlantic', null, {});
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
+    setSea(s, 'north_atlantic', null, {});
     gotoCombatMove(s);
     // Sub tries pacific -> gulf -> atlantic. The destroyer in gulf blocks transit.
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'atlantic', units: { submarine: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'north_atlantic', units: { submarine: 1 } }]);
     expect(r.ok).toBe(false);
     expect(['destroyer_intercept', 'range']).toContain(r.code);
   });
@@ -259,17 +259,17 @@ describe('ignore-or-attack choice (1942 2e p.29)', () => {
     const s = freshGame(2, 113);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { submarine: 1 });
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'pacific', to: 'gulf', units: { destroyer: 1 }, attack: false },
+      { from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 }, attack: false },
     ]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
     // No battle; the destroyer coexists with the enemy sub.
-    expect(s.battles.filter((b) => b.territoryId === 'gulf' && !b.over)).toHaveLength(0);
-    expect(s.territories['gulf'].units.destroyer).toBe(1);
-    const coexist = s.territories['gulf'].coexist ?? [];
+    expect(s.battles.filter((b) => b.territoryId === 'western_gulf' && !b.over)).toHaveLength(0);
+    expect(s.territories['western_gulf'].units.destroyer).toBe(1);
+    const coexist = s.territories['western_gulf'].coexist ?? [];
     expect(coexist.some((f) => f.owner === foe && f.units.submarine === 1)).toBe(true);
   });
 
@@ -277,26 +277,26 @@ describe('ignore-or-attack choice (1942 2e p.29)', () => {
     const s = freshGame(2, 114);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { submarine: 1 });
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'pacific', to: 'gulf', units: { destroyer: 1 }, attack: true },
+      { from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 }, attack: true },
     ]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.battles.some((b) => b.territoryId === 'gulf' && !b.over)).toBe(true);
+    expect(s.battles.some((b) => b.territoryId === 'western_gulf' && !b.over)).toBe(true);
   });
 
   it('default is to attack (phase-1 behavior preserved)', () => {
     const s = freshGame(2, 115);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { transport: 1 });
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { transport: 1 });
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { destroyer: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 } }]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.battles.some((b) => b.territoryId === 'gulf' && !b.over)).toBe(true);
+    expect(s.battles.some((b) => b.territoryId === 'western_gulf' && !b.over)).toBe(true);
   });
 });
 
@@ -306,42 +306,42 @@ describe('air-sub casualty constraints (1942 2e p.29)', () => {
     const s = freshGame(2, 116);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { submarine: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
-    s.territories['gulf'].units.fighter = 1;
+    setSea(s, 'california_coast', pid, { submarine: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
+    s.territories['western_gulf'].units.fighter = 1;
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { submarine: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { submarine: 1 } }]).ok).toBe(true);
     gotoCombat(s);
     // Attacker's sub is cancelled by the destroyer (no surprise), but the
     // general-exchange constraint still applies: sub hits are sea-only.
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     b.pendingDefender = 1;
     b.pendDefAir = 0;
     b.defenderResolved = false;
-    const r = autoCasualties(s, pid, 'gulf', 'defender');
+    const r = autoCasualties(s, pid, 'western_gulf', 'defender');
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
     // The fighter must survive; the hit went to the destroyer (sea unit).
-    expect(s.territories['gulf'].units.fighter).toBe(1);
+    expect(s.territories['western_gulf'].units.fighter).toBe(1);
   });
 
   it('air cannot hit subs without a friendly destroyer present', () => {
     const s = freshGame(2, 117);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, {});
-    s.territories['pacific'].units.fighter = 1;
-    setSea(s, 'gulf', foe, { submarine: 1 });
+    setSea(s, 'california_coast', pid, {});
+    s.territories['california_coast'].units.fighter = 1;
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { fighter: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { fighter: 1 } }]).ok).toBe(true);
     gotoCombat(s);
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     b.pendingDefender = 1;
     b.pendDefAir = 1;
     b.defenderResolved = false;
-    const r = autoCasualties(s, pid, 'gulf', 'defender');
+    const r = autoCasualties(s, pid, 'western_gulf', 'defender');
     // The policy cannot assign the air hit to the sub; the sub survives.
     if (r.ok) {
-      expect(s.territories['gulf'].units.submarine).toBe(1);
+      expect(s.territories['western_gulf'].units.submarine).toBe(1);
     }
   });
 
@@ -349,18 +349,18 @@ describe('air-sub casualty constraints (1942 2e p.29)', () => {
     const s = freshGame(2, 118);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, {});
-    s.territories['pacific'].units.fighter = 1;
-    setSea(s, 'gulf', foe, { submarine: 1, destroyer: 1 });
+    setSea(s, 'california_coast', pid, {});
+    s.territories['california_coast'].units.fighter = 1;
+    setSea(s, 'western_gulf', foe, { submarine: 1, destroyer: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { fighter: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { fighter: 1 } }]).ok).toBe(true);
     gotoCombat(s);
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     b.pendingDefender = 1;
     b.pendDefAir = 1;
     b.defenderResolved = false;
     // No attacking destroyer present: air cannot be assigned to the sub.
-    const r = chooseCasualties(s, pid, 'gulf', 'defender', { submarine: 1 });
+    const r = chooseCasualties(s, pid, 'western_gulf', 'defender', { submarine: 1 });
     expect(r.ok).toBe(false);
     expect(r.code).toBe('air_vs_sub');
   });
@@ -371,18 +371,18 @@ describe('mobilization into hostile waters (1942 2e p.21)', () => {
     const s = freshGame(2, 119);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'gulf', foe, { destroyer: 1 });
-    // Give pid a factory in florida (adjacent to gulf).
+    setSea(s, 'eastern_gulf', foe, { destroyer: 1 });
+    // Give pid a factory in florida (adjacent to the gulf).
     s.territories['florida'].owner = pid;
     s.territories['florida'].factory = true;
     s.players[pid].ipcs = 200;
     const pr = purchase(s, pid, [{ type: 'submarine', count: 1 }]);
     expect(pr.ok, `${pr.code} ${pr.error}`).toBe(true);
     gotoMobilize(s);
-    const m = mobilize(s, pid, [{ territory: 'florida', seaZone: 'gulf', units: { submarine: 1 } }]);
+    const m = mobilize(s, pid, [{ territory: 'florida', seaZone: 'eastern_gulf', units: { submarine: 1 } }]);
     expect(m.ok, `${m.code} ${m.error}`).toBe(true);
     // Both forces are present; no combat occurs during mobilization.
-    const z = s.territories['gulf'];
+    const z = s.territories['eastern_gulf'];
     const hasSub =
       z.units.submarine === 1 ||
       (z.coexist ?? []).some((f) => f.owner === pid && f.units.submarine === 1);
@@ -399,13 +399,13 @@ describe('submergeTurn UI helper', () => {
     const s = freshGame(2, 120);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { destroyer: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 } }]).ok).toBe(true);
     gotoCombat(s);
     // No subs: no decision.
-    expect(submergeTurn(s, 'gulf')).toBe(null);
+    expect(submergeTurn(s, 'western_gulf')).toBe(null);
   });
 });
 
@@ -417,11 +417,11 @@ describe('amphibious assault from a contested sea zone (1942 2e p.15: sea battle
   function rigContestedAssault(s: GameState, pid: number, foe: number) {
     s.territories['florida'].owner = foe;
     setUnits(s, 'florida', { infantry: 2 });
-    setSea(s, 'gulf', pid, { transport: 1, destroyer: 1 });
-    s.territories['gulf'].cargo = [
+    setSea(s, 'eastern_gulf', pid, { transport: 1, destroyer: 1 });
+    s.territories['eastern_gulf'].cargo = [
       { owner: pid, units: { ...emptyUnits(), infantry: 2 } },
     ];
-    s.territories['gulf'].coexist = [
+    s.territories['eastern_gulf'].coexist = [
       { owner: foe, units: { ...emptyUnits(), submarine: 1 } },
     ];
   }
@@ -434,13 +434,13 @@ describe('amphibious assault from a contested sea zone (1942 2e p.15: sea battle
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
       // The destroyer turns on the lurking sub (same-zone attack)...
-      { from: 'gulf', to: 'gulf', units: { destroyer: 1 }, attack: true },
+      { from: 'eastern_gulf', to: 'eastern_gulf', units: { destroyer: 1 }, attack: true },
       // ...while the transport declares the assault on florida.
-      { from: 'gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
+      { from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
     ]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
     // The sea battle is open in the gulf; the florida landing stays pending...
-    expect(s.battles.some((b) => b.territoryId === 'gulf' && !b.over)).toBe(true);
+    expect(s.battles.some((b) => b.territoryId === 'eastern_gulf' && !b.over)).toBe(true);
     const land = s.battles.find((b) => b.territoryId === 'florida' && !b.over)!;
     expect(land).toBeDefined();
     expect(land.pendingDisembark).toBeDefined();
@@ -452,8 +452,8 @@ describe('amphibious assault from a contested sea zone (1942 2e p.15: sea battle
     expect(blocked.ok).toBe(false);
     expect(blocked.code).toBe('sea_battle_pending');
     // Win the sea battle: the destroyer cancels the sub's surprise strike (p.29).
-    resolveBattleAuto(s, pid, 'gulf');
-    expect(s.battles.some((b) => b.territoryId === 'gulf' && !b.over)).toBe(false);
+    resolveBattleAuto(s, pid, 'eastern_gulf');
+    expect(s.battles.some((b) => b.territoryId === 'eastern_gulf' && !b.over)).toBe(false);
     // The cargo comes ashore into the florida battle.
     const landed = s.battles.find((b) => b.territoryId === 'florida' && !b.over)!;
     expect(landed).toBeDefined();
@@ -468,17 +468,17 @@ describe('amphibious assault from a contested sea zone (1942 2e p.15: sea battle
     const foe = 1 - pid;
     s.territories['florida'].owner = foe;
     setUnits(s, 'florida', { infantry: 2 });
-    setSea(s, 'gulf', foe, { submarine: 1 });
-    setSea(s, 'pacific', pid, { transport: 1 });
-    s.territories['pacific'].cargo = [
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
+    s.territories['california_coast'].cargo = [
       { owner: pid, units: { ...emptyUnits(), infantry: 2 } },
     ];
     gotoCombatMove(s);
     // 1942 2e p.30: transports may not attack a hostile sea zone unescorted,
     // so the assault cannot be declared from these waters at all.
     const r = combatMove(s, pid, [
-      { from: 'pacific', to: 'gulf', units: { transport: 1 } },
-      { from: 'gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
+      { from: 'california_coast', to: 'western_gulf', units: { transport: 1 } },
+      { from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
     ]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('no_escort');

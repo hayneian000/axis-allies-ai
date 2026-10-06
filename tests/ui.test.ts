@@ -53,29 +53,29 @@ beforeAll(async () => {
 });
 
 describe('browser UI playthrough', () => {
-  it('starts a game and renders 29 territories (26 land + 3 sea)', () => {
+  it('starts a game and renders 33 territories (26 land + 7 sea)', () => {
     document.querySelector<HTMLButtonElement>('.dogtag[data-players="2"]')!.click();
     (el<HTMLInputElement>('seed').value = '7');
     clickButton('CommenceWargame');
     expect(el('game').hidden).toBe(false);
     expect(banner()).toContain('purchase');
-    // 29 territory groups: 26 land + 3 sea zones (great_lakes has an extra
+    // 33 territory groups: 26 land + 7 sea zones (great_lakes has an extra
     // UP polygon, so 30 .terr polygons total).
-    expect(document.querySelectorAll('#map g.tgroup[data-terr]')).toHaveLength(29);
+    expect(document.querySelectorAll('#map g.tgroup[data-terr]')).toHaveLength(33);
     expect(document.querySelectorAll('#roster .p')).toHaveLength(2);
   });
 
   it('renders Tier 1 map chrome: groups, badges, icons, zoom controls', () => {
-    // 29 tiles: 26 land + 3 sea zones (+ 29 label groups in a separate layer).
+    // 33 tiles: 26 land + 7 sea zones (+ 33 label groups in a separate layer).
     const tiles = document.querySelectorAll('#map g.tgroup[data-terr]');
-    expect(tiles).toHaveLength(29);
+    expect(tiles).toHaveLength(33);
     for (const g of tiles) {
       const title = g.querySelector('title')?.textContent ?? '';
       const isSea = g.querySelector('polygon.sea') !== null;
       // Land tiles show IPC values; sea zones are labeled as sea zones.
       expect(title).toMatch(isSea ? /sea zone/ : /IPC \d/);
     }
-    expect(document.querySelectorAll('#map g.tlabels[data-terr]')).toHaveLength(29);
+    expect(document.querySelectorAll('#map g.tlabels[data-terr]')).toHaveLength(33);
     // IPC badges are land-only (sea zones are worth 0).
     expect(document.querySelectorAll('#map .ipcbadge')).toHaveLength(26);
     expect(document.querySelectorAll('#map .uicon').length).toBeGreaterThan(0);

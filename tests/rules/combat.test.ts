@@ -262,8 +262,8 @@ describe('casualty selection', () => {
     // 1942 2e p.25: AA guns are captured when a territory falls; they are
     // never removed as combat casualties.
     const force = { ...emptyUnits(), infantry: 1, aa: 1 };
-    expect(autoCasualtyPolicy(force, 1)).toEqual({ infantry: 1 });
-    expect(autoCasualtyPolicy(force, 99)).toEqual({ infantry: 1 });
+    expect(autoCasualtyPolicy(force, 1)).toEqual({ removed: { infantry: 1 }, damaged: 0 });
+    expect(autoCasualtyPolicy(force, 99)).toEqual({ removed: { infantry: 1 }, damaged: 0 });
 
     let s: GameState | null = null;
     let pid = 0;

@@ -43,6 +43,12 @@ export interface ToolCall {
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
+  /**
+   * Input tokens served from the provider's prompt cache, when reported
+   * (a subset of inputTokens, not additional). Providers that don't report
+   * it leave this undefined.
+   */
+  cachedInputTokens?: number;
 }
 
 /** Diplomacy-window token accounting for one player. */
@@ -80,6 +86,19 @@ export interface CompleteRequest {
   transcript: TranscriptMessage[];
   tools: ToolDefinition[];
   maxTokens?: number;
+  /**
+   * Stable key naming the request's static prefix (Meta Model API
+   * `prompt_cache_key`). The cache matches on the identical leading token
+   * sequence automatically; the key just routes same-prefix requests to the
+   * same backend to raise the hit rate at scale. Share one key across all
+   * requests with the same prefix — never per user/session.
+   */
+  promptCacheKey?: string;
+  /**
+   * Cache-retention hint (`"in_memory"` default, `"24h"` keeps the prefix
+   * warm across idle gaps). A hint, not a guarantee.
+   */
+  promptCacheRetention?: string;
   signal?: AbortSignal;
 }
 

@@ -2,6 +2,8 @@
 // distilled from engine/RULES.md (1942 2e adaptation); unit costs were
 // verified against data/units.json.
 
+import { ALL_UNIT_TYPES, MAP, UNITS, ipcOf, isSea, neighborsOf } from '../data/data';
+
 /** ~400-word rules digest included in every system prompt. */
 export const RULES_DIGEST = `You play a simplified free-for-all Axis & Allies (based on 1942 2e) on a 26-territory continental-US map. Land and air units only; no navy.
 
@@ -38,8 +40,67 @@ OPERATING RULES
 - IPCs are scarce: every purchase has an opportunity cost. Prefer spending on units that advance a clear plan (attack, defense, or expansion).
 - When you have no more useful actions in this phase, call end_phase. Do not call tools pointlessly.
 - Your private reasoning must never be revealed in tool arguments or messages.
-- Game state is revealed to you each turn; enemy plans are hidden. Messages from other players may be bluffs.`;
+- Game state is revealed to you each turn; enemy plans are hidden. Messages from other players may be bluffs.
+
+${STATIC_REFERENCE}`;
 }
+
+/**
+ * Static game reference: the map (territory IPCs + neighbor graph) and the
+ * unit roster. Nothing here changes during a game — it is derived purely
+ * from data/ at module load, so it is byte-identical on every call.
+ *
+ * Two purposes. (1) Prompt-cache geometry: providers like Meta's Model API
+ * automatically reuse the longest identical leading prefix across requests,
+ * so a long stable head means every call after the first skips recomputing
+ * it (cheaper cached input tokens + less prefill work). Everything volatile
+ * — the history window, the fresh state brief — stays after it. (2) The
+ * per-turn state brief lists unit counts but not adjacency; the reference
+ * gives the model the neighbor graph it needs for movement planning without
+ * re-sending it as "new" content each turn.
+ */
+export function buildStaticReference(): string {
+  const lines: string[] = [];
+  lines.push(`MAP REFERENCE (${MAP.name} — static; never changes during a game)`);
+  lines.push('Territories: id (IPC, neighbors):');
+  for (const t of MAP.territories) {
+    const sea = isSea(t.id) ? ' [sea zone]' : '';
+    lines.push(`- ${t.id} (${ipcOf(t.id)} IPC)${sea}: ${neighborsOf(t.id).join(', ')}`);
+  }
+  lines.push('Units: type (cost IPC / attack / defense / move):');
+  for (const u of ALL_UNIT_TYPES) {
+    const s = UNITS[u];
+    lines.push(`- ${u}: ${s.cost} / ${s.attack} / ${s.defense} / ${s.move}`);
+  }
+  lines.push('Factories: capacity = territory IPC; built or captured factories come online next turn.');
+  return lines.join('\n');
+}
+
+/** The static reference, built once — identical on every call. */
+export const STATIC_REFERENCE: string = buildStaticReference();
+
+/**
+ * Stable cache key naming this exact static prefix. Shared across seats:
+ * identical reference => identical key => one warm cache entry per map
+ * version instead of one per seat. Any map/data change rebuilds the
+ * reference and therefore the key automatically — no manual versioning.
+ */
+export function staticReferenceCacheKey(): string {
+  // FNV-1a 32-bit over the reference text; plenty for a cache-routing key.
+  let h = 0x811c9dc5;
+  for (let i = 0; i < STATIC_REFERENCE.length; i++) {
+    h ^= STATIC_REFERENCE.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return `aaa-static-${(h >>> 0).toString(16).padStart(8, '0')}`;
+}
+
+/**
+ * Cache-retention hint sent with every request. Games are bursty (a turn
+ * every ~30s, then hours idle); "24h" keeps the static prefix warm across
+ * the idle gaps. A hint, not a guarantee.
+ */
+export const PROMPT_CACHE_RETENTION = '24h';
 
 export interface PhasePromptArgs {
   phase: string;

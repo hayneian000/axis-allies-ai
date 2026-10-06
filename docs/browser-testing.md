@@ -110,3 +110,64 @@ Not wired up yet. The natural shape: a GitHub Actions job that installs
 Playwright's Chromium, runs `npm run screenshots`, and uploads the PNGs as a
 workflow artifact on every PR. The jsdom suite stays the fast blocking check;
 the screenshots stay human-reviewed.
+
+## Probing a branch against the live dev server
+
+The screenshot harness tests the **built** app from `file://`. When you need
+to verify the **branch you're actually on** — a PR's real code, clicked
+through by a real browser — use the live probe instead:
+
+```bash
+git checkout <branch>          # or a fresh clone/tarball of the exact ref
+npm ci                         # install deps for this checkout
+npm run dev -- --port 5173 &   # start the dev server (note the port)
+node scripts/probe-branch.mjs --port 5173 --out /tmp/shots
+```
+
+`scripts/probe-branch.mjs` launches headless Chromium (via `playwright-core`),
+skips the intro cinematic, starts a game (defaults: 2 players, seed 7), clicks
+a territory, advances one phase, and writes a screenshot per stage:
+
+1. `01-cinematic.png` — intro cinematic
+2. `02-setup.png` — setup screen
+3. `03-board.png` — board in the purchase phase
+4. `04-territory.png` — territory inspector after clicking a tile
+5. `05-combatmove.png` — combat-move phase after ending purchase
+
+It prints a JSON summary (`ok`, territory count, console errors, page
+errors) and exits non-zero if the game screen never appears, stylesheets
+fail to parse, or any page error fires. Options: `--port`, `--out`,
+`--seed`, `--players`. `probe-shots/` is gitignored.
+
+### Why not just point the browser at localhost?
+
+Two environment quirks, both handled inside the script — know them so you
+recognize the symptoms if they ever resurface:
+
+1. **Chromium blocks direct localhost navigation** in automation contexts
+   (`net::ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS`, a Local Network
+   Access check). The script re-fetches every localhost request server-side
+   via Node's `http` module and fulfills it through Playwright's routing.
+2. **The original request headers must be forwarded.** Vite's dev server keys
+   CSS-vs-JS-module responses off the `Accept` header; without it,
+   stylesheets come back as JS modules that parse to zero rules. Symptom:
+   every `var(--…)` fill silently falls back to black (unit chits render as
+   solid black boxes). The script asserts `cssRules.length > 0` on every
+   loaded stylesheet to catch this.
+
+The vite HMR websocket is also blocked by the same check — harmless (no
+live reload; the app itself loads and runs fine). A single
+`ERR_EMPTY_RESPONSE` for the favicon is likewise noise, not a failure.
+
+### Rules for a trustworthy probe
+
+- **Test the exact ref under review.** A stale local snapshot will happily
+  pass or fail on code that isn't what's being reviewed (this once produced
+  a phantom "missing `./driverBridge`" build failure — the file existed on
+  `main`; the snapshot was just old). Fresh clone, fresh tarball, or a
+  `git fetch` + exact checkout: pick one, never a dusty directory.
+- **Screenshots are evidence, not decoration.** The probe's PNGs go in the
+  PR or alongside the change being reviewed. Never present a mockup or an
+  approximation as a probe capture.
+- **The jsdom suite is still the gate.** The probe is slow (~30s) and
+  human-judged; `npm test` stays the fast, blocking check.

@@ -1,13 +1,10 @@
 # AI Axis & Allies — America
 
-Hot-seat Axis & Allies–style strategy game on a simplified **26-territory map of
-the continental United States**. 2–4 player free-for-all, no backend — game
-state lives in the browser with JSON export/import.
-
-This is **Phase 1** of a larger project: in Phase 2, LLM agents will replace some
-or all human players and negotiate with each other via chat. The engine and UI
-are built so Phase 2 is an additive layer, not a rewrite — the action API the
-UI drives is the same tool set agents will use.
+Hot-seat **and** AI-driven Axis & Allies–style strategy on a **33-territory map
+of the continental United States** (26 land territories + 7 coastal sea zones).
+2–4 player free-for-all, no backend — game state lives in the browser with
+JSON export/import. Human players share the keyboard; AI seats are LLM agents
+that play through the same action API, using your own provider API key (BYOK).
 
 ![UI overview — setup, board, purchase modal, move dialog](docs/screenshots/ui-polish-sheet1.svg)
 
@@ -30,6 +27,13 @@ npm run build     # type-checks (tsc --noEmit), then builds to dist/
 npm run preview   # serves dist/ at http://localhost:4173
 ```
 
+**Hot-seat game:** menu → New game → assign seats, pick a scenario, play.
+
+**AI game:** menu → New AI game → set each seat to Human or AI, pick a
+provider/model per AI seat and paste its API key. Keys stay in the browser's
+local storage — the game calls the provider directly; there is no server in
+the middle.
+
 ## Playing the game
 
 Each turn runs the same six phases — the stepper at the top tracks where you are:
@@ -48,25 +52,48 @@ Each turn runs the same six phases — the stepper at the top tracks where you a
 6. **Income** — collect IPCs for territories you hold; capturing a capital
    transfers the victim's bank to you.
 
-**Winning:** hold every capital in play. 20-round cap — then highest income
-wins (tie: bank). Lose your capital and you get no purchases and no income
-until you take it back.
+**Navy:** seven coastal sea zones ring the continent. The full 1942 roster is
+in play — transports (carry 2 ground units), submarines, destroyers, cruisers,
+carriers, and battleships — with amphibious assaults, submarine surprise
+strikes, and carrier/fighter logistics per the rulebook.
+
+**Winning:** hold a majority of the capitals simultaneously (3 of the 4 on
+this map). 20-round cap — then highest income wins (tie: bank). Lose your
+capital and you get no purchases and no income until you take it back.
 
 Click any territory to inspect it: owner, IPC value, units, factory status.
+
+## AI players
+
+Each AI seat is an LLM agent that reasons once per phase and returns tool
+calls; the driver validates and executes them against the engine, exactly like
+a human's clicks. The spectator panel shows every seat's rationale, tool
+calls, and token usage live — rationale streams in as it generates — with
+pause/resume/stop and per-seat error cards (retry, edit key, skip, or pass).
+
+- **Providers (BYOK):** Anthropic, OpenAI, and Meta's Model API (Muse Spark).
+- **Diplomacy:** every round opens a negotiation window — freeform chat
+  between seats under per-seat token budgets, dumped to JSON at game end.
+- **Performance:** turns stream over SSE, agent history is windowed (the
+  prompt already carries a full state snapshot), output is token-capped, and
+  the static prompt prefix is laid out for provider-side prefix caching.
+
+See [`docs/phase2-agents.md`](docs/phase2-agents.md) for the agent system and
+[`docs/m3-diplomacy.md`](docs/m3-diplomacy.md) for the diplomacy spec.
 
 ## Project structure
 
 | Path        | What it is |
 |-------------|------------|
-| `engine/`   | Pure headless rules engine (`engine.ts`, `types.ts`). No DOM, no I/O. Every state change goes through one validated action function; failures return `{ ok: false, code, error }` and never mutate state. |
+| `engine/`   | Pure headless rules engine — split into focused modules (`units`, `core`, `naval`, `combat`, `actions`, `meta`, plus an `engine.ts` barrel that preserves the public API). No DOM, no I/O. Every state change goes through one validated action function; failures return `{ ok: false, code, error }` and never mutate state. |
+| `agents/`   | LLM player system: `agent.ts` (per-seat reasoning + history), `driver.ts` (turn loop), `diplomacy.ts`, `prompts.ts`, `providers/` (Anthropic / OpenAI / Meta adapters), `lobby.ts`, `keys.ts`. |
 | `data/`     | All tunable content as JSON: `map.json` (territories, IPC, adjacency, SVG layout), `units.json` (cost/attack/defense/move), `scenario-2p/3p/4p.json` (starting setups), plus the `data.ts` loader. Balance changes are JSON edits. |
-| `ui/`       | Plain DOM + SVG front end (`index.html`, `main.ts`, `style.css`) driving the engine through the action API. |
-| `tests/`    | Per-phase unit tests, headless simulation bot, jsdom UI playthrough. |
-| `scripts/`  | Dev tooling — currently the real-browser screenshot harness. |
+| `ui/`       | Plain DOM + SVG front end (`index.html`, `main.ts`, `style.css`) driving the engine through the action API; `aiGame.ts` runs AI games in the browser. |
+| `tests/`    | Engine, rules, agent, and UI tests — see Testing below. |
+| `scripts/`  | Dev tooling: `build-map/` (the map pipeline — derives `map.json` geometry from real US boundary data), `probe-branch.mjs` (`npm run probe`), the screenshot harness. |
 | `docs/`     | Guides. Screenshots from UI reviews live in `docs/screenshots/`. |
 
-See [`docs/architecture.md`](docs/architecture.md) for the action API and exactly how a
-Phase 2 agent drives a turn.
+See [`docs/architecture.md`](docs/architecture.md) for the action API and exactly how an agent drives a turn.
 
 ## Documentation
 
@@ -75,11 +102,15 @@ for the index and how to add one.
 
 | Doc | Covers |
 |-----|--------|
-| [`docs/architecture.md`](docs/architecture.md) | Engine design, game state, the action API (also the Phase 2 tool set) |
+| [`docs/architecture.md`](docs/architecture.md) | Engine design, game state, the action API (also the agent tool set) |
 | [`docs/testing.md`](docs/testing.md) | Test suite guide: per-phase suites, the sim bot, conventions |
-| [`docs/browser-testing.md`](docs/browser-testing.md) | Real-browser screenshot harness: setup, the deterministic playthrough, the `single.html` trick, adding scenarios |
+| [`docs/browser-testing.md`](docs/browser-testing.md) | Real-browser testing: the `npm run probe` script, the screenshot harness, the deterministic playthrough |
 | [`docs/ui-guide.md`](docs/ui-guide.md) | UI conventions: design tokens, DOM contract, theming, review workflow |
-| [`docs/phase2-agents.md`](docs/phase2-agents.md) | Phase 2 sketch: how LLM agents will drive turns (roadmap, not spec) |
+| [`docs/style-guide.md`](docs/style-guide.md) | Visual direction: war room, not board-game café |
+| [`docs/phase2-agents.md`](docs/phase2-agents.md) | The LLM agent system: providers, prompts, driver, streaming, performance |
+| [`docs/m3-diplomacy.md`](docs/m3-diplomacy.md) | Diplomacy spec: freeform talk, token budgets, JSON dump |
+| [`docs/rules-test-plan.md`](docs/rules-test-plan.md) | The rulebook-cited test plan for `tests/rules/` |
+| [`docs/muse-workflow.md`](docs/muse-workflow.md) | Muse-specific operating notes for this repo |
 | [`docs/history/`](docs/history/) | Superseded specs — currently the original Phase 1 build prompt |
 
 ## Testing
@@ -87,47 +118,52 @@ for the index and how to add one.
 ### Unit / integration — `npm test`
 
 ```bash
-npm test                          # full suite (engine, data, simulation, UI)
+npm test                                # full suite (engine, rules, agents, data, simulation, UI)
 npx vitest run tests/combat.test.ts     # one file at a time, e.g.:
-npx vitest run tests/ui.test.ts        # jsdom UI playthrough
-npm run simulate                  # headless bot games played to an ending
+npx vitest run tests/ui.test.ts         # jsdom UI playthrough
+npm run simulate                        # headless bot games played to an ending
 ```
 
-| Test file | Covers |
-|-----------|--------|
+| Tests | Covers |
+|-------|--------|
+| `tests/rules/` | Rulebook-cited suites (setup, purchase, combat, movement, income, victory, FFA, unit specifics), built from [`docs/rules-test-plan.md`](docs/rules-test-plan.md) |
+| `tests/agents/` | Agent system: history windowing, streaming, prompt caching, providers, diplomacy, driver, tool results |
 | `purchase` / `movement` / `combat` / `economy` / `edge` | One phase group each, incl. boundary and invalid inputs |
-| `map` | Map + scenario data validation (coverage, contiguous holdings, factory on every capital) |
+| `navy-phase1/2/3`, `navy-e2e` | Sea zones, transports, submarines, carriers, amphibious assaults |
+| `map` | Map + scenario data validation (33 territories, IPC totals, factory on every capital, display-name metadata) |
 | `simulation` | Headless random-policy bot plays seeded 2/3/4-player games to `gameover`, asserting invariants every turn |
 | `ui` | jsdom playthrough: start game, buy, declare an attack through the SVG map, fight it in the combat panel, finish the turn, chat |
 
-### Browser testing — `npm run screenshots`
-
-Drives the real UI in headless Chromium through a deterministic scripted
-playthrough (2 players, seed 7) and captures PNGs of all 8 major screens:
-setup, board, purchase modal, move dialog, staged moves, battle dialog, chat,
-mobilize. Full setup documented in
-[`docs/browser-testing.md`](docs/browser-testing.md).
+### Browser testing — `npm run probe`
 
 ```bash
-npm run screenshots            # needs a Chromium; set CHROME_PATH if not found
+npm run probe                # boots the app in headless Chromium and drives a scripted playthrough
+npm run screenshots          # captures PNGs of all major screens (needs a Chromium; set CHROME_PATH if not found)
 ```
+
+Full setup documented in [`docs/browser-testing.md`](docs/browser-testing.md).
 
 ## Rules notes
 
+Canonical rules: Axis & Allies 1942 Second Edition (see `engine/RULES.md` for
+the rulebook links). Project adaptations: free-for-all instead of teams, US
+map instead of the world map.
+
 - Turn: purchase → combat move → combat → non-combat → mobilize → collect income.
+- Victory: hold a majority of capitals simultaneously (3 of 4). 20-round cap, then highest income wins (tie: bank).
 - Capturing a capital transfers the victim's bank. No capital = no purchases, no income.
 - Aircraft must end non-combat on ground held since turn start or they are lost.
+- AA guns move **only** during non-combat (never in combat movement).
 - New or captured factories produce from next turn.
-- The IPC table in the spec sums to **61**, not 64 — values kept as specified.
+- Neutral territories are defended by garrisons (default 3 infantry) that must be defeated in combat before capture.
+- The IPC table sums to **61** — values kept as specified.
 - Four Corners point-contacts (CO–AZ, NM–UT) are not adjacency.
 
 ## Roadmap
 
-- **Phase 2:** LLM agents drive turns through the action API
-  (`summarizeState` for prompts, `sendMessage`/`chatLog` for negotiation,
-  `autoCasualties` to skip casualty choice). See [`docs/architecture.md`](docs/architecture.md)
-  ("How a Phase 2 agent drives one turn").
-- **Later:** tournament harness, Elo-style ratings, cost/latency tracking.
+- **Tournaments:** harness for agent-vs-agent brackets, Elo-style ratings, cost/latency tracking per seat.
+- **1942 world map:** board inventory transcribed (96 land territories, 65 sea zones); build exploring the existing map pipeline.
+- **Diplomacy analytics:** commitment extraction, alliance graphs, and reputation — explicitly deferred until the JSON dumps exist to parse.
 
 ## Troubleshooting
 
@@ -139,3 +175,6 @@ npm run screenshots            # needs a Chromium; set CHROME_PATH if not found
   build will not emit `dist/` until they pass.
 - **Blank page in dev** — check the terminal running `npm run dev` and the
   browser devtools console for errors, then file an issue with both.
+- **AI seat fails with a key error** — open the seat's error card and re-paste
+  the key. Keys live in the browser's local storage; clearing site data
+  removes them.

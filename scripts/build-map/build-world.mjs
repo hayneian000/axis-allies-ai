@@ -445,10 +445,27 @@ function simplifyRing(ring) {
 
 const projected = [];
 for (const { cfg, polys } of wrapped) {
-  // Project unsimplified first (neighbors need exact shared borders).
   const pxPolys = polys.map((p) => p.map(projectRing));
+  // Dissolve adjacent pieces into unified outlines so no internal borders
+  // render between merged countries. Runs AFTER neighbor detection (above),
+  // which needs the original shared-border vertices — vertex rewriting here
+  // is harmless. Truly disjoint pieces (islands) stay separate.
+  let dissolvedGeoms;
+  if (pxPolys.length === 1) {
+    dissolvedGeoms = [pxPolys[0]];
+  } else {
+    const feats = pxPolys.map((p) => ({
+      type: 'Feature', properties: {},
+      geometry: { type: 'Polygon', coordinates: p },
+    }));
+    const dissolved = union(featureCollection(feats));
+    if (!dissolved) throw new Error(`${cfg.id}: dissolve failed`);
+    dissolvedGeoms = dissolved.geometry.type === 'Polygon'
+      ? [dissolved.geometry.coordinates]
+      : dissolved.geometry.coordinates;
+  }
   // All significant polygons, largest first; <2% of largest dropped.
-  const withArea = pxPolys.map((p) => ({ poly: p, area: ringAreaPx(p[0]) }));
+  const withArea = dissolvedGeoms.map((p) => ({ poly: p, area: ringAreaPx(p[0]) }));
   withArea.sort((a, b) => b.area - a.area);
   const largest = withArea[0]?.area ?? 0;
   const kept = withArea.filter((x) => x.area >= largest * 0.02);

@@ -56,9 +56,9 @@ const ZONES = [
   { id: 'california_coast', name: 'California Coast',  box: [[-128, 32], [-114, 32], [-114, 42], [-128, 42]] },
   { id: 'north_atlantic',   name: 'North Atlantic',    box: [[-76, 38.5], [-63, 38.5], [-63, 47], [-76, 47]] },
   { id: 'mid_atlantic_waters', name: 'Mid-Atlantic Waters', box: [[-79, 33], [-69, 33], [-69, 38.5], [-79, 38.5]] },
-  { id: 'south_atlantic',   name: 'South Atlantic',    box: [[-84, 25], [-72, 25], [-72, 33], [-84, 33]] },
+  { id: 'south_atlantic',   name: 'South Atlantic',    box: [[-82.5, 25], [-72, 25], [-72, 33], [-82.5, 33]] },
   { id: 'western_gulf',     name: 'Western Gulf',      box: [[-99, 24], [-89, 24], [-89, 31], [-99, 31]] },
-  { id: 'eastern_gulf',     name: 'Eastern Gulf',      box: [[-89, 24], [-80, 24], [-80, 31], [-89, 31]] },
+  { id: 'eastern_gulf',     name: 'Eastern Gulf',      box: [[-89, 24], [-82.5, 24], [-82.5, 31], [-89, 31]] },
 ];
 
 const boxPoly = (box) => ({

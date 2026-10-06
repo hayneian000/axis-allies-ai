@@ -86,25 +86,26 @@ describe('fighter movement and range', () => {
   it('moves up to 4 territories in combat movement (1942 2e p.10: move 4)', () => {
     const s = freshGame(2, 44);
     const pid = s.currentPlayer;
-    // california -> gulf_south is 4 steps; rig both friendly BEFORE
+    // california -> new_england is exactly 4 steps via the sea zones (air
+    // counts each sea zone as a step); rig both friendly BEFORE
     // gotoCombatMove so ownedAtTurnStart covers the landing spot.
-    for (const t of ['california', 'gulf_south']) s.territories[t].owner = pid;
+    for (const t of ['california', 'new_england']) s.territories[t].owner = pid;
     s.territories['california'].units.fighter = 1;
     gotoCombatMove(s);
     // 4 steps out, 0 remaining: must land at the destination itself.
-    const r = combatMove(s, pid, [{ from: 'california', to: 'gulf_south', units: { fighter: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california', to: 'new_england', units: { fighter: 1 } }]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.territories['gulf_south'].units.fighter).toBe(1);
+    expect(s.territories['new_england'].units.fighter).toBe(1);
   });
 
   it('cannot move 5 territories (1942 2e p.10: move 4)', () => {
     const s = freshGame(2, 45);
     gotoCombatMove(s);
     const pid = s.currentPlayer;
-    // california -> southeast is 5 steps: beyond fighter range.
-    for (const t of ['california', 'southeast']) s.territories[t].owner = pid;
-    s.territories['california'].units.fighter = 1;
-    const r = combatMove(s, pid, [{ from: 'california', to: 'southeast', units: { fighter: 1 } }]);
+    // montana -> florida is 5 steps: beyond fighter range.
+    for (const t of ['montana', 'florida']) s.territories[t].owner = pid;
+    s.territories['montana'].units.fighter = 1;
+    const r = combatMove(s, pid, [{ from: 'montana', to: 'florida', units: { fighter: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('range');
   });

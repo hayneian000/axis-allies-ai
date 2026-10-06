@@ -53,25 +53,30 @@ beforeAll(async () => {
 });
 
 describe('browser UI playthrough', () => {
-  it('starts a game and renders 26 territories', () => {
+  it('starts a game and renders 29 territories (26 land + 3 sea)', () => {
     document.querySelector<HTMLButtonElement>('.dogtag[data-players="2"]')!.click();
     (el<HTMLInputElement>('seed').value = '7');
     clickButton('CommenceWargame');
     expect(el('game').hidden).toBe(false);
     expect(banner()).toContain('purchase');
-    // 26 territory groups (great_lakes has an extra UP polygon, so 27 .terr polygons total).
-    expect(document.querySelectorAll('#map g.tgroup[data-terr]')).toHaveLength(26);
+    // 29 territory groups: 26 land + 3 sea zones (great_lakes has an extra
+    // UP polygon, so 30 .terr polygons total).
+    expect(document.querySelectorAll('#map g.tgroup[data-terr]')).toHaveLength(29);
     expect(document.querySelectorAll('#roster .p')).toHaveLength(2);
   });
 
   it('renders Tier 1 map chrome: groups, badges, icons, zoom controls', () => {
-    // 26 land tiles (+ 26 label groups in a separate layer above water).
+    // 29 tiles: 26 land + 3 sea zones (+ 29 label groups in a separate layer).
     const tiles = document.querySelectorAll('#map g.tgroup[data-terr]');
-    expect(tiles).toHaveLength(26);
+    expect(tiles).toHaveLength(29);
     for (const g of tiles) {
-      expect(g.querySelector('title')?.textContent).toMatch(/IPC \d/);
+      const title = g.querySelector('title')?.textContent ?? '';
+      const isSea = g.querySelector('polygon.sea') !== null;
+      // Land tiles show IPC values; sea zones are labeled as sea zones.
+      expect(title).toMatch(isSea ? /sea zone/ : /IPC \d/);
     }
-    expect(document.querySelectorAll('#map g.tlabels[data-terr]')).toHaveLength(26);
+    expect(document.querySelectorAll('#map g.tlabels[data-terr]')).toHaveLength(29);
+    // IPC badges are land-only (sea zones are worth 0).
     expect(document.querySelectorAll('#map .ipcbadge')).toHaveLength(26);
     expect(document.querySelectorAll('#map .uicon').length).toBeGreaterThan(0);
     // 2p capitals (california, new_york) start with star badges + factories.

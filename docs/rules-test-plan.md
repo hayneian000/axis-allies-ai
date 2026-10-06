@@ -171,7 +171,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] Attacker cannot retreat before first round completes
 - [ ] Retreat to adjacent friendly territory (not hostile, not newly captured)
 - [ ] All attacking units retreat together (or can split? — 1942 2e: all retreat to same territory)
-- [ ] Cannot retreat from amphibious assault (N/A — no navy, but test the guard)
+- [ ] Cannot retreat from amphibious assault (seaborne units cannot retreat — RULES.md)
 - [ ] Defender cannot retreat
 - [ ] Retreat with air units: air can retreat to different landing spot?
 

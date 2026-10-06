@@ -66,24 +66,24 @@ describe('naval movement (1942 2e p.27)', () => {
     // 1942 2e p.27: all sea units move 2 sea zones.
     const s = freshGame(2, 301);
     const pid = s.currentPlayer;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', pid, { destroyer: 1 });
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'atlantic', units: { destroyer: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'western_gulf', to: 'south_atlantic', units: { destroyer: 1 } }]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.territories['atlantic'].units.destroyer).toBe(1);
-    expect(s.territories['pacific'].units.destroyer).toBe(0);
+    expect(s.territories['south_atlantic'].units.destroyer).toBe(1);
+    expect(s.territories['western_gulf'].units.destroyer).toBe(0);
     // A fleet entering open waters claims the zone; the emptied zone is open again.
-    expect(s.territories['atlantic'].owner).toBe(pid);
-    expect(s.territories['pacific'].owner).toBe(null);
+    expect(s.territories['south_atlantic'].owner).toBe(pid);
+    expect(s.territories['western_gulf'].owner).toBe(null);
   });
 
   it('ships cannot sail directly into a land territory', () => {
     const s = freshGame(2, 302);
     const pid = s.currentPlayer;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
     s.territories['california'].owner = pid;
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'california', units: { destroyer: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'california', units: { destroyer: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('disembark_flag');
   });
@@ -93,10 +93,10 @@ describe('naval movement (1942 2e p.27)', () => {
     const s = freshGame(2, 303);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'atlantic', units: { destroyer: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'north_atlantic', units: { destroyer: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('range');
   });
@@ -107,12 +107,12 @@ describe('naval movement (1942 2e p.27)', () => {
     const s = freshGame(2, 304);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { transport: 1, submarine: 1 });
+    setSea(s, 'western_gulf', pid, { destroyer: 1 });
+    setSea(s, 'eastern_gulf', foe, { transport: 1, submarine: 1 });
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'atlantic', units: { destroyer: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'western_gulf', to: 'south_atlantic', units: { destroyer: 1 } }]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.territories['atlantic'].units.destroyer).toBe(1);
+    expect(s.territories['south_atlantic'].units.destroyer).toBe(1);
   });
 
   it('transports may not attack a hostile sea zone unescorted', () => {
@@ -120,10 +120,10 @@ describe('naval movement (1942 2e p.27)', () => {
     const s = freshGame(2, 305);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { transport: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { transport: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { transport: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('no_escort');
   });
@@ -132,25 +132,25 @@ describe('naval movement (1942 2e p.27)', () => {
     const s = freshGame(2, 306);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { transport: 1, destroyer: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1, destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'pacific', to: 'gulf', units: { transport: 1, destroyer: 1 } },
+      { from: 'california_coast', to: 'western_gulf', units: { transport: 1, destroyer: 1 } },
     ]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(openBattles(s).some((b) => b.territoryId === 'gulf')).toBe(true);
+    expect(openBattles(s).some((b) => b.territoryId === 'western_gulf')).toBe(true);
   });
 
   it('ships reposition between friendly sea zones in non-combat', () => {
     const s = freshGame(2, 307);
     const pid = s.currentPlayer;
-    setSea(s, 'pacific', pid, { cruiser: 1 });
+    setSea(s, 'california_coast', pid, { cruiser: 1 });
     gotoCombatMove(s);
     gotoNonCombat(s);
-    const r = nonCombatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { cruiser: 1 } }]);
+    const r = nonCombatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { cruiser: 1 } }]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(s.territories['gulf'].units.cruiser).toBe(1);
+    expect(s.territories['western_gulf'].units.cruiser).toBe(1);
   });
 });
 
@@ -161,14 +161,14 @@ describe('transport loading (1942 2e pp.13, 30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 2 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'california', to: 'pacific', units: { infantry: 2 }, embark: true },
+      { from: 'california', to: 'california_coast', units: { infantry: 2 }, embark: true },
     ]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
     expect(s.territories['california'].units.infantry).toBe(0);
-    expect(cargoN(s, 'pacific', pid, 'infantry')).toBe(2);
+    expect(cargoN(s, 'california_coast', pid, 'infantry')).toBe(2);
   });
 
   it('loads one infantry plus one tank', () => {
@@ -176,14 +176,14 @@ describe('transport loading (1942 2e pp.13, 30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 1, tank: 1 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'california', to: 'pacific', units: { infantry: 1, tank: 1 }, embark: true },
+      { from: 'california', to: 'california_coast', units: { infantry: 1, tank: 1 }, embark: true },
     ]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(cargoN(s, 'pacific', pid, 'infantry')).toBe(1);
-    expect(cargoN(s, 'pacific', pid, 'tank')).toBe(1);
+    expect(cargoN(s, 'california_coast', pid, 'infantry')).toBe(1);
+    expect(cargoN(s, 'california_coast', pid, 'tank')).toBe(1);
   });
 
   it('cannot overload a transport', () => {
@@ -191,18 +191,18 @@ describe('transport loading (1942 2e pp.13, 30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 1, tank: 2 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
     // Two non-infantry exceed one transport's capacity.
     const r = combatMove(s, pid, [
-      { from: 'california', to: 'pacific', units: { tank: 2 }, embark: true },
+      { from: 'california', to: 'california_coast', units: { tank: 2 }, embark: true },
     ]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('no_capacity');
     // Three infantry exceed the two-unit cap too.
     setUnits(s, 'california', { infantry: 3 });
     const r2 = combatMove(s, pid, [
-      { from: 'california', to: 'pacific', units: { infantry: 3 }, embark: true },
+      { from: 'california', to: 'california_coast', units: { infantry: 3 }, embark: true },
     ]);
     expect(r2.ok).toBe(false);
     expect(r2.code).toBe('no_capacity');
@@ -213,10 +213,10 @@ describe('transport loading (1942 2e pp.13, 30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 1 });
-    setSea(s, 'pacific', pid, {});
+    setSea(s, 'california_coast', pid, {});
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'california', to: 'pacific', units: { infantry: 1 }, embark: true },
+      { from: 'california', to: 'california_coast', units: { infantry: 1 }, embark: true },
     ]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('no_transport');
@@ -229,10 +229,10 @@ describe('transport loading (1942 2e pp.13, 30)', () => {
     const foe = 1 - pid;
     s.territories['florida'].owner = pid;
     setUnits(s, 'florida', { infantry: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1, transport: 1 });
+    setSea(s, 'eastern_gulf', foe, { destroyer: 1, transport: 1 });
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'florida', to: 'gulf', units: { infantry: 1 }, embark: true },
+      { from: 'florida', to: 'eastern_gulf', units: { infantry: 1 }, embark: true },
     ]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('hostile_waters');
@@ -244,10 +244,10 @@ describe('transport loading (1942 2e pp.13, 30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { aa: 1 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'california', to: 'pacific', units: { aa: 1 }, embark: true },
+      { from: 'california', to: 'california_coast', units: { aa: 1 }, embark: true },
     ]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('aa_no_attack');
@@ -258,9 +258,9 @@ describe('transport loading (1942 2e pp.13, 30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 1 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
-    const r = combatMove(s, pid, [{ from: 'california', to: 'pacific', units: { infantry: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california', to: 'california_coast', units: { infantry: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('embark_flag');
   });
@@ -270,15 +270,15 @@ describe('transport loading (1942 2e pp.13, 30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 2 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'california', to: 'pacific', units: { infantry: 2 }, embark: true }]).ok,
+      combatMove(s, pid, [{ from: 'california', to: 'california_coast', units: { infantry: 2 }, embark: true }]).ok,
     ).toBe(true);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { transport: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { transport: 1 } }]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-    expect(cargoN(s, 'gulf', pid, 'infantry')).toBe(2);
-    expect(cargoN(s, 'pacific', pid, 'infantry')).toBe(0);
+    expect(cargoN(s, 'western_gulf', pid, 'infantry')).toBe(2);
+    expect(cargoN(s, 'california_coast', pid, 'infantry')).toBe(0);
   });
 });
 
@@ -289,19 +289,19 @@ describe('transport offload and bridging (1942 2e p.30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 1 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'california', to: 'pacific', units: { infantry: 1 }, embark: true }]).ok,
+      combatMove(s, pid, [{ from: 'california', to: 'california_coast', units: { infantry: 1 }, embark: true }]).ok,
     ).toBe(true);
     gotoNonCombat(s);
     const r = nonCombatMove(s, pid, [
-      { from: 'pacific', to: 'california', units: { infantry: 1 }, disembark: true },
+      { from: 'california_coast', to: 'california', units: { infantry: 1 }, disembark: true },
     ]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
     expect(s.territories['california'].units.infantry).toBe(1);
-    expect(s.territories['pacific'].units.transport).toBe(1);
-    expect(cargoN(s, 'pacific', pid, 'infantry')).toBe(0);
+    expect(s.territories['california_coast'].units.transport).toBe(1);
+    expect(cargoN(s, 'california_coast', pid, 'infantry')).toBe(0);
   });
 
   it('combat offload into friendly territory is rejected', () => {
@@ -311,13 +311,13 @@ describe('transport offload and bridging (1942 2e p.30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 1 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'california', to: 'pacific', units: { infantry: 1 }, embark: true }]).ok,
+      combatMove(s, pid, [{ from: 'california', to: 'california_coast', units: { infantry: 1 }, embark: true }]).ok,
     ).toBe(true);
     const r = combatMove(s, pid, [
-      { from: 'pacific', to: 'california', units: { infantry: 1 }, disembark: true },
+      { from: 'california_coast', to: 'california', units: { infantry: 1 }, disembark: true },
     ]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('friendly_offload');
@@ -328,12 +328,12 @@ describe('transport offload and bridging (1942 2e p.30)', () => {
     const pid = s.currentPlayer;
     s.territories['california'].owner = pid;
     setUnits(s, 'california', { infantry: 1 });
-    setSea(s, 'pacific', pid, { transport: 1 });
+    setSea(s, 'california_coast', pid, { transport: 1 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'california', to: 'pacific', units: { infantry: 1 }, embark: true }]).ok,
+      combatMove(s, pid, [{ from: 'california', to: 'california_coast', units: { infantry: 1 }, embark: true }]).ok,
     ).toBe(true);
-    const r = combatMove(s, pid, [{ from: 'pacific', to: 'california', units: { infantry: 1 } }]);
+    const r = combatMove(s, pid, [{ from: 'california_coast', to: 'california', units: { infantry: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('disembark_flag');
   });
@@ -344,8 +344,8 @@ describe('amphibious assaults (1942 2e p.15)', () => {
   function rigInvasion(s: GameState, pid: number, foe: number, escorts: Partial<UnitCounts> = {}) {
     s.territories['florida'].owner = foe;
     setUnits(s, 'florida', { infantry: 2 });
-    setSea(s, 'gulf', pid, { transport: 1, ...escorts });
-    s.territories['gulf'].cargo = [
+    setSea(s, 'eastern_gulf', pid, { transport: 1, ...escorts });
+    s.territories['eastern_gulf'].cargo = [
       { owner: pid, units: { ...emptyUnits(), infantry: 2 } },
     ];
   }
@@ -357,12 +357,12 @@ describe('amphibious assaults (1942 2e p.15)', () => {
     rigInvasion(s, pid, foe, { battleship: 1 });
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
+      { from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
     ]);
     expect(r.ok, `${r.code} ${r.error}`).toBe(true);
     const b = openBattles(s).find((x) => x.territoryId === 'florida')!;
     expect(b).toBeDefined();
-    expect(b.amphibiousFrom).toBe('gulf');
+    expect(b.amphibiousFrom).toBe('eastern_gulf');
     expect(b.seaborne).toMatchObject({ infantry: 2 });
     // One bombarding ship per offloaded land unit (p.15).
     expect(b.bombard).toEqual({ battleship: 1, cruiser: 0 });
@@ -375,7 +375,7 @@ describe('amphibious assaults (1942 2e p.15)', () => {
     rigInvasion(s, pid, foe, { battleship: 2, cruiser: 2 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'gulf', to: 'florida', units: { infantry: 2 }, disembark: true }]).ok,
+      combatMove(s, pid, [{ from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true }]).ok,
     ).toBe(true);
     const b = openBattles(s).find((x) => x.territoryId === 'florida')!;
     const ships = b.bombard!;
@@ -391,7 +391,7 @@ describe('amphibious assaults (1942 2e p.15)', () => {
     rigInvasion(s, pid, foe, { battleship: 1 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'gulf', to: 'florida', units: { infantry: 2 }, disembark: true }]).ok,
+      combatMove(s, pid, [{ from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true }]).ok,
     ).toBe(true);
     gotoCombat(s);
     const b = s.battles.find((x) => x.territoryId === 'florida')!;
@@ -428,16 +428,16 @@ describe('amphibious assaults (1942 2e p.15)', () => {
     rigInvasion(s, pid, foe, { battleship: 1 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'gulf', to: 'florida', units: { infantry: 2 }, disembark: true }]).ok,
+      combatMove(s, pid, [{ from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true }]).ok,
     ).toBe(true);
     s.battles.push({
       id: s.nextBattleId++,
-      territoryId: 'gulf',
+      territoryId: 'eastern_gulf',
       attackerId: foe,
       defenderId: pid,
       kind: 'combat',
       attack: { ...emptyUnits(), destroyer: 1 },
-      origins: ['atlantic'],
+      origins: ['north_atlantic'],
       aaFired: false,
       sbrStruck: false,
       rounds: 0,
@@ -474,7 +474,7 @@ describe('amphibious assaults (1942 2e p.15)', () => {
     rigInvasion(s, pid, foe, {});
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'gulf', to: 'florida', units: { infantry: 2 }, disembark: true }]).ok,
+      combatMove(s, pid, [{ from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true }]).ok,
     ).toBe(true);
     gotoCombat(s);
     expect(resolveCombatRound(s, pid, 'florida').ok).toBe(true);
@@ -483,7 +483,7 @@ describe('amphibious assaults (1942 2e p.15)', () => {
       // Clear casualties so retreat is legal to attempt.
       if (b.pendingAttacker > 0) expect(autoCasualties(s, pid, 'florida', 'attacker').ok).toBe(true);
       if (b.pendingDefender > 0) expect(autoCasualties(s, pid, 'florida', 'defender').ok).toBe(true);
-      const r = retreat(s, pid, 'florida', 'gulf');
+      const r = retreat(s, pid, 'florida', 'western_gulf');
       expect(r.ok).toBe(false);
       expect(r.code).toBe('bad_retreat');
     }
@@ -500,7 +500,7 @@ describe('amphibious assaults (1942 2e p.15)', () => {
     gotoCombatMove(s);
     expect(
       combatMove(s, pid, [
-        { from: 'gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
+        { from: 'eastern_gulf', to: 'florida', units: { infantry: 2 }, disembark: true },
         { from: 'gulf_south', to: 'florida', units: { tank: 1 } },
       ]).ok,
     ).toBe(true);
@@ -528,11 +528,11 @@ describe('amphibious assaults (1942 2e p.15)', () => {
     const foe = 1 - pid;
     s.territories['florida'].owner = foe;
     setUnits(s, 'florida', { infantry: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1, transport: 1 });
-    s.territories['gulf'].cargo = [{ owner: pid, units: { ...emptyUnits(), infantry: 1 } }];
+    setSea(s, 'eastern_gulf', foe, { destroyer: 1, transport: 1 });
+    s.territories['western_gulf'].cargo = [{ owner: pid, units: { ...emptyUnits(), infantry: 1 } }];
     gotoCombatMove(s);
     const r = combatMove(s, pid, [
-      { from: 'gulf', to: 'florida', units: { infantry: 1 }, disembark: true },
+      { from: 'western_gulf', to: 'florida', units: { infantry: 1 }, disembark: true },
     ]);
     expect(r.ok).toBe(false);
     // Either not_owner (zone still foe-held) or hostile_waters: both reject.
@@ -545,19 +545,19 @@ describe('sea combat (1942 2e pp.27-28)', () => {
     const s = freshGame(2, 341);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 2 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
+    setSea(s, 'california_coast', pid, { destroyer: 2 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { destroyer: 2 } }]).ok,
+      combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 2 } }]).ok,
     ).toBe(true);
     gotoCombat(s);
-    resolveBattleAuto(s, pid, 'gulf');
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    resolveBattleAuto(s, pid, 'western_gulf');
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     expect(b.over).toBe(true);
     // One side holds the zone afterwards.
-    const pidWon = b.result === 'sea_taken' && s.territories['gulf'].owner === pid;
-    const foeWon = s.territories['gulf'].owner === foe;
+    const pidWon = b.result === 'sea_taken' && s.territories['western_gulf'].owner === pid;
+    const foeWon = s.territories['western_gulf'].owner === foe;
     expect(pidWon || foeWon).toBe(true);
   });
 
@@ -565,19 +565,19 @@ describe('sea combat (1942 2e pp.27-28)', () => {
     const s = freshGame(2, 342);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 1 });
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { destroyer: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 } }]).ok).toBe(true);
     gotoCombat(s);
-    expect(resolveCombatRound(s, pid, 'gulf').ok).toBe(true);
-    const b = s.battles.find((x) => x.territoryId === 'gulf' && !x.over);
+    expect(resolveCombatRound(s, pid, 'western_gulf').ok).toBe(true);
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf' && !x.over);
     if (b) {
-      if (b.pendingAttacker > 0) expect(autoCasualties(s, pid, 'gulf', 'attacker').ok).toBe(true);
-      if (b.pendingDefender > 0) expect(autoCasualties(s, pid, 'gulf', 'defender').ok).toBe(true);
-      const r = retreat(s, pid, 'gulf', 'pacific');
+      if (b.pendingAttacker > 0) expect(autoCasualties(s, pid, 'western_gulf', 'attacker').ok).toBe(true);
+      if (b.pendingDefender > 0) expect(autoCasualties(s, pid, 'western_gulf', 'defender').ok).toBe(true);
+      const r = retreat(s, pid, 'western_gulf', 'california_coast');
       expect(r.ok, `${r.code} ${r.error}`).toBe(true);
-      expect(s.territories['pacific'].units.destroyer).toBe(1);
+      expect(s.territories['california_coast'].units.destroyer).toBe(1);
     }
   });
 
@@ -586,16 +586,16 @@ describe('sea combat (1942 2e pp.27-28)', () => {
     const s = freshGame(2, 343);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { destroyer: 1 });
-    setSea(s, 'gulf', foe, { transport: 1 });
-    s.territories['gulf'].cargo = [{ owner: foe, units: { ...emptyUnits(), infantry: 2 } }];
+    setSea(s, 'california_coast', pid, { destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { transport: 1 });
+    s.territories['western_gulf'].cargo = [{ owner: foe, units: { ...emptyUnits(), infantry: 2 } }];
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { destroyer: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { destroyer: 1 } }]).ok).toBe(true);
     gotoCombat(s);
-    resolveBattleAuto(s, pid, 'gulf');
-    expect(s.territories['gulf'].units.transport).toBe(0);
+    resolveBattleAuto(s, pid, 'western_gulf');
+    expect(s.territories['western_gulf'].units.transport).toBe(0);
     // Cargo is destroyed with its transport (p.30).
-    expect(cargoN(s, 'gulf', foe, 'infantry')).toBe(0);
+    expect(cargoN(s, 'western_gulf', foe, 'infantry')).toBe(0);
   });
 });
 
@@ -610,22 +610,22 @@ describe('battleship two-hit tracking (1942 2e p.27)', () => {
     const s = freshGame(2, 352);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { battleship: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 2 });
+    setSea(s, 'california_coast', pid, { battleship: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 2 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { battleship: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { battleship: 1 } }]).ok).toBe(true);
     gotoCombat(s);
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     // Force one attacker hit through the casualty flow.
     b.pendingAttacker = 1;
     b.attackerResolved = false;
-    expect(autoCasualties(s, pid, 'gulf', 'attacker').ok).toBe(true);
+    expect(autoCasualties(s, pid, 'western_gulf', 'attacker').ok).toBe(true);
     expect(b.attack.battleship).toBe(1);
     expect(b.damagedAttackBB).toBe(1);
     // A second hit in the same combat sinks her.
     b.pendingAttacker = 1;
     b.attackerResolved = false;
-    expect(autoCasualties(s, pid, 'gulf', 'attacker').ok).toBe(true);
+    expect(autoCasualties(s, pid, 'western_gulf', 'attacker').ok).toBe(true);
     expect(b.attack.battleship).toBe(0);
     expect(b.damagedAttackBB).toBe(0);
   });
@@ -635,17 +635,17 @@ describe('battleship two-hit tracking (1942 2e p.27)', () => {
     const s = freshGame(2, 353);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { battleship: 1 });
-    setSea(s, 'gulf', foe, { submarine: 1 });
+    setSea(s, 'california_coast', pid, { battleship: 1 });
+    setSea(s, 'western_gulf', foe, { submarine: 1 });
     gotoCombatMove(s);
-    expect(combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { battleship: 1 } }]).ok).toBe(true);
+    expect(combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { battleship: 1 } }]).ok).toBe(true);
     gotoCombat(s);
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     b.pendingAttacker = 1;
     b.attackerResolved = false;
-    expect(autoCasualties(s, pid, 'gulf', 'attacker').ok).toBe(true);
+    expect(autoCasualties(s, pid, 'western_gulf', 'attacker').ok).toBe(true);
     expect(b.damagedAttackBB).toBe(1);
-    resolveBattleAuto(s, pid, 'gulf');
+    resolveBattleAuto(s, pid, 'western_gulf');
     expect(b.over).toBe(true);
     // The surviving battleship keeps no damage counter into the next combat.
     expect(b.damagedAttackBB).toBe(0);
@@ -671,17 +671,17 @@ describe('transports are chosen last (1942 2e p.30)', () => {
     const s = freshGame(2, 362);
     const pid = s.currentPlayer;
     const foe = 1 - pid;
-    setSea(s, 'pacific', pid, { transport: 1, destroyer: 1 });
-    setSea(s, 'gulf', foe, { destroyer: 3 });
+    setSea(s, 'california_coast', pid, { transport: 1, destroyer: 1 });
+    setSea(s, 'western_gulf', foe, { destroyer: 3 });
     gotoCombatMove(s);
     expect(
-      combatMove(s, pid, [{ from: 'pacific', to: 'gulf', units: { transport: 1, destroyer: 1 } }]).ok,
+      combatMove(s, pid, [{ from: 'california_coast', to: 'western_gulf', units: { transport: 1, destroyer: 1 } }]).ok,
     ).toBe(true);
     gotoCombat(s);
-    const b = s.battles.find((x) => x.territoryId === 'gulf')!;
+    const b = s.battles.find((x) => x.territoryId === 'western_gulf')!;
     b.pendingAttacker = 1;
     b.attackerResolved = false;
-    expect(autoCasualties(s, pid, 'gulf', 'attacker').ok).toBe(true);
+    expect(autoCasualties(s, pid, 'western_gulf', 'attacker').ok).toBe(true);
     expect(b.attack.destroyer).toBe(0);
     expect(b.attack.transport).toBe(1);
   });
@@ -735,7 +735,7 @@ describe('mobilizing the fleet (1942 2e p.21)', () => {
     const s = freshGame(2, 374);
     const pid = s.currentPlayer;
     const cap = s.players[pid].capital;
-    const far = ['pacific', 'gulf', 'atlantic'].find((z) => !neighborsOf(cap).includes(z))!;
+    const far = ['california_coast', 'western_gulf', 'north_atlantic'].find((z) => !neighborsOf(cap).includes(z))!;
     s.players[pid].ipcs = 100;
     expect(purchase(s, pid, [{ type: 'destroyer', count: 1 }]).ok).toBe(true);
     gotoMobilize(s);
@@ -749,7 +749,7 @@ describe('sea-zone setup exemptions', () => {
   it('sea zones never hold garrisons, owners, or IPCs', () => {
     for (const n of [2, 3, 4]) {
       const s = freshGame(n, 381);
-      for (const zid of ['pacific', 'gulf', 'atlantic']) {
+      for (const zid of ['california_coast', 'western_gulf', 'north_atlantic']) {
         const t = s.territories[zid];
         expect(t.owner).toBe(null);
         expect(t.units).toEqual(emptyUnits());

@@ -34,8 +34,9 @@ export const metaAdapter: ProviderAdapter = {
     // - If a token cap is ever sent, prefer max_completion_tokens over
     //   max_tokens on this API.
     // - Meta ends long *non-streaming* requests with HTTP 504; streaming is
-    //   exempt. Non-streaming is fine for MVP turn sizes, but a streaming
-    //   adapter will be needed before long games or tournaments.
+    //   exempt. The adapter streams whenever the caller passes `onToken`
+    //   (the browser UI does for every turn), so long games and tournaments
+    //   take the streaming path automatically.
     return openAiCompatComplete(META_BASE_URL, req);
   },
 };

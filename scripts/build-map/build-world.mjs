@@ -31,6 +31,7 @@ import { geoNaturalEarth1 } from 'd3-geo';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildSeaZones } from './build-sea.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..');
@@ -543,11 +544,43 @@ const territories = projected.map((e, i) => ({
   ...(e.cfg.victoryCity ? { victoryCity: e.cfg.victoryCity } : {}),
   neutral: !!e.cfg.neutral,
 }));
-// Preserve territories a land rebuild doesn't own (sea zones added later).
+// Build the 65 sea zones (adapted polygons clipped to our ocean).
+const seaTerritories = buildSeaZones(territories);
+// Wire sea<->land adjacency both ways.
+{
+  const byId = new Map(territories.map((t) => [t.id, t]));
+  for (const s of seaTerritories) {
+    for (const lid of s.neighbors) {
+      const lt = byId.get(lid);
+      if (lt && !lt.neighbors.includes(s.id)) lt.neighbors.push(s.id);
+    }
+  }
+  for (const t of territories) t.neighbors.sort();
+}
+territories.push(...seaTerritories);
+// Preserve territories a land+sea rebuild doesn't own (safety net for
+// hand-added territories; rebuilt sea zone ids are already present).
 if (prev) {
   const rebuiltIds = new Set(territories.map((t) => t.id));
   for (const t of prev.territories) {
     if (!rebuiltIds.has(t.id)) territories.push(t);
+  }
+}
+// Sea zone assertions.
+{
+  const ids = new Set(territories.map((t) => t.id));
+  const seas = territories.filter((t) => t.domain === 'sea');
+  if (seas.length !== 65) throw new Error(`expected 65 sea zones, got ${seas.length}`);
+  for (const s of seas) {
+    if (s.ipc !== 0) throw new Error(`${s.id}: sea zone IPC must be 0`);
+    for (const n of s.neighbors) {
+      if (!ids.has(n)) throw new Error(`${s.id}: dangling neighbor ${n}`);
+    }
+  }
+  for (const t of territories) {
+    for (const n of t.neighbors) {
+      if (!ids.has(n)) throw new Error(`${t.id}: dangling neighbor ${n}`);
+    }
   }
 }
 const landCount = territories.filter((t) => t.domain !== 'sea').length;

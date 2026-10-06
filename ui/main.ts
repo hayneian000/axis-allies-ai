@@ -800,17 +800,9 @@ function seaLabels(
     'font-size': '12',
     class: 'tname seafont',
   });
-  name.textContent = `${t.name}${inBattle ? ' ⚔' : ''}`;
+  const seaNum = /^sz(\d+)$/.exec(tid)?.[1];
+  name.textContent = `${seaNum ?? t.name}${inBattle ? ' ⚔' : ''}`;
   g.appendChild(name);
-  const ctrl = svgEl('text', {
-    x: String(lx),
-    y: String(ly + 4),
-    'text-anchor': 'middle',
-    'font-size': '10',
-    class: 'towner seafont',
-  });
-  ctrl.textContent = st.owner === null ? 'open waters' : s.players[st.owner].name;
-  g.appendChild(ctrl);
   const present = UNIT_ORDER.filter((u) => st.units[u] > 0);
   if (present.length > 0) {
     const gap = 5;
@@ -893,15 +885,6 @@ function terrLabels(
   });
   name.textContent = `${DISPLAY_NAME[tid] ?? t.name}${isCap ? ' ★' : ''}${inBattle ? ' ⚔' : ''}`;
   g.appendChild(name);
-  const owner = svgEl('text', {
-    x: String(lx),
-    y: String(ly + 1),
-    'text-anchor': 'middle',
-    'font-size': '10',
-    class: 'towner',
-  });
-  owner.textContent = st.owner === null ? 'neutral' : s.players[st.owner].name;
-  g.appendChild(owner);
 
   // IPC lozenge heading the label stack: brass value on umber.
   // Positioned with clear gap above the name (badge spans ly-39 to ly-25, name at ly-10).
@@ -1061,6 +1044,9 @@ function renderMap(s: GameState): void {
     line.setAttribute('pointer-events', 'none');
     vport.appendChild(line);
   }
+  // Zoom-gated label detail needs the class on first paint too (applyView
+  // only runs on zoom/pan input).
+  m.classList.toggle('zoom-far', view.k < 1.5);
 }
 
 // ------------------------------------------------------------ map chrome ---
@@ -1087,6 +1073,8 @@ function applyView(): void {
   document
     .getElementById('vport')
     ?.setAttribute('transform', `translate(${view.x} ${view.y}) scale(${view.k})`);
+  // Zoom-gated label detail: hide IPC badges and unit icons when zoomed out.
+  svg().classList.toggle('zoom-far', view.k < 1.5);
 }
 
 /** Keep the map from scrolling away: the transformed viewBox must always

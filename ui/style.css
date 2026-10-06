@@ -644,6 +644,9 @@ input::placeholder { color: var(--faint); }
   stroke: rgba(18, 38, 58, 0.9);
 }
 #map text.dim { opacity: 0.75; }
+/* Zoom-gated detail: IPC badges and unit icons only appear when zoomed in. */
+#map.zoom-far .ipcbadge,
+#map.zoom-far .uicons { display: none; }
 /* War-map labels: stencil names in umber ink on parchment. */
 #map text.tname {
   font-family: var(--font-display);

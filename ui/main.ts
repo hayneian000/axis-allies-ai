@@ -710,6 +710,20 @@ function seaTile(
   base.addEventListener('mousemove', moveTip);
   base.addEventListener('mouseleave', hideTip);
   g.appendChild(base);
+  // Extra disjoint pieces (e.g. sz5's Baltic Sea) — same sea styling, no separate click handling.
+  for (const extra of t.extraPolygons ?? []) {
+    const epts = extra.map((p) => p.join(',')).join(' ');
+    const ex = svgEl('polygon', {
+      points: epts,
+      fill: '#2e5a7d',
+      stroke: ownerHex,
+      'stroke-width': st.owner === null ? '1.5' : '2.5',
+      class: cls,
+      'data-owner': st.owner === null ? 'null' : String(st.owner),
+    });
+    if (st.owner === null) ex.setAttribute('stroke-dasharray', '7 4');
+    g.appendChild(ex);
+  }
   return g;
 }
 

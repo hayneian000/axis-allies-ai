@@ -20,10 +20,10 @@ const TS = map1942.territories as unknown as T1942[];
 const byId = new Map(TS.map((t) => [t.id, t]));
 
 describe('map-1942 data (Axis & Allies 1942 Second Edition board)', () => {
-  it('has 96 land territories and 0 sea zones (sea zones deferred)', () => {
-    expect(TS).toHaveLength(96);
+  it('has 96 land territories and 65 sea zones', () => {
+    expect(TS).toHaveLength(161);
     expect(TS.filter((t) => t.domain === 'land')).toHaveLength(96);
-    expect(TS.filter((t) => t.domain === 'sea')).toHaveLength(0);
+    expect(TS.filter((t) => t.domain === 'sea')).toHaveLength(65);
   });
 
   it('per-power IPC sums match the inventory (USSR 24 / Germany 41 / UK 31 / Japan 30 / US 42)', () => {
@@ -90,10 +90,54 @@ describe('map-1942 data (Axis & Allies 1942 Second Edition board)', () => {
         expect(byId.get(id)!.neighbors, `${id} -> ${n}`).toContain(n);
       }
     }
-    // Islands must be isolated (no false land bridges).
+    // Islands must be isolated (no false land bridges; sea neighbors are fine).
     for (const id of ['japan', 'united_kingdom', 'eire', 'okinawa']) {
-      expect(byId.get(id)!.neighbors, `${id} should have no land neighbors`).toHaveLength(0);
+      const landNs = byId.get(id)!.neighbors.filter((n) => byId.get(n)!.domain === 'land');
+      expect(landNs, `${id} should have no land neighbors`).toHaveLength(0);
     }
+  });
+
+  it('sea zones: 65 zones numbered 1-65 with board names', () => {
+    const seas = TS.filter((t) => t.domain === 'sea');
+    expect(seas).toHaveLength(65);
+    for (let n = 1; n <= 65; n++) {
+      const z = byId.get(`sz${n}`);
+      expect(z, `sz${n} exists`).toBeDefined();
+      expect(z!.name).toBe(`Sea Zone ${n}`);
+      expect(z!.domain).toBe('sea');
+      expect(z!.ipc, `sz${n} IPC`).toBe(0);
+    }
+  });
+
+  it('sea zones: no isolated zones, neighbors are symmetric', () => {
+    for (const z of TS.filter((t) => t.domain === 'sea')) {
+      expect(z.neighbors.length, `${z.id} should have neighbors`).toBeGreaterThan(0);
+      // At least one sea-sea neighbor (open water connects).
+      const seaNs = z.neighbors.filter((n) => byId.get(n)!.domain === 'sea');
+      expect(seaNs.length, `${z.id} should border another sea zone`).toBeGreaterThan(0);
+    }
+  });
+
+  it('sea zones: sea-land adjacency sanity (amphibious assaults)', () => {
+    // SZ5 (Baltic) borders the Scandinavian/German littoral.
+    const sz5 = byId.get('sz5')!;
+    for (const lid of ['norway', 'sweden', 'finland', 'germany']) {
+      expect(sz5.neighbors, `sz5 -> ${lid}`).toContain(lid);
+      expect(byId.get(lid)!.neighbors, `${lid} -> sz5`).toContain('sz5');
+    }
+    // SZ17 (E. Mediterranean) borders Egypt and Trans-Jordan (Suez).
+    const sz17 = byId.get('sz17')!;
+    for (const lid of ['egypt', 'trans_jordan']) {
+      expect(sz17.neighbors, `sz17 -> ${lid}`).toContain(lid);
+      expect(byId.get(lid)!.neighbors, `${lid} -> sz17`).toContain('sz17');
+    }
+    // SZ53 borders the Hawaiian Islands.
+    const sz53 = byId.get('sz53')!;
+    expect(sz53.neighbors, 'sz53 -> hawaiian_islands').toContain('hawaiian_islands');
+    expect(byId.get('hawaiian_islands')!.neighbors, 'hawaiian_islands -> sz53').toContain('sz53');
+    // SZ15 (W. Mediterranean) borders Southern Europe / North Africa.
+    const sz15 = byId.get('sz15')!;
+    expect(sz15.neighbors, 'sz15 -> italy').toContain('italy');
   });
 
   it('every territory has a valid polygon (≥4 points) and a label inside the viewBox', () => {

@@ -6,7 +6,7 @@ of the continental United States** (26 land territories + 7 coastal sea zones).
 JSON export/import. Human players share the keyboard; AI seats are LLM agents
 that play through the same action API, using your own provider API key (BYOK).
 
-![UI overview — setup, board, purchase modal, move dialog](docs/screenshots/ui-polish-sheet1.svg)
+![Game board — 33-territory continental US map with coastal sea zones](docs/screenshots/board.png)
 
 ## Quickstart
 
@@ -77,6 +77,8 @@ pause/resume/stop and per-seat error cards (retry, edit key, skip, or pass).
 - **Performance:** turns stream over SSE, agent history is windowed (the
   prompt already carries a full state snapshot), output is token-capped, and
   the static prompt prefix is laid out for provider-side prefix caching.
+
+![AI lobby — War Council seat assignments with BYOK provider/model/key pickers](docs/screenshots/ai-lobby.png)
 
 See [`docs/phase2-agents.md`](docs/phase2-agents.md) for the agent system and
 [`docs/m3-diplomacy.md`](docs/m3-diplomacy.md) for the diplomacy spec.

@@ -139,8 +139,12 @@ export class Agent {
    * model that wants several actions in one phase returns several tool calls
    * in this response; the driver applies them in order, and re-prompts (with
    * fresh state) when validation rejects one.
+   *
+   * `onToken`, when provided, is forwarded to the provider: adapters that
+   * support it stream the response (SSE) and call it with each text delta
+   * as it arrives, instead of returning only after the full response.
    */
-  async act(state: GameState, phase: Phase): Promise<ActResult> {
+  async act(state: GameState, phase: Phase, onToken?: (deltaText: string) => void): Promise<ActResult> {
     const apiKey = this.getApiKey();
     if (!apiKey) throw new MissingApiKeyError(this.playerId);
 
@@ -173,6 +177,9 @@ export class Agent {
       // seats; the retention hint keeps it warm across idle gaps.
       promptCacheKey: staticReferenceCacheKey(),
       promptCacheRetention: PROMPT_CACHE_RETENTION,
+      // Stream the response when the caller wants live deltas (the browser
+      // UI does); otherwise this is a plain non-streaming round-trip.
+      ...(onToken ? { onToken } : {}),
     });
     delta.inputTokens += resp.usage.inputTokens;
     delta.outputTokens += resp.usage.outputTokens;
@@ -199,8 +206,11 @@ export class Agent {
    * totals; the diplomacy-budget breakout is charged separately via
    * chargeDiplomacy, because the budget rule charges only round-trips that
    * produced an accepted message or an end_diplomacy.
+   *
+   * `onToken`, when provided, is forwarded to the provider for streaming
+   * (see act()).
    */
-  async diplomacyAct(state: GameState, budgetRemaining: number): Promise<ActResult> {
+  async diplomacyAct(state: GameState, budgetRemaining: number, onToken?: (deltaText: string) => void): Promise<ActResult> {
     const apiKey = this.getApiKey();
     if (!apiKey) throw new MissingApiKeyError(this.playerId);
 
@@ -232,7 +242,12 @@ export class Agent {
       // seats; the retention hint keeps it warm across idle gaps.
       promptCacheKey: staticReferenceCacheKey(),
       promptCacheRetention: PROMPT_CACHE_RETENTION,
+      // Stream the response when the caller wants live deltas (the browser
+      // UI does); otherwise this is a plain non-streaming round-trip.
+      ...(onToken ? { onToken } : {}),
     });
+    // Diplomacy usage always accumulates into the seat totals, and the
+    // budget breakout is charged separately by the driver.
     delta.inputTokens += resp.usage.inputTokens;
     delta.outputTokens += resp.usage.outputTokens;
     delta.calls += 1;

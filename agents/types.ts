@@ -100,6 +100,15 @@ export interface CompleteRequest {
    */
   promptCacheRetention?: string;
   signal?: AbortSignal;
+  /**
+   * When set, the adapter streams the response (SSE) and calls this with
+   * each generated text delta as it arrives, instead of waiting for the
+   * full response before returning. The returned CompleteResponse is
+   * identical in shape to a non-streaming call — same text, toolCalls,
+   * usage, stopReason — so callers can switch without changing how they
+   * consume the result. Adapters that don't support streaming ignore it.
+   */
+  onToken?: (deltaText: string) => void;
 }
 
 /** Single round-trip response from a provider. */

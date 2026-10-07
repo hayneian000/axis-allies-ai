@@ -253,12 +253,17 @@ export function buildSeaZones(landTerritories) {
     const polys = seaPolys[i];
     const main = polys[0];
     let label;
-    try {
-      const pf = pointOnFeature(asFeature(main));
-      label = [Math.round(pf.geometry.coordinates[0]), Math.round(pf.geometry.coordinates[1])];
-    } catch {
-      const bb = bboxOfRing(main);
-      label = [Math.round((bb[0] + bb[2]) / 2), Math.round((bb[1] + bb[3]) / 2)];
+    if (z.label) {
+      // Explicit label override (e.g. sz5 in the Baltic, not its northern piece).
+      label = z.label;
+    } else {
+      try {
+        const pf = pointOnFeature(asFeature(main));
+        label = [Math.round(pf.geometry.coordinates[0]), Math.round(pf.geometry.coordinates[1])];
+      } catch {
+        const bb = bboxOfRing(main);
+        label = [Math.round((bb[0] + bb[2]) / 2), Math.round((bb[1] + bb[3]) / 2)];
+      }
     }
     const neighbors = [...new Set([...seaSea[i], ...seaLand[i]])].sort();
     seas.push({

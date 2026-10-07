@@ -257,6 +257,59 @@ export const TOOLS: Record<string, ToolDefinition> = {
 /** All canonical tool names. */
 export const TOOL_NAMES = Object.keys(TOOLS);
 
+/**
+ * Batched-turn phase groups: the engine phases a single LLM call plans
+ * together. Grouping is exact — purchase, combat move, and mobilize are all
+ * decidable from the pre-turn state (purchased units can't fight until
+ * placed; mobilize depends only on the purchase list + turn-start factories,
+ * and factories captured this turn come online next turn anyway). Only the
+ * non-combat phase needs post-combat state (units lost in battle can't
+ * reposition; captured territories are new destinations), so it leads the
+ * second call.
+ */
+export type PhaseGroup = 'assault' | 'consolidate';
+
+/** Canonical engine-phase order inside each group. */
+export const PHASE_GROUP_ORDER: Record<PhaseGroup, Phase[]> = {
+  assault: ['purchase', 'combatMove'],
+  consolidate: ['nonCombat', 'mobilize'],
+};
+
+/**
+ * Which engine phase a tool belongs to, or null for tools the group driver
+ * consumes itself (end_phase) or that never appear in batched turns
+ * (combat/diplomacy tools).
+ */
+export function phaseForTool(name: string): Phase | null {
+  switch (name) {
+    case 'purchase':
+      return 'purchase';
+    case 'combat_move':
+      return 'combatMove';
+    case 'non_combat_move':
+      return 'nonCombat';
+    case 'mobilize':
+      return 'mobilize';
+    default:
+      return null;
+  }
+}
+
+/** Union of the per-phase tool allowlists for the given phases, de-duplicated. */
+export function toolsForGroup(phases: Phase[]): ToolDefinition[] {
+  const seen = new Set<string>();
+  const out: ToolDefinition[] = [];
+  for (const p of phases) {
+    for (const t of toolsForPhase(p)) {
+      if (!seen.has(t.name)) {
+        seen.add(t.name);
+        out.push(t);
+      }
+    }
+  }
+  return out;
+}
+
 /** Tool allowlist per phase (the driver enforces this). */
 export function toolsForPhase(phase: Phase): ToolDefinition[] {
   const pick = (names: string[]): ToolDefinition[] => names.map((n) => TOOLS[n]);

@@ -74,10 +74,32 @@ can see another's system prompt, reasoning, or history — this is structural
 - `agents/tools.ts` exposes the 9 canonical tools with a per-phase allowlist
   (e.g. only `purchase` + `end_phase` during purchase). The UI harness uses
   the same schemas — one tool surface for humans and LLMs.
-- Per phase the driver asks the agent for tool calls and applies them via
-  `dispatchTool` (engine validation **is** the validation step — failed
-  actions never mutate state). On rejection it re-prompts (max 3 retries),
-  then falls back to a safe default (pass / no moves / forfeit unplaced).
+- **Batched turns (2 LLM calls, not 4):** an AI turn is two provider
+  round-trips. Group A ("assault") plans purchase + combat move from the
+  pre-turn state; combat then auto-resolves locally with no LLM; group B
+  ("consolidate") plans non-combat + mobilize from the post-combat state.
+  This is exact, not approximate: purchase/combatMove/mobilize are all
+  decidable from the pre-turn state (purchased units can't fight until
+  placed; mobilize depends only on the purchase list + turn-start factories,
+  and factories captured this turn come online next turn). Only non-combat
+  needs post-combat state. `Agent.actGroup()` builds the group prompt
+  (`buildGroupPrompt`) and the union tool allowlist (`toolsForGroup`); the
+  driver partitions returned tool calls by tool name and applies them in
+  canonical phase order. `act()` (single phase) is unchanged and still used
+  by diplomacy/human paths.
+- **Phase skipping:** before each phase the driver runs a cheap local
+  affordance check (`agents/affordance.ts`) — e.g. purchase is skipped when
+  the bank can't cover the cheapest unit or the capital is enemy-held,
+  mobilize when nothing was purchased. Skipped phases end directly with an
+  `onPhaseSkipped` event and no LLM call. All checks are conservative: a
+  missed skip costs one wasted call, a wrongful skip would drop agency.
+- Per phase the driver applies tool calls via `dispatchTool` (engine
+  validation **is** the validation step — failed actions never mutate
+  state). On rejection the valid prefix **stays applied**; the driver
+  re-plans the failed phase plus the not-yet-executed later phases in one
+  fresh call (max 3 retries per phase), with the `rejected [code]: reason`
+  tool result in history as feedback. Then it falls back to a safe default
+  (pass / no moves / forfeit unplaced).
 - After each batch, the driver records every tool call's outcome back into
   the agent (`Agent.recordToolResults`) as `{role:'tool'}` history entries —
   provider APIs require each assistant `tool_calls` entry to have a matching
@@ -88,10 +110,11 @@ can see another's system prompt, reasoning, or history — this is structural
   `autoCasualties` on both sides until every battle ends. The agent decides
   *where* to attack (`combat_move`), not casualty-by-casualty. `retreat` and
   `chooseCasualties` exist as tools for later sophistication.
-- `act()` is a single provider round-trip per phase by design (no blind ReAct
-  loop — tool results live with the driver, so looping without them would just
-  burn tokens). Multi-action phases are expressed as multiple tool calls in
-  one response; `end_phase` from the model means "I'm done".
+- `act()`/`actGroup()` are a single provider round-trip each by design (no
+  blind ReAct loop — tool results live with the driver, so looping without
+  them would just burn tokens). Multi-action phases are expressed as
+  multiple tool calls in one response; `end_phase` from the model means "I'm
+  done" (in batched turns it is optional — phases advance automatically).
 - Negotiation: `send_message` plumbing works end-to-end, but
   agent-initiated chat is **disabled in the MVP** (v2).
 

@@ -3,6 +3,7 @@
 // verified against data/units.json.
 
 import { ALL_UNIT_TYPES, MAP, UNITS, ipcOf, isSea, neighborsOf } from '../data/data';
+import type { PhaseGroup } from './tools';
 
 /** ~500-word rules digest included in every system prompt. Distilled from
  * engine/RULES.md (1942 2e adaptation); unit costs/profiles verified against
@@ -41,6 +42,7 @@ ${RULES_DIGEST}
 
 OPERATING RULES
 - You act ONLY through the tools provided for the current phase. Never narrate an action you did not call.
+- In batched turns, tools for several phases may be offered at once: the driver applies them in canonical phase order (purchase → combat move → noncombat → mobilize) regardless of the order you emit them.
 - Never invent territory names, unit counts, or game state. Use only territory names exactly as they appear in the game-state brief.
 - IPCs are scarce: every purchase has an opportunity cost. Prefer spending on units that advance a clear plan (attack, defense, or expansion).
 - When you have no more useful actions in this phase, call end_phase. Do not call tools pointlessly.
@@ -145,6 +147,41 @@ export function buildPhasePrompt(args: PhasePromptArgs): string {
     PHASE_INSTRUCTIONS[args.phase] ??
     `Unknown phase "${args.phase}". Take no action and call end_phase.`;
   return `${instruction}\n\nCURRENT GAME STATE\n${args.stateBrief}`;
+}
+
+export interface GroupPromptArgs {
+  group: PhaseGroup;
+  /** Live phases in canonical order (subset of the group's phases). */
+  phases: string[];
+  stateBrief: string;
+}
+
+const GROUP_LABELS: Record<PhaseGroup, string> = {
+  assault: 'ASSAULT — purchase + combat move',
+  consolidate: 'CONSOLIDATE — noncombat move + mobilize',
+};
+
+/**
+ * Prompt for one batched turn: a single provider round-trip plans every
+ * live phase in the group. The driver partitions the returned tool calls by
+ * tool name and applies them in canonical phase order, advancing phases
+ * automatically — so the model emits each phase's calls together and never
+ * needs to sequence phases itself. Only live phases are listed: phases the
+ * driver skipped (no legal actions) are already over.
+ */
+export function buildGroupPrompt(args: GroupPromptArgs): string {
+  const label = GROUP_LABELS[args.group];
+  const instructions = args.phases
+    .map((p) => PHASE_INSTRUCTIONS[p] ?? `Unknown phase "${p}". Take no action.`)
+    .join('\n\n');
+  return (
+    `BATCHED TURN (${label}). You are planning several phases in ONE response: ` +
+    `emit the tool calls for every live phase below together. The driver sorts them into canonical ` +
+    `phase order (purchase → combat move → noncombat → mobilize) and applies each phase in turn, ` +
+    `advancing phases automatically — emission order does not matter. end_phase is optional: call it ` +
+    `once when you are done with everything, or omit it.\n\n` +
+    `${instructions}\n\nCURRENT GAME STATE\n${args.stateBrief}`
+  );
 }
 
 export interface DiplomacyPromptArgs {

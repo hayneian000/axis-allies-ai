@@ -3,19 +3,26 @@
 import { autoCasualties, endPhase, openBattles, resolveCombatRound } from '../engine/engine';
 import type { ActionResult, GameState, Phase } from '../engine/types';
 import type { Agent, ToolResultRecord } from './agent';
+import { phaseHasActions } from './affordance';
 import {
   DiplomacyLedger,
   runDiplomacyWindow,
   type DiplomacyEvents,
   type RunDiplomacyOpts,
 } from './diplomacy';
-import { dispatchTool } from './tools';
-import type { PlayerUsage, SeatConfig } from './types';
+import { dispatchTool, PHASE_GROUP_ORDER, phaseForTool, type PhaseGroup } from './tools';
+import type { PlayerUsage, SeatConfig, ToolCall } from './types';
 
 export interface DriverEvents {
   onHumanTurn?: (state: GameState, playerId: number, phase: Phase) => Promise<void>;
   onPhase?: (state: GameState, playerId: number, phase: Phase) => void;
   onToolCall?: (playerId: number, name: string, ok: boolean, code?: string) => void;
+  /**
+   * An AI phase was skipped with no LLM call: the affordance check found
+   * provably no legal actions (e.g. nothing affordable to buy, nothing
+   * purchased to mobilize). The phase was ended directly.
+   */
+  onPhaseSkipped?: (state: GameState, playerId: number, phase: Phase, reason: string) => void;
   /** Human seat's turn in the diplomacy window; resolves when done talking. */
   onHumanDiplomacy?: (state: GameState, playerId: number) => Promise<void>;
   /** A diplomacy message was accepted into chatLog. */
@@ -65,20 +72,267 @@ interface ErrorCounter {
 }
 
 /**
- * Run one AI phase: ask the agent for tool calls, apply them in order via
- * dispatchTool, and retry the whole act() on the first invalid call (up to
- * maxRetries). An `end_phase` tool call means "I'm done" — it is consumed, not
- * dispatched, and the driver performs the single engine endPhase afterwards.
- * If every attempt fails, the fallback action runs instead.
+ * Run one batched phase group for an AI seat: a single actGroup() plans
+ * every live phase, the driver partitions the returned tool calls by tool
+ * name, and applies them in canonical phase order with an endPhase between
+ * phases. Phases with no legal actions are skipped with no LLM call.
  *
- * After each batch, the driver records every tool call's outcome back into
- * the agent via recordToolResults — provider APIs require each assistant
- * tool_calls entry to have a matching tool response, and the feedback also
- * tells the model what was rejected and why before its next attempt.
+ * Retry semantics (scoped, with error feedback): tool calls apply in order
+ * and the valid prefix STAYS applied — the driver never re-applies it. On
+ * the first rejection in a phase, the failed phase and the not-yet-executed
+ * later phases are re-planned in one fresh actGroup() (the model sees the
+ * applied prefix plus the `rejected [code]: reason` tool result in its
+ * history). Retries are bounded per phase; on exhaustion the phase's
+ * no-op fallback runs and later phases keep their validated plans
+ * (fallbacks are no-ops, so those plans still apply cleanly).
  *
- * Note: a retry builds a fresh prompt from the updated state, so the model
- * implicitly sees what happened on top of the explicit tool results.
+ * Transcript validity: every tool_call id gets exactly one tool result.
+ * Applied buckets are recorded as they execute; superseded buckets (from a
+ * re-planned group) are recorded as skipped before the re-plan.
  */
+type TurnPhase = 'purchase' | 'combatMove' | 'nonCombat' | 'mobilize';
+
+/** No-op fallbacks per phase (safe defaults when no valid plan emerges). */
+const PHASE_FALLBACKS: Record<TurnPhase, (state: GameState, pid: number) => ActionResult> = {
+  purchase: (s, p) => dispatchTool(s, p, 'purchase', { items: [] }),
+  combatMove: (s, p) => dispatchTool(s, p, 'combat_move', { moves: [] }),
+  nonCombat: (s, p) => dispatchTool(s, p, 'non_combat_move', { moves: [] }),
+  mobilize: (s, p) => dispatchTool(s, p, 'mobilize', { placements: [] }),
+};
+
+type Partition = { ok: true; buckets: Map<TurnPhase, ToolCall[]> } | { ok: false; badCall: ToolCall };
+
+/**
+ * Sort a batched response into per-phase buckets. `end_phase` is consumed
+ * (phases advance automatically). A tool that isn't live in this group —
+ * unknown or belonging to another phase — fails the whole partition so the
+ * group is re-planned with feedback.
+ */
+function partitionGroupCalls(toolCalls: ToolCall[], live: TurnPhase[]): Partition {
+  const buckets = new Map<TurnPhase, ToolCall[]>(live.map((p) => [p, []]));
+  for (const tc of toolCalls) {
+    if (tc.name === 'end_phase') continue;
+    const phase = phaseForTool(tc.name) as TurnPhase | null;
+    const bucket = phase ? buckets.get(phase) : undefined;
+    if (!bucket) return { ok: false, badCall: tc };
+  }
+  for (const tc of toolCalls) {
+    if (tc.name === 'end_phase') continue;
+    buckets.get(phaseForTool(tc.name) as TurnPhase)!.push(tc);
+  }
+  return { ok: true, buckets };
+}
+
+/** Record "skipped" tool results for buckets that will never execute. */
+function recordSkipped(
+  agent: Agent,
+  buckets: Map<TurnPhase, ToolCall[]>,
+  phases: TurnPhase[],
+  summary: string,
+): void {
+  const calls = phases.flatMap((p) => buckets.get(p) ?? []);
+  if (calls.length === 0) return;
+  agent.recordToolResults(calls.map((tc) => ({ toolCallId: tc.id, ok: false, summary })));
+}
+
+/**
+ * Get a validated partition for the given live phases: one actGroup() call,
+ * retrying the whole group (with rejection feedback) when the model emits a
+ * tool that isn't live. On exhaustion, empty buckets — the caller then runs
+ * per-phase fallbacks.
+ */
+async function planGroup(
+  state: GameState,
+  agent: Agent,
+  pid: number,
+  group: PhaseGroup,
+  live: TurnPhase[],
+  maxRetries: number,
+  errors: ErrorCounter,
+): Promise<Map<TurnPhase, ToolCall[]>> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const { toolCalls } = await agent.actGroup(state, group, live);
+    const part = partitionGroupCalls(toolCalls, live);
+    if (part.ok) {
+      const consumed = toolCalls.filter((tc) => tc.name === 'end_phase');
+      if (consumed.length > 0) {
+        agent.recordToolResults(
+          consumed.map((tc) => ({
+            toolCallId: tc.id,
+            ok: true,
+            summary: 'ok: end_phase consumed by the driver (phases advance automatically)',
+          })),
+        );
+      }
+      return part.buckets;
+    }
+    errors.count++;
+    agent.recordToolResults(
+      toolCalls.map((tc) => ({
+        toolCallId: tc.id,
+        ok: false,
+        summary:
+          tc.id === part.badCall.id
+            ? `rejected: tool "${tc.name}" is not available in this batched turn (live phases: ${live.join(', ')})`
+            : 'skipped: not attempted after an unavailable tool was emitted',
+      })),
+    );
+  }
+  return new Map(live.map((p) => [p, []]));
+}
+
+/**
+ * Apply one phase's bucket in order, recording every outcome. Returns true
+ * when the whole bucket applied cleanly. The valid prefix stays applied on
+ * failure — the caller re-plans from this phase forward.
+ */
+function applyPhaseBucket(
+  state: GameState,
+  agent: Agent,
+  pid: number,
+  phase: TurnPhase,
+  bucket: ToolCall[],
+  events: DriverEvents,
+): boolean {
+  const results: ToolResultRecord[] = [];
+  let failed: { name: string; result: ActionResult } | null = null;
+  let i = 0;
+  for (; i < bucket.length; i++) {
+    const tc = bucket[i];
+    const r = dispatchTool(state, pid, tc.name, tc.arguments);
+    events.onToolCall?.(pid, tc.name, r.ok, r.ok ? undefined : r.code);
+    results.push({
+      toolCallId: tc.id,
+      ok: r.ok,
+      summary: r.ok
+        ? `ok: ${summarizeOk(tc.name, tc.arguments)}`
+        : `rejected [${r.code}]: ${r.error}`,
+    });
+    if (!r.ok) {
+      failed = { name: tc.name, result: r };
+      i++;
+      break;
+    }
+  }
+  // Tool calls after the break were never attempted; record them as
+  // skipped so the transcript stays valid (every tool_call needs a matching
+  // tool response) and the model knows they didn't happen.
+  for (; i < bucket.length; i++) {
+    results.push({
+      toolCallId: bucket[i].id,
+      ok: false,
+      summary: failed
+        ? `skipped: not attempted after "${failed.name}" was rejected`
+        : 'skipped: phase already ending',
+    });
+  }
+  agent.recordToolResults(results);
+  return !failed;
+}
+
+function endPhaseOrThrow(state: GameState, pid: number, phase: Phase): void {
+  const end = endPhase(state, pid);
+  if (!end.ok) {
+    throw new Error(`endPhase failed for player ${pid} in ${phase}: [${end.code}] ${end.error}`);
+  }
+}
+
+function skipReason(state: GameState, pid: number, phase: TurnPhase): string {
+  return phaseHasActions(state, pid, phase).reason;
+}
+
+/**
+ * Execute one phase group (assault or consolidate) for an AI seat.
+ * `live` is the subset of the group's phases with legal actions; the rest
+ * are ended directly with an onPhaseSkipped event and no LLM call.
+ */
+async function runPhaseGroup(
+  state: GameState,
+  agent: Agent,
+  pid: number,
+  group: PhaseGroup,
+  live: TurnPhase[],
+  events: DriverEvents,
+  maxRetries: number,
+  errors: ErrorCounter,
+): Promise<void> {
+  // PHASE_GROUP_ORDER is typed as Phase[]; the groups only ever contain the
+  // four LLM-driven turn phases.
+  const order = PHASE_GROUP_ORDER[group] as TurnPhase[];
+  let buckets =
+    live.length > 0
+      ? await planGroup(state, agent, pid, group, live, maxRetries, errors)
+      : new Map<TurnPhase, ToolCall[]>();
+  const retries = new Map<TurnPhase, number>();
+  let remaining = [...live];
+  for (const phase of order) {
+    events.onPhase?.(state, pid, phase);
+    if (!live.includes(phase)) {
+      events.onPhaseSkipped?.(state, pid, phase, skipReason(state, pid, phase));
+      endPhaseOrThrow(state, pid, phase);
+      continue;
+    }
+    let bucket = buckets.get(phase) ?? [];
+    for (;;) {
+      if (applyPhaseBucket(state, agent, pid, phase, bucket, events)) break;
+      errors.count++;
+      const used = (retries.get(phase) ?? 0) + 1;
+      retries.set(phase, used);
+      if (used > maxRetries) {
+        const fr = PHASE_FALLBACKS[phase](state, pid);
+        if (!fr.ok) {
+          throw new Error(
+            `Fallback action failed for player ${pid} in phase ${phase}: [${fr.code}] ${fr.error}`,
+          );
+        }
+        break;
+      }
+      // Scoped retry: the valid prefix stays applied; the failed phase and
+      // the not-yet-executed later phases are re-planned in one fresh call.
+      // The old later-phase buckets are superseded — record them as skipped
+      // so every tool_call keeps exactly one tool response.
+      const later = remaining.slice(remaining.indexOf(phase) + 1);
+      recordSkipped(agent, buckets, later, `skipped: ${phase} failed validation; re-planned with the retry`);
+      remaining = remaining.slice(remaining.indexOf(phase));
+      buckets = await planGroup(state, agent, pid, group, remaining, maxRetries, errors);
+      bucket = buckets.get(phase) ?? [];
+    }
+    remaining = remaining.filter((p) => p !== phase);
+    endPhaseOrThrow(state, pid, phase);
+  }
+}
+
+/**
+ * Run one full AI turn: two LLM calls. Group A (assault) plans purchase +
+ * combat move from the pre-turn state; combat auto-resolves locally with no
+ * LLM; group B (consolidate) plans non-combat + mobilize from the
+ * post-combat state. Phases with no legal actions are skipped without a
+ * call (see agents/affordance.ts).
+ */
+async function runAiTurn(
+  state: GameState,
+  seat: SeatRuntime,
+  events: DriverEvents,
+  errors: ErrorCounter,
+): Promise<void> {
+  const agent = seat.agent;
+  if (!agent) throw new Error(`AI seat ${seat.seat.seatIndex} has no agent.`);
+  const pid = seat.seat.playerId;
+
+  const liveA = (['purchase', 'combatMove'] as TurnPhase[]).filter(
+    (p) => phaseHasActions(state, pid, p).has,
+  );
+  await runPhaseGroup(state, agent, pid, 'assault', liveA, events, DEFAULT_MAX_RETRIES, errors);
+
+  events.onPhase?.(state, pid, 'combat');
+  autoResolveCombat(state, pid);
+  endPhaseOrThrow(state, pid, 'combat');
+
+  const liveB: TurnPhase[] = [];
+  if (phaseHasActions(state, pid, 'nonCombat').has) liveB.push('nonCombat');
+  if (phaseHasActions(state, pid, 'mobilize').has) liveB.push('mobilize');
+  await runPhaseGroup(state, agent, pid, 'consolidate', liveB, events, DEFAULT_MAX_RETRIES, errors);
+}
 /**
  * One-line human summary of a successful tool call, recorded into the
  * agent's history alongside the outcome.
@@ -117,70 +371,6 @@ function summarizeOk(name: string, args: Record<string, unknown>): string {
       return `sent message to ${String(args.recipients ?? 'all')}`;
     default:
       return `${name} ok`;
-  }
-}
-
-async function agentPhaseWithRetry(
-  state: GameState,
-  agent: Agent,
-  pid: number,
-  phase: Phase,
-  events: DriverEvents,
-  maxRetries: number,
-  fallback: () => ActionResult,
-  errors: ErrorCounter,
-): Promise<void> {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const { toolCalls } = await agent.act(state, phase);
-    const results: ToolResultRecord[] = [];
-    let failed: { name: string; result: ActionResult } | null = null;
-    let i = 0;
-    for (; i < toolCalls.length; i++) {
-      const tc = toolCalls[i];
-      if (tc.name === 'end_phase') {
-        results.push({ toolCallId: tc.id, ok: true, summary: `ok: ending ${phase} phase` });
-        i++;
-        break;
-      }
-      const r = dispatchTool(state, pid, tc.name, tc.arguments);
-      events.onToolCall?.(pid, tc.name, r.ok, r.ok ? undefined : r.code);
-      results.push({
-        toolCallId: tc.id,
-        ok: r.ok,
-        summary: r.ok
-          ? `ok: ${summarizeOk(tc.name, tc.arguments)}`
-          : `rejected [${r.code}]: ${r.error}`,
-      });
-      if (!r.ok) {
-        failed = { name: tc.name, result: r };
-        i++;
-        break;
-      }
-    }
-    // Tool calls after the break were never attempted; record them as
-    // skipped so the transcript stays valid (every tool_call needs a matching
-    // tool response) and the model knows they didn't happen.
-    for (; i < toolCalls.length; i++) {
-      results.push({
-        toolCallId: toolCalls[i].id,
-        ok: false,
-        summary: failed
-          ? `skipped: not attempted after "${failed.name}" was rejected`
-          : 'skipped: phase already ending',
-      });
-    }
-    // The driver owns tool results: feed them back into this seat's history
-    // so the next act() sends a provider-valid transcript and the model sees
-    // what succeeded and why rejections happened.
-    agent.recordToolResults(results);
-    if (!failed) return;
-    errors.count++;
-  }
-  const fr = fallback();
-  if (!fr.ok) {
-    throw new Error(
-      `Fallback action failed for player ${pid} in phase ${phase}: [${fr.code}] ${fr.error}`,
-    );
   }
 }
 
@@ -227,56 +417,6 @@ function autoResolveCombat(state: GameState, pid: number): void {
         `Auto-resolve: battle in ${still.territoryId} did not finish within ${MAX_BATTLE_ROUNDS} rounds.`,
       );
     }
-  }
-}
-
-async function runAiPhase(
-  state: GameState,
-  seat: SeatRuntime,
-  events: DriverEvents,
-  errors: ErrorCounter,
-): Promise<void> {
-  const agent = seat.agent;
-  if (!agent) throw new Error(`AI seat ${seat.seat.seatIndex} has no agent.`);
-  const pid = seat.seat.playerId;
-  switch (state.phase) {
-    case 'purchase':
-      await agentPhaseWithRetry(
-        state, agent, pid, 'purchase', events, DEFAULT_MAX_RETRIES,
-        () => dispatchTool(state, pid, 'purchase', { items: [] }),
-        errors,
-      );
-      break;
-    case 'combatMove':
-      await agentPhaseWithRetry(
-        state, agent, pid, 'combatMove', events, DEFAULT_MAX_RETRIES,
-        () => dispatchTool(state, pid, 'combat_move', { moves: [] }),
-        errors,
-      );
-      break;
-    case 'combat':
-      autoResolveCombat(state, pid);
-      break;
-    case 'nonCombat':
-      await agentPhaseWithRetry(
-        state, agent, pid, 'nonCombat', events, DEFAULT_MAX_RETRIES,
-        () => dispatchTool(state, pid, 'non_combat_move', { moves: [] }),
-        errors,
-      );
-      break;
-    case 'mobilize':
-      await agentPhaseWithRetry(
-        state, agent, pid, 'mobilize', events, DEFAULT_MAX_RETRIES,
-        () => dispatchTool(state, pid, 'mobilize', { placements: [] }),
-        errors,
-      );
-      break;
-    case 'gameover':
-      return;
-  }
-  const end = endPhase(state, pid);
-  if (!end.ok) {
-    throw new Error(`endPhase failed for player ${pid} in ${state.phase}: [${end.code}] ${end.error}`);
   }
 }
 
@@ -339,12 +479,14 @@ export async function runGame(
     const pid = state.currentPlayer;
     const seat = seats[pid];
     if (!seat) throw new Error(`No seat configured for current player ${pid}.`);
-    events.onPhase?.(state, pid, state.phase);
     if (seat.seat.kind === 'human') {
+      events.onPhase?.(state, pid, state.phase);
       await events.onHumanTurn!(state, pid, state.phase);
     } else {
+      // AI seats run the whole turn batched (two LLM calls); per-phase
+      // onPhase/onPhaseSkipped events fire inside runAiTurn.
       const errors: ErrorCounter = { count: 0 };
-      await runAiPhase(state, seat, events, errors);
+      await runAiTurn(state, seat, events, errors);
       errorsByPlayer.set(pid, (errorsByPlayer.get(pid) ?? 0) + errors.count);
     }
   }

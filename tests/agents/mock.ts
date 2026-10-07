@@ -2,7 +2,7 @@
 
 import { ipcOf, isSea, neighborsOf, UNITS } from '../../data/data';
 import { ownsCapital } from '../../engine/engine';
-import type { GameState, Phase } from '../../engine/types';
+import type { GameState } from '../../engine/types';
 import type {
   CompleteRequest,
   CompleteResponse,
@@ -34,8 +34,6 @@ export function mockToolCall(name: string, args: Record<string, unknown>): ToolC
 export function mockResponse(text: string, toolCalls: ToolCall[] = []): CompleteResponse {
   return { text, toolCalls, usage: { inputTokens: 10, outputTokens: 5 }, stopReason: 'end_turn' };
 }
-
-const endPhaseCall = (): ToolCall[] => [mockToolCall('end_phase', {})];
 
 /** Always passes: no tool calls, so the driver just ends each phase. */
 export const passBotHandler: MockHandler = () => mockResponse('pass');
@@ -127,49 +125,35 @@ function greedyMobilize(
  * weakest neighbor, auto-resolves nothing itself (the driver does that),
  * passes non-combat, and mobilizes everything it bought.
  *
- * The real Agent may call complete() several times per act(); this handler
- * tracks per-phase steps via closure state, resetting whenever the phase
- * changes.
+ * Batched-turn aware: the driver plans purchase+combatMove in one call
+ * (group A) and nonCombat+mobilize in another (group B). The handler
+ * inspects the exposed tools to tell a group call from a single-phase
+ * retry and emits the matching tool calls together — the driver partitions
+ * them back into phases.
  */
 export function makeGreedyHandler(getState: () => GameState, pid: number): MockHandler {
-  let lastPhase: Phase | '' = '';
-  let step = 0;
-  return (_req, _callIndex) => {
+  return (req, _callIndex) => {
     const state = getState();
-    if (state.phase !== lastPhase) {
-      lastPhase = state.phase;
-      step = 0;
+    const tools = new Set(req.tools.map((t) => t.name));
+    const calls: ToolCall[] = [];
+    const canPurchase = tools.has('purchase') && state.phase === 'purchase';
+    const canCombatMove =
+      tools.has('combat_move') && (state.phase === 'purchase' || state.phase === 'combatMove');
+    const canMobilize =
+      tools.has('mobilize') && (state.phase === 'nonCombat' || state.phase === 'mobilize');
+    if (canPurchase) {
+      const items = greedyPurchase(state, pid);
+      if (items.length > 0) calls.push(mockToolCall('purchase', { items }));
     }
-    const s = step++;
-    switch (state.phase) {
-      case 'purchase': {
-        if (s === 0) {
-          const items = greedyPurchase(state, pid);
-          return mockResponse('greedy purchase', items.length ? [mockToolCall('purchase', { items })] : []);
-        }
-        return mockResponse('greedy done', s === 1 ? endPhaseCall() : []);
-      }
-      case 'combatMove': {
-        if (s === 0) {
-          const attack = greedyAttack(state, pid);
-          return mockResponse('greedy attack', attack ? [mockToolCall('combat_move', { moves: [attack] })] : []);
-        }
-        return mockResponse('greedy done', s === 1 ? endPhaseCall() : []);
-      }
-      case 'nonCombat':
-        return mockResponse('greedy pass', s === 0 ? endPhaseCall() : []);
-      case 'mobilize': {
-        if (s === 0) {
-          const placements = greedyMobilize(state, pid);
-          return mockResponse(
-            'greedy mobilize',
-            placements.length ? [mockToolCall('mobilize', { placements })] : [],
-          );
-        }
-        return mockResponse('greedy done', s === 1 ? endPhaseCall() : []);
-      }
-      default:
-        return mockResponse('greedy pass');
+    if (canCombatMove) {
+      const attack = greedyAttack(state, pid);
+      if (attack) calls.push(mockToolCall('combat_move', { moves: [attack] }));
     }
+    // Greedy passes non-combat (never emits non_combat_move).
+    if (canMobilize) {
+      const placements = greedyMobilize(state, pid);
+      if (placements.length > 0) calls.push(mockToolCall('mobilize', { placements }));
+    }
+    return mockResponse('greedy', calls);
   };
 }

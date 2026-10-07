@@ -14,6 +14,7 @@ import {
   type DriverEvents,
   type SeatRuntime,
 } from '../agents/driver';
+import type { PhaseGroup } from '../agents/tools';
 import {
   buildDiplomacyDump,
   DIPLOMACY_BUDGET_PER_ROUND,
@@ -136,6 +137,45 @@ class UiAgent extends Agent {
           }
         });
         this.seatUi.onThought(this.pid, phase, r.text, r.toolCalls, this.usage);
+        return r;
+      } catch (err) {
+        if (err instanceof StoppedError) throw err;
+        const choice = await this.seatUi.onFailure(this.pid, err);
+        if (choice === 'retry') continue;
+        if (choice === 'pass-rest') this.passRest = true;
+        return endPhaseResult(
+          choice === 'pass-rest'
+            ? 'Seat replaced with a passing commander — ending phase.'
+            : 'Phase skipped by host — ending phase.',
+        );
+      }
+    }
+  }
+
+  /**
+   * Batched-turn counterpart of act(): same pause gating, streaming, and
+   * seat-level failure handling. The driver plans purchase+combatMove
+   * (assault) or nonCombat+mobilize (consolidate) in one provider call.
+   */
+  override async actGroup(state: GameState, group: PhaseGroup, phases: Phase[]): Promise<ActResult> {
+    if (this.passRest) {
+      return endPhaseResult('Seat replaced with a passing commander — ending phase.');
+    }
+    for (;;) {
+      await this.ctrl.waitIfPaused();
+      try {
+        // Stream the rationale into the seat card as it generates, so a
+        // batched turn shows its thinking instead of a dead "Thinking…" status.
+        this.tokenBuf = '';
+        const r = await super.actGroup(state, group, phases, (delta) => {
+          this.tokenBuf += delta;
+          const card = seatCards.get(this.pid);
+          if (card) {
+            card.rationale.textContent =
+              this.tokenBuf.length > 900 ? this.tokenBuf.slice(0, 900) + '…' : this.tokenBuf;
+          }
+        });
+        this.seatUi.onThought(this.pid, phases[0] ?? 'purchase', r.text, r.toolCalls, this.usage);
         return r;
       } catch (err) {
         if (err instanceof StoppedError) throw err;
@@ -731,6 +771,15 @@ async function runAiGame(state: GameState, config: AiGameConfig): Promise<void> 
         `<span class="pdot" style="background:${color}"></span><b>${escapeHtml(seatName)}</b> ` +
           `${escapeHtml(name)} ${ok ? '<span class="ok">✓</span>' : `<span class="bad">✗ [${escapeHtml(code ?? 'error')}]</span>`}`,
       );
+    },
+    onPhaseSkipped: (s, pid, phase, reason) => {
+      const seatName = config.playerNames[pid] ?? `Player ${pid + 1}`;
+      const color = state.players[pid]?.color ?? '#999';
+      feed(
+        `<span class="pdot" style="background:${color}"></span><b>${escapeHtml(seatName)}</b> ` +
+          `skipped ${escapeHtml(phase)} <span class="ok">—</span> ${escapeHtml(reason)}`,
+      );
+      ui.refresh();
     },
     onHumanTurn: (_s, pid, phase) => {
       document.body.classList.remove('ai-thinking');

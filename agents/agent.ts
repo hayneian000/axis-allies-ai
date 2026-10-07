@@ -6,8 +6,9 @@
 
 import { summarizeState } from '../engine/engine';
 import type { GameState, Phase } from '../engine/types';
-import { buildDiplomacyPrompt, buildPhasePrompt, buildSystemPrompt, PROMPT_CACHE_RETENTION, staticReferenceCacheKey } from './prompts';
-import { TOOLS, toolsForPhase } from './tools';
+import { buildDiplomacyPrompt, buildGroupPrompt, buildPhasePrompt, buildSystemPrompt, PROMPT_CACHE_RETENTION, staticReferenceCacheKey } from './prompts';
+import { TOOLS, toolsForGroup, toolsForPhase } from './tools';
+import type { PhaseGroup } from './tools';
 import {
   emptyDiplomacyUsage,
   emptyUsage,
@@ -16,6 +17,7 @@ import {
   type ProviderAdapter,
   type TokenUsage,
   type ToolCall,
+  type ToolDefinition,
   type TranscriptMessage,
 } from './types';
 
@@ -145,6 +147,46 @@ export class Agent {
    * as it arrives, instead of returning only after the full response.
    */
   async act(state: GameState, phase: Phase, onToken?: (deltaText: string) => void): Promise<ActResult> {
+    const phasePrompt = buildPhasePrompt({ phase, stateBrief: summarizeState(state, this.playerId) });
+    return this.complete(state, phasePrompt, toolsForPhase(phase), onToken);
+  }
+
+  /**
+   * Run one BATCHED turn's worth of LLM reasoning: a single provider
+   * round-trip plans every live phase in `phases` (canonical order). The
+   * driver partitions the returned tool calls by tool name and applies them
+   * phase by phase. Used by the turn driver; diplomacy and human-driven
+   * paths keep using act().
+   *
+   * `onToken`, when provided, is forwarded to the provider for streaming
+   * (see act()).
+   */
+  async actGroup(
+    state: GameState,
+    group: PhaseGroup,
+    phases: Phase[],
+    onToken?: (deltaText: string) => void,
+  ): Promise<ActResult> {
+    const groupPrompt = buildGroupPrompt({
+      group,
+      phases,
+      stateBrief: summarizeState(state, this.playerId),
+    });
+    return this.complete(state, groupPrompt, toolsForGroup(phases), onToken);
+  }
+
+  /**
+   * Shared single-round-trip implementation behind act()/actGroup(): build
+   * the prompt from the seat's own inputs, send it, and file the response
+   * in the private history (tool results are recorded afterwards by the
+   * driver via recordToolResults).
+   */
+  private async complete(
+    state: GameState,
+    userPrompt: string,
+    tools: ToolDefinition[],
+    onToken?: (deltaText: string) => void,
+  ): Promise<ActResult> {
     const apiKey = this.getApiKey();
     if (!apiKey) throw new MissingApiKeyError(this.playerId);
 
@@ -156,13 +198,10 @@ export class Agent {
     const playerName = me?.name ?? `Player ${this.playerId}`;
     const system = buildSystemPrompt({ playerName, persona: this.persona });
 
-    const stateBrief = summarizeState(state, this.playerId);
     const chat = visibleChat(state, playerName);
-    const phasePrompt = buildPhasePrompt({ phase, stateBrief });
-    const userContent = chat ? `${phasePrompt}\n\nPUBLIC CHAT (visible to you)\n${chat}` : phasePrompt;
+    const userContent = chat ? `${userPrompt}\n\nPUBLIC CHAT (visible to you)\n${chat}` : userPrompt;
 
     const transcript: TranscriptMessage[] = [...this.history, { role: 'user', content: userContent }];
-    const tools = toolsForPhase(phase);
     const delta: PlayerUsage = emptyUsage();
 
     const resp = await this.provider.complete({

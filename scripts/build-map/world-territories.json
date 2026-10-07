@@ -13,9 +13,9 @@
     "height": 840
   },
   "simplify": {
-    "tolerancePx": 1.6,
+    "tolerancePx": 0.8,
     "minPoints": 5,
-    "maxPoints": 90
+    "maxPoints": 150
   },
   "landSource": {
     "file": "cache/ne_50m_admin_0_countries.geojson",

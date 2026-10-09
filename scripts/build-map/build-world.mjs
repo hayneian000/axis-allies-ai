@@ -544,8 +544,8 @@ const territories = projected.map((e, i) => ({
   ...(e.cfg.victoryCity ? { victoryCity: e.cfg.victoryCity } : {}),
   neutral: !!e.cfg.neutral,
 }));
-// Build the 65 sea zones (adapted polygons clipped to our ocean).
-const seaTerritories = buildSeaZones(territories);
+// Build the 65 sea zones (TripleA board polygons clipped to our ocean).
+const { seas: seaTerritories, canals: seaCanals } = buildSeaZones(territories);
 // Wire sea<->land adjacency both ways.
 {
   const byId = new Map(territories.map((t) => [t.id, t]));
@@ -591,7 +591,7 @@ const out = {
   regions: config.regions,
   territories,
   wrapPairs: config.wrapPairs,
-  canals: config.canals,
+  canals: seaCanals,
 };
 fs.writeFileSync(prevPath, JSON.stringify(out, null, 2) + '\n');
 console.log(`wrote data/map-1942.json (${territories.length} territories)`);

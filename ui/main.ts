@@ -1,8 +1,10 @@
-import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, centroid, ipcOf, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
+import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, boardTintHex, canalBetween, centroid, ipcOf, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
 import boardUrl from './board-1942.jpg';
 import { playIntro } from './intro';
 import {
   autoCasualties,
+  canalEdgeOpen,
+  capitalsOf,
   chooseCasualties,
   combatMove,
   countAir,
@@ -362,13 +364,13 @@ function boot(): void {
   );
   map.addEventListener('dblclick', (e) => {
     e.preventDefault();
-    view = { x: 0, y: 0, k: 1 };
+    view = homeView();
     applyView();
   });
   $('zin').addEventListener('click', () => zoomOnPoint({ x: VB_W / 2, y: VB_H / 2 }, 1.25));
   $('zout').addEventListener('click', () => zoomOnPoint({ x: VB_W / 2, y: VB_H / 2 }, 1 / 1.25));
   $('zreset').addEventListener('click', () => {
-    view = { x: 0, y: 0, k: 1 };
+    view = homeView();
     applyView();
   });
 
@@ -561,6 +563,25 @@ let VB_H = 470;
 let view = { x: 0, y: 0, k: 1 };
 let syncedViewBox = '';
 
+/** Board-space fit: the 1942 board's edge labels (Central America at
+ *  x=10, the United States names at both wrap edges, sz21 at the bottom)
+ *  are authored ON the board edge and their text overflows the 3500x2000
+ *  frame, so an exact 1:1 fit clips them at the panel edge. The home view
+ *  therefore fits the board at 93%, centered — the whole board plus its
+ *  edge text sits inside the panel, letterboxed by the ocean backdrop.
+ *  Other maps home at exactly 1:1 (their labels stay inside the frame). */
+const BOARD_FIT_K = 0.93;
+
+function homeView(): { x: number; y: number; k: number } {
+  if (!isBoardSpace()) return { x: 0, y: 0, k: 1 };
+  const k = BOARD_FIT_K;
+  return { x: (VB_W - VB_W * k) / 2, y: (VB_H - VB_H * k) / 2, k };
+}
+
+function minZoom(): number {
+  return isBoardSpace() ? BOARD_FIT_K : 1;
+}
+
 /** Pull VB_W/VB_H + the #map viewBox attribute from the active MAP.
  *  Called at init and whenever a game starts/restarts (and at the top
  *  of renderMap, which covers the AI-driver and load-game paths).
@@ -582,7 +603,7 @@ function syncFromMap(): void {
   }
   if (dimsChanged) {
     syncedViewBox = key;
-    view = { x: 0, y: 0, k: 1 };
+    view = homeView();
     if (document.getElementById('vport')) applyView();
   }
 }
@@ -776,6 +797,10 @@ function seaTile(
   g.appendChild(tip);
   const pts = t.points.map((p) => p.join(',')).join(' ');
   const ownerHex = st.owner === null ? '#7fb3d9' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
+  // Board space: controlled waters tint with the occupying seat's
+  // official nation color (subtler than land — see the board-mode CSS);
+  // open waters keep the pale blue.
+  const boardHex = st.owner === null ? '#7fb3d9' : boardTintHex(t, st.owner);
   let cls = 'terr sea';
   if (tid === sel) cls += ' selfrom';
   else if (isDest) cls += ' dest';
@@ -783,10 +808,10 @@ function seaTile(
   const attrs: Record<string, string> = {
     points: pts,
     // Board space: the artwork is the water — the polygon is an
-    // interaction layer carrying only a faint owner tint (its
-    // fill-opacity is set by the #map.board-mode CSS).
-    fill: isBoardSpace() ? ownerHex : '#2e5a7d',
-    stroke: ownerHex,
+    // interaction layer carrying the owner tint (its fill-opacity is
+    // set by the #map.board-mode CSS).
+    fill: isBoardSpace() ? boardHex : '#2e5a7d',
+    stroke: isBoardSpace() ? boardHex : ownerHex,
     'stroke-width': st.owner === null ? '1.5' : '2.5',
   };
   if (st.owner === null) attrs['stroke-dasharray'] = '7 4';
@@ -818,13 +843,19 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
   const pts = t.points.map((p) => p.join(',')).join(' ');
   const ownerHex = st.owner === null ? '#6e6e6a' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
   const board = isBoardSpace();
+  // Board space: the tint IS the territory's color on the printed board —
+  // the official color of the nation holding it (data.ts boardTintHex:
+  // original nation's color while its own seat holds it, the capturer's
+  // lead nation after a capture, cream for neutrals), at the solid
+  // fill-opacity set by the board-mode CSS.
+  const boardHex = boardTintHex(t, st.owner);
   const base = svgEl('polygon', {
     points: pts,
-    // Board space: transparent interaction layer over the board JPEG —
-    // owner color only, at the low fill-opacity set by the board-mode
-    // CSS. America keeps its parchment base + tint wash below.
-    fill: board ? ownerHex : 'var(--paper, #c9b98a)',
-    stroke: ownerHex,
+    // Board space: interaction layer over the board JPEG carrying the
+    // official-color control tint. America keeps its parchment base +
+    // tint wash below.
+    fill: board ? boardHex : 'var(--paper, #c9b98a)',
+    stroke: board ? boardHex : ownerHex,
     'stroke-width': '2',
   });
   let cls = 'terr';
@@ -843,8 +874,8 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
     g.appendChild(
       svgEl('polygon', {
         points: epts,
-        fill: board ? ownerHex : 'var(--paper, #c9b98a)',
-        stroke: ownerHex,
+        fill: board ? boardHex : 'var(--paper, #c9b98a)',
+        stroke: board ? boardHex : ownerHex,
         'stroke-width': '2',
         class: cls,
         'data-owner': st.owner === null ? 'null' : String(st.owner),
@@ -978,33 +1009,47 @@ function boardNameSize(name: string): number {
   return 34;
 }
 
-/** Board-space labels. TripleA's base artwork prints NO territory names
- *  or sea-zone numbers (TripleA draws that text itself from
- *  name_place.txt), so board mode renders the names here, at the
+/** Board-space labels, in two layers. TripleA's base artwork prints NO
+ *  territory names or sea-zone numbers (TripleA draws that text itself
+ *  from name_place.txt), so board mode renders the names here, at the
  *  name_place anchors (t.nameLabel): land names in dark ink with a
  *  light halo, the IPC value on a smaller second line, and sea zones
  *  as a bare zone number in light text. What renders at the territory's
  *  label point is the dynamic state the artwork cannot know: unit
  *  icons + counts (land and sea) and the factory indicator. Icon rows
- *  are scaled up (BOARD_SCALE) because board coordinates are ~3.5x the
- *  America map's — unscaled 15px chits would be unreadable at
+ *  are scaled up (BOARD_UNIT_SCALE) because board coordinates are ~3.5x
+ *  the America map's — unscaled 15px chits would be unreadable at
  *  full-board zoom. Sea zones also keep their dynamic aux lines
  *  (cargo, carrier capacity, coexisting forces), which are game state,
- *  not artwork. */
+ *  not artwork.
+ *
+ *  Layering: renderMap draws every territory's MARKERS (unit chits,
+ *  factory badge, sea aux lines) first and every territory's NAMES in a
+ *  second pass, so a name is never painted under a neighboring stack.
+ *  The handful of names whose anchor still sits directly on their own
+ *  stack carry a data-driven `nameNudge` (build script's NAME_NUDGES
+ *  table) that moves them into open space. Both layers are
+ *  pointer-events: none. */
 const BOARD_UNIT_SCALE = 3;
-function boardLabels(
+
+/** Name layer (drawn last, above all unit chits): the territory name +
+ *  IPC line, or the sea-zone number, at the name_place anchor plus the
+ *  territory's optional nameNudge. */
+function boardNames(
   s: GameState, tid: string, inBattle: boolean, lx: number, ly: number,
 ): SVGElement {
   const t = MAP.territories.find((x) => x.id === tid)!;
-  const st = s.territories[tid];
   const g = svgEl('g', {
     class: t.domain === 'sea' ? 'tlabels sealabels boardlabels' : 'tlabels boardlabels',
     'data-terr': tid,
     'pointer-events': 'none',
   });
   // Name text at the name_place anchor (falls back to the label point
-  // for any map that predates nameLabel).
-  const [nx, ny] = t.nameLabel ?? [lx, ly];
+  // for any map that predates nameLabel), shifted by the optional
+  // data-driven nudge for stack-collision territories.
+  const [ax, ay] = t.nameLabel ?? [lx, ly];
+  const nx = ax + (t.nameNudge?.[0] ?? 0);
+  const ny = ay + (t.nameNudge?.[1] ?? 0);
   if (t.domain === 'sea') {
     const num = svgEl('text', {
       x: String(nx),
@@ -1040,6 +1085,23 @@ function boardLabels(
       g.appendChild(ip);
     }
   }
+  return g;
+}
+
+/** Marker layer (drawn before the name layer): unit icon row + counts
+ *  at the centers.txt label point, the factory badge, and — for sea
+ *  zones — the dynamic aux lines (cargo, carrier capacity, coexisting
+ *  forces). */
+function boardMarkers(
+  s: GameState, tid: string, inBattle: boolean, lx: number, ly: number,
+): SVGElement {
+  const t = MAP.territories.find((x) => x.id === tid)!;
+  const st = s.territories[tid];
+  const g = svgEl('g', {
+    class: t.domain === 'sea' ? 'tlabels sealabels boardmarkers' : 'tlabels boardmarkers',
+    'data-terr': tid,
+    'pointer-events': 'none',
+  });
   const present = UNIT_ORDER.filter((u) => st.units[u] > 0);
   let below = ly;
   if (present.length > 0) {
@@ -1112,7 +1174,7 @@ function terrLabels(
   if (t.domain === 'sea') return seaLabels(s, tid, t, st, inBattle, lx, ly);
   const bb = bboxOf(t.points);
   const g = svgEl('g', { class: 'tlabels', 'data-terr': tid, 'pointer-events': 'none' });
-  const isCap = s.players.some((p) => p.capital === tid);
+  const isCap = s.players.some((p) => capitalsOf(s, p.id).includes(tid));
 
   // Name + owner stacked on the label anchor, with breathing room below the IPC lozenge.
   const name = svgEl('text', {
@@ -1287,15 +1349,24 @@ function renderMap(s: GameState): void {
 
   // Layer 3: labels, badges, unit icons — above water.
   // Board space renders name text at the name_place anchors (the
-  // artwork prints none) plus the dynamic markers (units + factory).
+  // artwork prints none) plus the dynamic markers (units + factory),
+  // in two passes: all markers first, then all names, so names are
+  // never painted under a neighboring territory's unit stack.
   const layout = layoutLabels();
-  for (const t of MAP.territories) {
-    const p = layout.get(t.id)!;
-    vport.appendChild(
-      board
-        ? boardLabels(s, t.id, battles.has(t.id), p.x, p.y)
-        : terrLabels(s, t.id, battles.has(t.id), p.x, p.y),
-    );
+  if (board) {
+    for (const t of MAP.territories) {
+      const p = layout.get(t.id)!;
+      vport.appendChild(boardMarkers(s, t.id, battles.has(t.id), p.x, p.y));
+    }
+    for (const t of MAP.territories) {
+      const p = layout.get(t.id)!;
+      vport.appendChild(boardNames(s, t.id, battles.has(t.id), p.x, p.y));
+    }
+  } else {
+    for (const t of MAP.territories) {
+      const p = layout.get(t.id)!;
+      vport.appendChild(terrLabels(s, t.id, battles.has(t.id), p.x, p.y));
+    }
   }
 
   // Draft-move arrows above the tiles.
@@ -1376,9 +1447,9 @@ function svgPoint(clientX: number, clientY: number): { x: number; y: number } {
 }
 
 function zoomOnPoint(p: { x: number; y: number }, factor: number): void {
-  const k2 = Math.min(6, Math.max(1, view.k * factor));
-  if (k2 === 1) {
-    view = { x: 0, y: 0, k: 1 };
+  const k2 = Math.min(6, Math.max(minZoom(), view.k * factor));
+  if (k2 === minZoom()) {
+    view = homeView();
   } else {
     view = {
       x: p.x - ((p.x - view.x) * k2) / view.k,
@@ -1395,10 +1466,17 @@ function legalDestinations(s: GameState): Set<string> {
   if (!sel || s.phase === 'gameover') return out;
   if (s.territories[sel].owner !== s.currentPlayer) return out;
   const pid = s.currentPlayer;
+  const from = sel;
+  // A closed canal edge is not a legal destination highlight either
+  // (canalBetween is undefined for ordinary edges and for maps without
+  // canals, so this only bites on the 1942 board's two canal edges).
+  const canalShut = (n: string): boolean =>
+    !!canalBetween(from, n) && !canalEdgeOpen(s.territories, from, n, pid);
   if (s.phase === 'combatMove') {
-    for (const n of neighborsOf(sel)) out.add(n);
+    for (const n of neighborsOf(sel)) if (!canalShut(n)) out.add(n);
   } else if (s.phase === 'nonCombat') {
     for (const n of neighborsOf(sel)) {
+      if (canalShut(n)) continue;
       const o = s.territories[n].owner;
       // Friendly waters (empty or yours) are legal naval destinations.
       if (s.territories[n] && MAP.territories.find((t) => t.id === n)?.domain === 'sea') {
@@ -1587,7 +1665,8 @@ function renderInspector(s: GameState): void {
   const mine = t.owner === s.currentPlayer;
   const head = document.createElement('div');
   head.className = 'insp-head';
-  const isCap = s.players.some((p) => p.capital === sel);
+  const selId = sel;
+  const isCap = selId !== null && s.players.some((p) => capitalsOf(s, p.id).includes(selId));
   const ownerLabel =
     t.owner === null ? (def.domain === 'sea' ? 'open waters' : 'neutral') : s.players[t.owner].name;
   head.innerHTML =
@@ -1815,9 +1894,15 @@ function seaMoveDialogBody(
     // transit is barred but the destination itself may be hostile —
     // 1942 2e p.27; the engine applies the exact per-unit rules,
     // including submarine/destroyer exceptions, when moves launch).
+    // Canal edges (Panama, Suez) are offered only while the canal is
+    // open to this seat — the same canalEdgeOpen rule the engine
+    // validates with, so the dialog never offers a route the engine
+    // would reject as canal_closed.
     const destSet = new Set(
       neighborsOf(tid).filter(
-        (n) => MAP.territories.find((x) => x.id === n)?.domain === 'sea',
+        (n) =>
+          MAP.territories.find((x) => x.id === n)?.domain === 'sea' &&
+          canalEdgeOpen(s.territories, tid, n, pid),
       ),
     );
     const hostileZone = (z: string): boolean => {
@@ -1827,7 +1912,12 @@ function seaMoveDialogBody(
     for (const n1 of [...destSet]) {
       if (hostileZone(n1)) continue;
       for (const n2 of neighborsOf(n1)) {
-        if (MAP.territories.find((x) => x.id === n2)?.domain === 'sea') destSet.add(n2);
+        if (
+          MAP.territories.find((x) => x.id === n2)?.domain === 'sea' &&
+          canalEdgeOpen(s.territories, n1, n2, pid)
+        ) {
+          destSet.add(n2);
+        }
       }
     }
     const dests = [...destSet];

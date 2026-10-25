@@ -639,29 +639,42 @@ input::placeholder { color: var(--faint); }
 
 /* ---------- 1942 board-space mode ----------
    The board JPEG (ui/board-1942.jpg, rendered as the first child of
-   #vport) is the terrain artwork. Territory polygons are only an
-   interaction layer over it: near-transparent owner tint normally,
-   with the stroke/highlight states doing the talking. The .board-mode
-   class is set on #map by syncFromMap() in ui/main.ts whenever the
-   active map has boardSpace: true; America rendering is untouched. */
+   #vport) is the terrain artwork. Territory polygons over it carry the
+   official power color of the holding nation (near-solid on land,
+   a wash at sea) so controlled territory reads like the printed
+   board, with the stroke/highlight states doing the talking. The
+   .board-mode class is set on #map by syncFromMap() in ui/main.ts
+   whenever the active map has boardSpace: true; America rendering is
+   untouched. */
 #map.board-mode .board-art { pointer-events: none; }
+/* Land carries the official nation color (ui/main.ts boardTintHex) at
+   near-board strength: the printed board's territories ARE their power
+   colors, so the tint is close to solid and the pale base art only
+   textures it. Sea zones wear the same palette at a lighter wash so
+   controlled waters read as tinted, not painted. */
 #map.board-mode polygon.terr {
-  fill-opacity: 0.16;
+  fill-opacity: 0.75;
   stroke-width: 2.5;
 }
+#map.board-mode polygon.terr.sea {
+  fill-opacity: 0.38;
+}
 #map.board-mode polygon.terr:hover {
-  fill-opacity: 0.3;
+  fill-opacity: 0.85;
   stroke: #fff;
   stroke-width: 4;
 }
+#map.board-mode polygon.terr.sea:hover {
+  fill-opacity: 0.5;
+}
 #map.board-mode polygon.terr.selfrom {
-  fill-opacity: 0.28;
+  fill-opacity: 0.85;
   stroke: #fff;
   stroke-width: 5;
   filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
 }
 #map.board-mode polygon.terr.dest {
-  fill-opacity: 0.28;
+  fill-opacity: 0.85;
   stroke: #ffd23e;
   stroke-width: 5;
   stroke-dasharray: 16 9;

@@ -280,14 +280,56 @@ describe('scenario-1942 (four-seat merge of the five board powers)', () => {
     units: Record<string, number>;
   }>;
 
-  it('has 4 players, merged banks, and all 5 board capitals listed', () => {
+  it('has 4 players, merged banks, and per-seat capitals covering all 5 board capitals', () => {
     expect(scenario1942.players).toBe(4);
     // Germans 41, Russians 24, Japanese 30, British 31 + Americans 42 = 73.
     expect(scenario1942.banks).toEqual([41, 24, 30, 73]);
-    expect(scenario1942.capitals).toHaveLength(5);
-    expect([...scenario1942.capitals].sort()).toEqual(
+    // One capitals entry per seat; seat 3 (British + Americans) lists both
+    // of its capitals, primary first.
+    expect(scenario1942.capitals).toHaveLength(4);
+    expect(scenario1942.capitals[0]).toBe('germany');
+    expect(scenario1942.capitals[1]).toBe('russia');
+    expect(scenario1942.capitals[2]).toBe('japan');
+    expect(scenario1942.capitals[3]).toEqual(['united_kingdom', 'eastern_united_states']);
+    const flat = (scenario1942.capitals as Array<string | string[]>).flatMap((c) =>
+      Array.isArray(c) ? c : [c],
+    );
+    expect([...flat].sort()).toEqual(
       ['eastern_united_states', 'germany', 'japan', 'russia', 'united_kingdom'].sort(),
     );
+    expect(scenario1942.capitalsToWin).toBe(3);
+  });
+
+  it('name nudges exist only for the documented stack-collision territories', () => {
+    const nudged = TS.filter((t) => (t as { nameNudge?: [number, number] }).nameNudge);
+    expect(nudged.map((t) => t.id).sort()).toEqual(
+      [
+        'anhwei',
+        'france',
+        'germany',
+        'india',
+        'italy',
+        'japan',
+        'kiangsu',
+        'kwangtung',
+        'manchuria',
+        'poland',
+        'southern_europe',
+      ].sort(),
+    );
+    // Raw nameLabel anchors stay exactly as name_place.txt authored them.
+    expect(byId.get('japan')!.nameLabel).toEqual([2744, 728]);
+    expect(byId.get('germany')!.nameLabel).toEqual([990, 560]);
+    // Every nudged anchor stays inside the viewBox.
+    const { width, height } = map1942.viewBox;
+    for (const t of nudged) {
+      const [dx, dy] = (t as unknown as { nameNudge: [number, number] }).nameNudge;
+      const [nx, ny] = t.nameLabel;
+      expect(nx + dx).toBeGreaterThanOrEqual(0);
+      expect(nx + dx).toBeLessThanOrEqual(width);
+      expect(ny + dy).toBeGreaterThanOrEqual(0);
+      expect(ny + dy).toBeLessThanOrEqual(height);
+    }
   });
 
   it('has 19 sea holdings carrying naval/fighter units only', () => {

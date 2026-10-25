@@ -197,6 +197,9 @@ export interface ChatMessage {
 
 export interface GameState {
   version: 3;
+  /** Map this game is played on (a data/data MapId). Recorded at creation
+   *  so a save file restores the right map on load; absent in old saves. */
+  mapId?: string;
   seed: number;
   rngState: number;
   numPlayers: number;

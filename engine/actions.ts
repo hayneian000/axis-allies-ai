@@ -5,7 +5,7 @@ import { AIR_UNIT_TYPES, CARGO_TYPES, LAND_UNIT_TYPES, addUnits, countAir, count
 import { DEFAULT_TURN_CAP, PLAYER_COLORS, fail, incomeOf, log, openBattles, ownedTerritories, ownsCapital, requireCurrentAlive, requirePhase, shuffle, usedKey } from './core';
 import { CARRIER_FIGHTERS, addPlayerSeaUnits, arriveSeaZone, cargoOf, carrierSpare, carryCargoAlong, consolidateDefender, destroyCargo, disembarkUnits, embarkUnits, findDestroyerIntercept, hasHostileDestroyer, hasSurfaceWarships, landingOptions, movePower, normalizeSeaZone, playerCarrierForce, playerSeaForce, removeSeaUnits, seaZoneForces, seaZoneHostileTo } from './naval';
 import { resolveCapture } from './combat';
-import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, UNITS, airDistance, areAdjacent, ipcOf, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
+import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
 import type { UnitType } from '../data/data';
 import type { ActionResult, CombatMove, GameState, MobilizePlacement, NonCombatMove, PurchaseItem, TerritoryState, UnitCounts } from './types';
 
@@ -28,6 +28,7 @@ export function createGame(opts: CreateGameOptions): GameState {
   const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31);
   const state: GameState = {
     version: 3,
+    mapId: activeMapId(),
     seed,
     rngState: seed >>> 0,
     numPlayers,

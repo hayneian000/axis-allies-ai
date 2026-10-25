@@ -1,4 +1,4 @@
-import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, centroid, ipcOf, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
+import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, centroid, ipcOf, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
 import boardUrl from './board-1942.jpg';
 import { playIntro } from './intro';
 import {
@@ -1659,14 +1659,30 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     seaMoveDialogBody(s, el, tid, isCombat, prefix);
     return;
   }
+  // Aircraft left aloft over a finished battle here (non-combat phase) are
+  // dialable alongside the units on the ground — the engine lands aloft
+  // air first. Without this, the phase panel's "land this air" instruction
+  // cannot be followed from a land territory (the sea dialog already
+  // handles the carrier case).
+  const aloft: Partial<UnitCounts> = {};
+  if (!isCombat) {
+    for (const b of s.battles) {
+      if (b.territoryId === tid && b.attackerId === pid && b.over) {
+        if (b.attack.fighter) aloft.fighter = (aloft.fighter ?? 0) + b.attack.fighter;
+        if (b.attack.bomber) aloft.bomber = (aloft.bomber ?? 0) + b.attack.bomber;
+      }
+    }
+  }
+  const aloftN = (aloft.fighter ?? 0) + (aloft.bomber ?? 0);
   const grid = document.createElement('div');
   grid.className = 'stepgrid';
   let any = false;
   for (const u of UNIT_ORDER) {
     if (u === 'aa' && isCombat) continue; // AA can't attack
-    if (t.units[u] <= 0) continue;
+    const availHere = t.units[u] + (aloft[u] ?? 0);
+    if (availHere <= 0) continue;
     any = true;
-    grid.appendChild(stepper(prefix, u, t.units[u]));
+    grid.appendChild(stepper(prefix, u, availHere));
   }
   if (!any) {
     const p = document.createElement('p');
@@ -1675,6 +1691,11 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     return;
   }
   el.appendChild(grid);
+  if (aloftN > 0) {
+    const p = document.createElement('p');
+    p.textContent = `${aloftN} aircraft aloft over the finished battle here — dial them above and pick a landing spot.`;
+    el.appendChild(p);
+  }
   if (isCombat) {
     const viaLab = document.createElement('label');
     viaLab.textContent = 'Via (tank blitz) ';
@@ -1694,7 +1715,22 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
   const h = document.createElement('p');
   h.innerHTML = '<strong>Send to:</strong>';
   el.appendChild(h);
-  const dests = neighborsOf(tid).filter((n) => {
+  // Destinations: adjacent territories, plus — when aircraft are based
+  // here (on the ground or aloft) — every territory within their range.
+  // Adjacent-only lists would strand land-based air (e.g. a bomber on an
+  // island territory could never reach a target); the engine validates
+  // the exact per-unit range and landing feasibility when moves launch.
+  let airRange = 0;
+  for (const u of ['fighter', 'bomber'] as const) {
+    if (t.units[u] + (aloft[u] ?? 0) > 0) airRange = Math.max(airRange, UNITS[u].move);
+  }
+  const destIds = new Set(neighborsOf(tid));
+  if (airRange > 0) {
+    for (const d of MAP.territories) {
+      if (d.id !== tid && airDistance(tid, d.id) <= airRange) destIds.add(d.id);
+    }
+  }
+  const dests = [...destIds].filter((n) => {
     const dd = MAP.territories.find((x) => x.id === n)!;
     if (isCombat) return true;
     if (dd.domain === 'sea') {
@@ -1716,7 +1752,9 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     btn.dataset.dest = d;
     const owner = dt.owner === null ? 'neutral' : dt.owner === pid ? 'yours' : s.players[dt.owner].name;
     const embarkTag = ddef.domain === 'sea' ? ' (embark)' : '';
-    btn.textContent = `${DISPLAY_NAME[d] ?? ddef.name}${embarkTag} (${owner}, ${describeUnits(dt.units)}${dt.factory ? ', FAC' : ''})`;
+    const dist = airDistance(tid, d);
+    const rangeTag = dist > 1 ? ` · ${dist} away` : '';
+    btn.textContent = `${DISPLAY_NAME[d] ?? ddef.name}${embarkTag} (${owner}, ${describeUnits(dt.units)}${dt.factory ? ', FAC' : ''})${rangeTag}`;
     btn.addEventListener('click', () => {
       const units = readUnits(s.phase === 'combatMove' ? 'mv' : 'nc');
       const full = { ...emptyUnits(), ...units };
@@ -1772,9 +1810,27 @@ function seaMoveDialogBody(
       atkLab.append(' Attack subs/transports (uncheck to ignore & coexist) ', atkBox);
       el.appendChild(atkLab);
     }
-    const dests = neighborsOf(tid).filter(
-      (n) => MAP.territories.find((x) => x.id === n)?.domain === 'sea',
+    // Destinations: adjacent zones, plus zones two steps away reached
+    // through non-hostile water (ships move up to 2 sea zones; hostile
+    // transit is barred but the destination itself may be hostile —
+    // 1942 2e p.27; the engine applies the exact per-unit rules,
+    // including submarine/destroyer exceptions, when moves launch).
+    const destSet = new Set(
+      neighborsOf(tid).filter(
+        (n) => MAP.territories.find((x) => x.id === n)?.domain === 'sea',
+      ),
     );
+    const hostileZone = (z: string): boolean => {
+      const o = s.territories[z].owner;
+      return o !== null && o !== pid;
+    };
+    for (const n1 of [...destSet]) {
+      if (hostileZone(n1)) continue;
+      for (const n2 of neighborsOf(n1)) {
+        if (MAP.territories.find((x) => x.id === n2)?.domain === 'sea') destSet.add(n2);
+      }
+    }
+    const dests = [...destSet];
     for (const d of dests) {
       const ddef = MAP.territories.find((x) => x.id === d)!;
       const dt = s.territories[d];
@@ -1827,7 +1883,13 @@ function seaMoveDialogBody(
       showError('');
       render();
     };
-    const airDests = neighborsOf(tid).filter((n) => {
+    // Fighter launch destinations: adjacent, plus anything within
+    // fighter range (carrier strikes are not limited to the next zone).
+    const airDestIds = new Set(neighborsOf(tid));
+    for (const d of MAP.territories) {
+      if (d.id !== tid && airDistance(tid, d.id) <= UNITS.fighter.move) airDestIds.add(d.id);
+    }
+    const airDests = [...airDestIds].filter((n) => {
       const dd = MAP.territories.find((x) => x.id === n)!;
       if (dd.domain === 'sea') return true;
       const o = s.territories[n].owner;

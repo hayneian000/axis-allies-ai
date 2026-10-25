@@ -3,7 +3,7 @@
  */
 import { describeUnits } from './units';
 import { MAX_CHAT_LENGTH, fail, incomeOf, log, ownedTerritories } from './core';
-import { ALL_UNIT_TYPES, MAP, ipcOf } from '../data/data';
+import { ALL_UNIT_TYPES, MAP, activeMapId, ipcOf, setActiveMap, type MapId } from '../data/data';
 import type { ActionResult, ChatMessage, GameState, UnitCounts } from './types';
 
 
@@ -93,9 +93,25 @@ export function serialize(state: GameState): string {
 }
 
 
+/** Which map a save belongs to: the recorded mapId, or — for saves made
+ *  before saves carried one — inferred from territory ids unique to a map. */
+function mapIdOfSave(data: GameState): MapId | null {
+  if (data.mapId === 'america' || data.mapId === 'world1942') return data.mapId;
+  const ids = Object.keys(data.territories ?? {});
+  if (ids.includes('germany') || ids.includes('sz62')) return 'world1942';
+  if (ids.includes('california') || ids.includes('new_york')) return 'america';
+  return null;
+}
+
 export function deserialize(json: string): GameState {
   const data = JSON.parse(json) as GameState;
   if (!data || data.version !== 3) throw new Error('Unsupported save version.');
+  // Restore the save's own map before validating against it: territory ids
+  // differ per map, so validating a 1942 save under the America map (the
+  // default) fails on the first territory. The UI's load path relies on
+  // this — it hands the file straight here.
+  const want = mapIdOfSave(data);
+  if (want && want !== activeMapId()) setActiveMap(want);
   for (const t of MAP.territories) {
     const s = data.territories?.[t.id];
     if (!s || s.owner === undefined || !s.units) {

@@ -3685,6 +3685,10 @@
     2744,
     728
    ],
+   "nameNudge": [
+    0,
+    -150
+   ],
    "owner": "japan",
    "capital": "Tokyo",
    "victoryCity": "Tokyo",
@@ -5729,6 +5733,10 @@
    "nameLabel": [
     2481,
     558
+   ],
+   "nameNudge": [
+    0,
+    -95
    ],
    "owner": "japan",
    "neutral": false
@@ -11569,6 +11577,10 @@
     2396,
     738
    ],
+   "nameNudge": [
+    0,
+    -70
+   ],
    "owner": "japan",
    "victoryCity": "Shanghai",
    "neutral": false
@@ -12728,6 +12740,10 @@
    "nameLabel": [
     2347,
     912
+   ],
+   "nameNudge": [
+    0,
+    85
    ],
    "owner": "japan",
    "neutral": false
@@ -14152,6 +14168,10 @@
    "nameLabel": [
     2246,
     701
+   ],
+   "nameNudge": [
+    0,
+    70
    ],
    "owner": "us",
    "neutral": false
@@ -16195,6 +16215,10 @@
    "nameLabel": [
     990,
     560
+   ],
+   "nameNudge": [
+    0,
+    -105
    ],
    "owner": "germany",
    "capital": "Berlin",
@@ -46044,6 +46068,10 @@
     788,
     656
    ],
+   "nameNudge": [
+    0,
+    -90
+   ],
    "owner": "germany",
    "victoryCity": "Paris",
    "neutral": false
@@ -52444,6 +52472,10 @@
     1249,
     534
    ],
+   "nameNudge": [
+    0,
+    -100
+   ],
    "owner": "germany",
    "neutral": false
   },
@@ -55763,6 +55795,10 @@
     990,
     802
    ],
+   "nameNudge": [
+    0,
+    70
+   ],
    "owner": "germany",
    "victoryCity": "Rome",
    "neutral": false
@@ -57158,6 +57194,10 @@
    "nameLabel": [
     1096,
     812
+   ],
+   "nameNudge": [
+    0,
+    100
    ],
    "owner": "germany",
    "neutral": false
@@ -75401,6 +75441,10 @@
    "nameLabel": [
     1855,
     1058
+   ],
+   "nameNudge": [
+    0,
+    95
    ],
    "owner": "uk",
    "victoryCity": "Calcutta",

@@ -237,6 +237,36 @@ for (const [id, [nx, ny]] of nameLabelById) {
   );
 }
 
+// ------------------------------------------------------------ name nudges --
+// A few authored name anchors collide with the territory's own starting
+// unit stack (unit icons sit at the centers.txt anchor, scaled 3x, and the
+// widest stacks span 400-500 board units). For those territories the name
+// is drawn at nameLabel + nameNudge instead. Offsets are [dx, dy] in board
+// units, chosen to move the name into open space inside (or just beside)
+// its own polygon, clear of the unit row and the factory badge below it.
+// Every other territory keeps its authored anchor untouched. The UI also
+// draws all names above all unit chits, so a nudge is only needed where
+// the name would sit directly ON the stack, not merely near it.
+const NAME_NUDGES = {
+  // Europe: names ride above/below their stacks into open home territory.
+  france: [0, -90], // stack spans the anchor row; name goes north
+  germany: [0, -105], // 6-type stack, 420 wide; name goes north
+  poland: [0, -100], // east of Germany's stack; name goes north
+  italy: [0, 70], // down the boot, clear of the row
+  southern_europe: [0, 100], // into the open Balkans
+  // Coastal China: interleaved stacks; alternate up/down to separate.
+  manchuria: [0, -95],
+  anhwei: [0, 70],
+  kiangsu: [0, -70],
+  kwangtung: [0, 85],
+  // Japan: name anchor coincides with the unit anchor and the starting
+  // stack is the widest on the board (507); move the name well north,
+  // over the upper home islands.
+  japan: [0, -150],
+  // India: stack sits on the anchor; the subcontinent's south is empty.
+  india: [0, 95],
+};
+
 // ------------------------------------------------------------- map-1942.json --
 const adjacency = new Map(metaIds.map((id) => [id, new Set()]));
 for (const [a, b] of connections) {
@@ -288,6 +318,7 @@ const territories = metaIds.map((id) => {
     if (rest.length > 0) t.extraPolygons = rest;
     t.label = label;
     t.nameLabel = nameLabel;
+    if (NAME_NUDGES[id]) t.nameNudge = NAME_NUDGES[id];
     t.owner = m.owner;
     if (m.capital !== undefined) t.capital = m.capital;
     if (m.victoryCity !== undefined) t.victoryCity = m.victoryCity;
@@ -358,7 +389,22 @@ const mapOut = {
       nx >= 0 && nx <= 3500 && ny >= 0 && ny <= 2000,
       `nameLabel for "${t.id}" [${nx},${ny}] lies outside the viewBox`,
     );
+    if (t.nameNudge) {
+      assert(
+        Object.prototype.hasOwnProperty.call(NAME_NUDGES, t.id),
+        `nameNudge emitted for "${t.id}" but it is not in NAME_NUDGES`,
+      );
+      const [gx, gy] = [nx + t.nameNudge[0], ny + t.nameNudge[1]];
+      assert(
+        gx >= 0 && gx <= 3500 && gy >= 0 && gy <= 2000,
+        `nudged name anchor for "${t.id}" [${gx},${gy}] lies outside the viewBox`,
+      );
+    }
   }
+  assert(
+    Object.keys(NAME_NUDGES).every((id) => byId.has(id)),
+    'NAME_NUDGES references an unknown territory id',
+  );
 }
 
 // --------------------------------------------------------- scenario-1942.json --
@@ -496,7 +542,12 @@ if (['Germans', 'Russians', 'Japanese', 'British', 'Americans'].every((p) => pus
 
 const scenarioOut = {
   players: 4,
-  capitals: ['germany', 'russia', 'japan', 'united_kingdom', 'eastern_united_states'],
+  // One entry per seat; seat 3 rules two powers, so its entry is the pair
+  // of its capitals (primary first). The engine registers BOTH as seat 3
+  // capitals: capturing either steals the seat's bank, the seat is
+  // purchase/income-blocked only while it holds neither, and victory is
+  // a majority of all five board capitals (capitalsToWin: 3).
+  capitals: ['germany', 'russia', 'japan', ['united_kingdom', 'eastern_united_states']],
   capitalsToWin: 3,
   banks,
   holdings,
@@ -506,9 +557,9 @@ const scenarioOut = {
     'Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. ' +
     'The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, ' +
     'Japanese = seat 2, and British + Americans are combined into seat 3 (both powers\' territories and ' +
-    'starting units belong to seat 3). capitals lists all five board capitals in seat order; seat 3\'s ' +
-    'capital is united_kingdom and eastern_united_states is the fifth entry (the combined seat\'s second ' +
-    `capital). Banks: ${bankSource}. ` +
+    'starting units belong to seat 3). capitals has one entry per seat; seat 3\'s entry lists both of ' +
+    'its capitals, united_kingdom (primary) and eastern_united_states, and both are registered seat ' +
+    `capitals in the engine. Banks: ${bankSource}. ` +
     'Sea-zone holdings carry the naval starting units from the XML; land holdings cover every ' +
     'power-owned territory. Neutral territories use the default 3-infantry garrison.',
 };

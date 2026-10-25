@@ -3,9 +3,9 @@
  */
 import { AIR_UNIT_TYPES, CARGO_TYPES, LAND_UNIT_TYPES, addUnits, countAir, countLand, countSea, countUnits, describeUnits, emptyUnits, hasEnough, subUnits, validCounts } from './units';
 import { DEFAULT_TURN_CAP, PLAYER_COLORS, fail, incomeOf, log, openBattles, ownedTerritories, ownsCapital, requireCurrentAlive, requirePhase, shuffle, usedKey } from './core';
-import { CARRIER_FIGHTERS, addPlayerSeaUnits, arriveSeaZone, cargoOf, carrierSpare, carryCargoAlong, consolidateDefender, destroyCargo, disembarkUnits, embarkUnits, findDestroyerIntercept, hasHostileDestroyer, hasSurfaceWarships, landingOptions, movePower, normalizeSeaZone, playerCarrierForce, playerSeaForce, removeSeaUnits, seaZoneForces, seaZoneHostileTo } from './naval';
+import { CARRIER_FIGHTERS, addPlayerSeaUnits, arriveSeaZone, canalBlockFailure, canalEdgeOpen, cargoOf, carrierSpare, carryCargoAlong, consolidateDefender, destroyCargo, disembarkUnits, embarkUnits, findDestroyerIntercept, hasHostileDestroyer, hasSurfaceWarships, landingOptions, movePower, normalizeSeaZone, playerCarrierForce, playerSeaForce, removeSeaUnits, seaZoneForces, seaZoneHostileTo } from './naval';
 import { resolveCapture } from './combat';
-import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
+import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, NATION_COLORS_1942, SEAT_NATION_1942, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
 import type { UnitType } from '../data/data';
 import type { ActionResult, CombatMove, GameState, MobilizePlacement, NonCombatMove, PurchaseItem, TerritoryState, UnitCounts } from './types';
 
@@ -54,14 +54,22 @@ export function createGame(opts: CreateGameOptions): GameState {
   };
 
   const names = opts.playerNames ?? [];
+  // On the 1942 board, seat chrome takes the official color of the seat's
+  // lead nation (data.ts NATION_COLORS_1942 / SEAT_NATION_1942) so the
+  // sidebar, banner, and territory tints share one palette. Other maps
+  // keep the classic PLAYER_COLORS.
+  const onBoard1942 = activeMapId() === 'world1942';
   for (let i = 0; i < numPlayers; i++) {
+    const caps = scenario.capitals[i];
+    const capitals = Array.isArray(caps) ? [...caps] : [caps];
     state.players.push({
       id: i,
       name: names[i] || `Player ${i + 1}`,
-      color: PLAYER_COLORS[i],
+      color: onBoard1942 ? NATION_COLORS_1942[SEAT_NATION_1942[i]] : PLAYER_COLORS[i],
       alive: true,
       ipcs: scenario.banks[i] ?? 0,
-      capital: scenario.capitals[i],
+      capital: capitals[0],
+      capitals,
     });
   }
   state.turnOrder = shuffle(state, state.players.map((p) => p.id));
@@ -155,8 +163,10 @@ export function createGame(opts: CreateGameOptions): GameState {
     throw new Error('Scenario does not cover every land territory.');
   }
   for (const p of state.players) {
-    if (!state.territories[p.capital]?.factory) {
-      throw new Error(`Capital ${p.capital} has no factory.`);
+    for (const cap of p.capitals ?? [p.capital]) {
+      if (!state.territories[cap]?.factory) {
+        throw new Error(`Capital ${cap} has no factory.`);
+      }
     }
   }
 
@@ -343,10 +353,16 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
       const nSubs = units.submarine ?? 0;
       const otherSeaN = seaN - nSubs;
       if (nSubs > 0) {
-        const reach = seaReachable(move.from, UNITS.submarine.move, (z) =>
-          z === move.to ? true : !hasHostileDestroyer(work, z, playerId),
+        const subPassable = (z: string) =>
+          z === move.to ? true : !hasHostileDestroyer(work, z, playerId);
+        const reach = seaReachable(move.from, UNITS.submarine.move, subPassable, (a, b) =>
+          canalEdgeOpen(work, a, b, playerId),
         );
         if (!reach.has(move.to)) {
+          const canalErr = canalBlockFailure(
+            work, move.from, move.to, UNITS.submarine.move, subPassable, playerId,
+          );
+          if (canalErr) return canalErr;
           const intercept = findDestroyerIntercept(work, move.from, playerId);
           if (intercept) {
             return fail(
@@ -358,10 +374,16 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
         }
       }
       if (otherSeaN > 0) {
-        const reach = seaReachable(move.from, UNITS.transport.move, (z) =>
-          z === move.to ? true : !seaZoneHostileTo(work, z, playerId),
+        const shipPassable = (z: string) =>
+          z === move.to ? true : !seaZoneHostileTo(work, z, playerId);
+        const reach = seaReachable(move.from, UNITS.transport.move, shipPassable, (a, b) =>
+          canalEdgeOpen(work, a, b, playerId),
         );
         if (!reach.has(move.to)) {
+          const canalErr = canalBlockFailure(
+            work, move.from, move.to, UNITS.transport.move, shipPassable, playerId,
+          );
+          if (canalErr) return canalErr;
           return fail(
             'range',
             `Ships in ${move.from} cannot reach ${move.to} (2 sea zones, no hostile transit).`,
@@ -1005,10 +1027,16 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
       const nSubs = units.submarine ?? 0;
       const otherSeaN = seaN - nSubs;
       if (nSubs > 0) {
-        const reach = seaReachable(move.from, UNITS.submarine.move, (z) =>
-          z === move.to ? true : !hasHostileDestroyer(work, z, playerId),
+        const subPassable = (z: string) =>
+          z === move.to ? true : !hasHostileDestroyer(work, z, playerId);
+        const reach = seaReachable(move.from, UNITS.submarine.move, subPassable, (a, b) =>
+          canalEdgeOpen(work, a, b, playerId),
         );
         if (!reach.has(move.to)) {
+          const canalErr = canalBlockFailure(
+            work, move.from, move.to, UNITS.submarine.move, subPassable, playerId,
+          );
+          if (canalErr) return canalErr;
           const intercept = findDestroyerIntercept(work, move.from, playerId);
           if (intercept) {
             return fail(
@@ -1020,8 +1048,15 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
         }
       }
       if (otherSeaN > 0) {
-        const reach = seaReachable(move.from, UNITS.transport.move, (z) => !seaZoneHostileTo(work, z, playerId));
+        const shipPassable = (z: string) => !seaZoneHostileTo(work, z, playerId);
+        const reach = seaReachable(move.from, UNITS.transport.move, shipPassable, (a, b) =>
+          canalEdgeOpen(work, a, b, playerId),
+        );
         if (!reach.has(move.to)) {
+          const canalErr = canalBlockFailure(
+            work, move.from, move.to, UNITS.transport.move, shipPassable, playerId,
+          );
+          if (canalErr) return canalErr;
           return fail('range', `Ships in ${move.from} cannot reach ${move.to} (2 non-hostile sea zones).`);
         }
       }

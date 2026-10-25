@@ -53,8 +53,16 @@ export function summarizeState(state: GameState, playerId: number): string {
   lines.push(`Round ${state.round}, ${state.players[state.currentPlayer].name} to move (phase ${state.phase}). You are ${me.name}. Bank ${me.ipcs}, income ${incomeOf(state, playerId)}.`);
   for (const p of state.players) {
     const terrs = ownedTerritories(state, p.id).length;
-    const cap = state.territories[p.capital];
-    const capStatus = cap.owner === p.id ? 'holds capital' : cap.owner === null ? 'capital neutral' : `capital held by ${state.players[cap.owner].name}`;
+    const capStatus = (p.capitals ?? [p.capital])
+      .map((cid) => {
+        const cap = state.territories[cid];
+        return cap.owner === p.id
+          ? `holds capital ${cid}`
+          : cap.owner === null
+            ? `capital ${cid} neutral`
+            : `capital ${cid} held by ${state.players[cap.owner].name}`;
+      })
+      .join(', ');
     const factories = Object.keys(state.territories).filter(
       (t) => state.territories[t].owner === p.id && state.territories[t].factory,
     );
@@ -125,6 +133,10 @@ export function deserialize(json: string): GameState {
   }
   if (!Array.isArray(data.players) || !Array.isArray(data.battles)) {
     throw new Error('Save file is missing game data.');
+  }
+  // Saves from before multi-capital seats lack the per-seat capital list.
+  for (const p of data.players) {
+    if (!Array.isArray(p.capitals) || p.capitals.length === 0) p.capitals = [p.capital];
   }
   // Saves from before navy phase 1 lack the naval battle fields.
   for (const b of data.battles) {

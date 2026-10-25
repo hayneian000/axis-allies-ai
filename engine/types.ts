@@ -66,7 +66,14 @@ export interface PlayerState {
   alive: boolean;
   /** IPC bank. */
   ipcs: number;
+  /** The seat's primary capital (display + legacy readers). */
   capital: string;
+  /** All capitals belonging to this seat. Most seats have exactly one;
+   *  a seat ruling two powers (1942 seat 3) has two. The seat is
+   *  capital-blocked (no purchase, no income) only when it holds NONE
+   *  of them. Absent in saves from before multi-capital seats — readers
+   *  fall back to `[capital]` (see `capitalsOf` in core.ts). */
+  capitals?: string[];
 }
 
 export type Phase = 'purchase' | 'combatMove' | 'combat' | 'nonCombat' | 'mobilize' | 'gameover';

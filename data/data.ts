@@ -24,6 +24,11 @@ export interface TerritoryDef {
    *  name text is drawn, from TripleA's name_place.txt. Distinct from
    *  `label` (the centers.txt anchor that unit icons sit on). */
   nameLabel?: [number, number];
+  /** Board-space name nudge (1942 map only): a small [dx, dy] offset added
+   *  to `nameLabel` when drawing the name, for territories whose authored
+   *  name anchor collides with their starting unit stack. Emitted by the
+   *  build script from its NAME_NUDGES table; absent = draw at the anchor. */
+  nameNudge?: [number, number];
   /** Coarse world region (1942 map only; the America map groups by `states`). */
   region?: string;
   /** Starting power on the 1942 map: 'ussr' | 'germany' | 'uk' | 'japan' | 'us' | 'neutral'. Land only. */
@@ -156,7 +161,10 @@ export interface HoldingDef {
 
 export interface ScenarioDef {
   players: number;
-  capitals: string[];
+  /** One entry per seat: a single capital territory id, or — for a seat
+   *  ruling more than one power (1942 seat 3: British + Americans) — an
+   *  array of its capitals, primary first. */
+  capitals: Array<string | string[]>;
   banks: number[];
   holdings: HoldingDef[];
   neutrals: Record<string, Partial<Record<UnitType, number>> | null>;
@@ -170,6 +178,62 @@ export interface ScenarioDef {
 }
 
 export const UNITS: Record<UnitOrFactory, UnitStats> = unitsJson as Record<UnitOrFactory, UnitStats>;
+
+// ------------------------------------------------- 1942 official colors --
+/**
+ * Official power colors for the 1942 board, used for board-mode territory
+ * tints and (via the seat's lead nation) player chrome. Ground truth is the
+ * TripleA `world_war_ii_v5_1942` map package's own `map/map.properties`
+ * (`color.*` entries — the same package the geometry and artwork come
+ * from), cross-checked against its rendered preview: Germans #5a5a5a
+ * (preview samples #5b5b5b), Russians #af2828 (preview shades to #7a323c
+ * under relief), British #916400 (a dark tan), Americans #5a5a00 (olive),
+ * and the cream #d8ba7c the package assigns to impassable/non-power land
+ * (preview samples Switzerland at #c4af84). One deliberate deviation:
+ * Japanese is the physical board's orange #e87112, not the package's
+ * digital gold #e6b42d — the printed 1942 board colors Japan orange, and
+ * that is the palette the game's owner asked for.
+ */
+export const NATION_COLORS_1942: Record<string, string> = {
+  germany: '#5a5a5a',
+  ussr: '#af2828',
+  uk: '#916400',
+  japan: '#e87112',
+  us: '#5a5a00',
+  neutral: '#d8ba7c',
+};
+
+/** Which seat each 1942 nation belongs to (UK and US share seat 3). */
+export const NATION_SEAT_1942: Record<string, number> = {
+  germany: 0,
+  ussr: 1,
+  japan: 2,
+  uk: 3,
+  us: 3,
+};
+
+/** Each seat's lead nation: its chrome color, and the tint for territory
+ *  the seat captures from another power. Seat 3 leads from the United
+ *  Kingdom (its first-listed capital); its American holdings still tint
+ *  US olive because they are held by their original nation (see
+ *  `boardTintHex`). */
+export const SEAT_NATION_1942: string[] = ['germany', 'ussr', 'japan', 'uk'];
+
+/**
+ * Board-mode tint for a territory held by `ownerSeat` (null = unheld):
+ * the color of the nation that holds it. A territory still held by its
+ * original power's seat keeps that nation's color — so seat 3's British
+ * holdings tint tan and its American holdings tint olive, exactly like
+ * the printed board's start position. Territory taken from another power
+ * tints with the capturer's lead-nation color. Sea zones (no original
+ * nation) tint with the occupying seat's lead nation.
+ */
+export function boardTintHex(def: TerritoryDef, ownerSeat: number | null): string {
+  if (ownerSeat === null) return NATION_COLORS_1942.neutral;
+  const home = def.owner;
+  if (home && NATION_SEAT_1942[home] === ownerSeat) return NATION_COLORS_1942[home];
+  return NATION_COLORS_1942[SEAT_NATION_1942[ownerSeat]];
+}
 
 // ------------------------------------------------------------- map registry --
 export type MapId = 'america' | 'world1942';
@@ -281,6 +345,29 @@ export function pointInPolygon(pt: [number, number], poly: Array<[number, number
   return inside;
 }
 
+/** All canals declared by the active map (empty on maps without any). */
+export function canalList(): Array<{
+  id: string;
+  zones: [string, string];
+  requires: string[];
+  description: string;
+}> {
+  return MAP.canals ?? [];
+}
+
+/** The canal (if any) whose passage connects sea zones `a` and `b`. Canal
+ *  edges ARE part of `neighbors`; traversing one additionally requires the
+ *  moving power to control every territory in the canal's `requires` list
+ *  (enforced by movement code, not by the adjacency data). */
+export function canalBetween(
+  a: string,
+  b: string,
+): { id: string; zones: [string, string]; requires: string[]; description: string } | undefined {
+  return MAP.canals?.find(
+    (c) => (c.zones[0] === a && c.zones[1] === b) || (c.zones[0] === b && c.zones[1] === a),
+  );
+}
+
 /** BFS step-distance over all territories (aircraft ignore ground ownership). */
 export function airDistance(from: string, to: string): number {
   if (from === to) return 0;
@@ -301,11 +388,14 @@ export function airDistance(from: string, to: string): number {
 
 /** Sea zones reachable within `maxSteps` sea moves, traveling only through
  *  zones where `passable` holds. Used for the 2-zone naval movement rule
- *  (1942 2e p.27: "All sea units can move up to two sea zones"). */
+ *  (1942 2e p.27: "All sea units can move up to two sea zones"). The
+ *  optional `edgeOk` veto is consulted for every traversed edge (from, to)
+ *  — canal enforcement hangs off it (see `canalBetween`). */
 export function seaReachable(
   from: string,
   maxSteps: number,
   passable: (id: string) => boolean,
+  edgeOk?: (from: string, to: string) => boolean,
 ): Set<string> {
   const seen = new Set<string>([from]);
   let frontier = [from];
@@ -314,6 +404,7 @@ export function seaReachable(
     for (const cur of frontier) {
       for (const n of neighborsOf(cur)) {
         if (!isSea(n) || seen.has(n) || !passable(n)) continue;
+        if (edgeOk && !edgeOk(cur, n)) continue;
         seen.add(n);
         next.push(n);
       }

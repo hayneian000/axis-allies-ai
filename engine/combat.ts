@@ -2,7 +2,7 @@
  * engine/combat.ts — Battle resolution: rounds, surprise strikes, casualties, bombardment, retreat, capture.
  */
 import { CARGO_TYPES, addUnits, countAir, countLand, countSea, countUnits, describeUnits, emptyUnits, hasEnough, subUnits, undamagedBB, validCounts } from './units';
-import { fail, log, logEvent, requireCurrentAlive, requirePhase, rollDie, rollHits, usedKey } from './core';
+import { capitalsOf, fail, log, logEvent, requireCurrentAlive, requirePhase, rollDie, rollHits, usedKey } from './core';
 import { CARRIER_FIGHTERS, addPlayerSeaUnits, cargoOf, carrierSpare, carryCargoAlong, disembarkUnits, normalizeSeaZone, sinkTransportCargo } from './naval';
 import { NAVAL_UNIT_TYPES, UNITS, isLand, isSea, landTerritoryIds, neighborsOf } from '../data/data';
 import type { UnitType } from '../data/data';
@@ -1036,7 +1036,10 @@ export function resolveCapture(
   }
   const victim = state.players[prevOwner];
   let detail = `${captor.name} captures ${terrId} from ${victim.name}.`;
-  if (victim.capital === terrId) {
+  // Capturing ANY of the victim's capitals triggers the bank steal — for a
+  // multi-capital seat (1942 seat 3) taking Washington steals the seat's
+  // bank just as taking London does.
+  if (capitalsOf(state, prevOwner).includes(terrId)) {
     captor.ipcs += victim.ipcs;
     detail += ` Capital taken! ${victim.ipcs} IPCs transfer to ${captor.name}.`;
     victim.ipcs = 0;
@@ -1055,9 +1058,13 @@ export function resolveCapture(
 function checkWinByCapitals(state: GameState): void {
   // FFA Decision (Ian, Oct 3 2026): Majority of capitals held simultaneously wins.
   // For 4 players: 3 of 4. Scenario/map may override via capitalsToWin.
+  // The count runs over the union of all seats' capitals — on the 1942
+  // board that is five capitals (seat 3 owns two of them), so a majority
+  // is 3 of 5 there.
   const holders = new Map<number, number>();
-  for (const p of state.players) {
-    const holder = state.territories[p.capital]?.owner;
+  const allCapitals = new Set(state.players.flatMap((p) => capitalsOf(state, p.id)));
+  for (const cap of allCapitals) {
+    const holder = state.territories[cap]?.owner;
     if (holder !== null && holder !== undefined) {
       holders.set(holder, (holders.get(holder) ?? 0) + 1);
     }

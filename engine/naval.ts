@@ -3,7 +3,7 @@
  */
 import { CARGO_TYPES, addUnits, countUnits, emptyUnits, hasEnough, subUnits } from './units';
 import { fail, log } from './core';
-import { ALL_UNIT_TYPES, SURFACE_WARSHIP_TYPES, UNITS, isLand, isSea, neighborsOf, seaZoneIds } from '../data/data';
+import { ALL_UNIT_TYPES, SURFACE_WARSHIP_TYPES, UNITS, canalBetween, canalList, isLand, isSea, neighborsOf, seaReachable, seaZoneIds } from '../data/data';
 import type { UnitType } from '../data/data';
 import type { ActionResult, Battle, GameState, TerritoryState, TransportLoad, UnitCounts } from './types';
 
@@ -231,6 +231,62 @@ export function findDestroyerIntercept(
       }
     }
     frontier = next;
+  }
+  return null;
+}
+
+
+/**
+ * Canal passage (map data, `canals` in data/data.ts): the Panama edge
+ * (sz19<->sz18) is open to a power only while it controls Central
+ * America; the Suez edge (sz17<->sz34) only while it controls BOTH Egypt
+ * and Trans-Jordan. Control is evaluated against `work` at move time,
+ * for the moving seat. Non-canal edges are always open. This is the
+ * `edgeOk` veto for `seaReachable`, so legal-destination generation and
+ * engine validation share one rule.
+ */
+export function canalEdgeOpen(
+  work: Record<string, TerritoryState>,
+  from: string,
+  to: string,
+  playerId: number,
+): boolean {
+  const c = canalBetween(from, to);
+  if (!c) return true;
+  return c.requires.every((r) => work[r]?.owner === playerId);
+}
+
+
+/**
+ * When a sea move fails reachability, decide whether a closed canal is
+ * the (sole) blocker: the destination is reachable with canals ignored,
+ * but becomes unreachable when one specific closed canal is honored.
+ * Returns a `canal_closed` failure naming that canal, or null when the
+ * failure has another cause (range, hostile transit, destroyers).
+ */
+export function canalBlockFailure(
+  work: Record<string, TerritoryState>,
+  from: string,
+  to: string,
+  maxSteps: number,
+  passable: (id: string) => boolean,
+  playerId: number,
+): ActionResult | null {
+  const ignoring = seaReachable(from, maxSteps, passable);
+  if (!ignoring.has(to)) return null;
+  for (const c of canalList()) {
+    if (c.requires.every((r) => work[r]?.owner === playerId)) continue; // open
+    const honored = seaReachable(from, maxSteps, passable, (a, b) => {
+      const x = canalBetween(a, b);
+      return !x || x.id !== c.id;
+    });
+    if (!honored.has(to)) {
+      const missing = c.requires.filter((r) => work[r]?.owner !== playerId);
+      return fail(
+        'canal_closed',
+        `The ${c.id.charAt(0).toUpperCase() + c.id.slice(1)} Canal is closed to you: passage requires control of ${missing.join(' and ')} (${c.description}).`,
+      );
+    }
   }
   return null;
 }

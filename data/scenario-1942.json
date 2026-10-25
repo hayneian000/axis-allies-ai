@@ -1,0 +1,793 @@
+{
+  "players": 4,
+  "capitals": [
+    "germany",
+    "russia",
+    "japan",
+    "united_kingdom",
+    "eastern_united_states"
+  ],
+  "capitalsToWin": 3,
+  "banks": [
+    41,
+    24,
+    30,
+    73
+  ],
+  "holdings": [
+    {
+      "territory": "iwo_jima",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "okinawa",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "japan",
+      "owner": 2,
+      "factory": true,
+      "units": {
+        "aa": 1,
+        "infantry": 4,
+        "artillery": 1,
+        "tank": 1,
+        "fighter": 1,
+        "bomber": 1
+      }
+    },
+    {
+      "territory": "manchuria",
+      "owner": 2,
+      "units": {
+        "fighter": 1,
+        "infantry": 3
+      }
+    },
+    {
+      "territory": "sinkiang",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "szechwan",
+      "owner": 3,
+      "units": {
+        "infantry": 2,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "yunnan",
+      "owner": 3,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "kiangsu",
+      "owner": 2,
+      "units": {
+        "infantry": 4
+      }
+    },
+    {
+      "territory": "kwangtung",
+      "owner": 2,
+      "units": {
+        "infantry": 1,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "anhwei",
+      "owner": 3,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "germany",
+      "owner": 0,
+      "factory": true,
+      "units": {
+        "aa": 1,
+        "infantry": 3,
+        "tank": 2,
+        "bomber": 1,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "soviet_far_east",
+      "owner": 1,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "buryatia_ssr",
+      "owner": 1,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "yakut_ssr",
+      "owner": 1,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "evenki",
+      "owner": 1,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "novosibirsk",
+      "owner": 1,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "kazakh_ssr",
+      "owner": 1,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "caucasus",
+      "owner": 1,
+      "factory": true,
+      "units": {
+        "aa": 1,
+        "artillery": 1,
+        "infantry": 3,
+        "tank": 1
+      }
+    },
+    {
+      "territory": "vologda",
+      "owner": 1,
+      "units": {}
+    },
+    {
+      "territory": "archangel",
+      "owner": 1,
+      "units": {
+        "tank": 1,
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "karelia_ssr",
+      "owner": 1,
+      "factory": true,
+      "units": {
+        "infantry": 4,
+        "fighter": 1,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "west_russia",
+      "owner": 0,
+      "units": {
+        "infantry": 3,
+        "artillery": 1,
+        "tank": 1
+      }
+    },
+    {
+      "territory": "ukraine_ssr",
+      "owner": 0,
+      "units": {
+        "artillery": 1,
+        "infantry": 3,
+        "tank": 1,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "belorussia",
+      "owner": 0,
+      "units": {
+        "infantry": 3
+      }
+    },
+    {
+      "territory": "russia",
+      "owner": 1,
+      "factory": true,
+      "units": {
+        "aa": 1,
+        "infantry": 4,
+        "artillery": 1,
+        "tank": 2,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "france",
+      "owner": 0,
+      "units": {
+        "aa": 1,
+        "infantry": 1,
+        "tank": 2
+      }
+    },
+    {
+      "territory": "northwestern_europe",
+      "owner": 0,
+      "units": {
+        "fighter": 1,
+        "infantry": 1,
+        "tank": 1
+      }
+    },
+    {
+      "territory": "norway",
+      "owner": 0,
+      "units": {
+        "infantry": 2,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "finland",
+      "owner": 0,
+      "units": {
+        "infantry": 3
+      }
+    },
+    {
+      "territory": "baltic_states",
+      "owner": 0,
+      "units": {
+        "infantry": 1,
+        "tank": 1
+      }
+    },
+    {
+      "territory": "poland",
+      "owner": 0,
+      "units": {
+        "tank": 1,
+        "fighter": 1,
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "bulgaria_romania",
+      "owner": 0,
+      "units": {
+        "infantry": 2,
+        "fighter": 1,
+        "tank": 1
+      }
+    },
+    {
+      "territory": "italy",
+      "owner": 0,
+      "factory": true,
+      "units": {
+        "aa": 1,
+        "tank": 1,
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "southern_europe",
+      "owner": 0,
+      "units": {
+        "infantry": 1,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "morocco",
+      "owner": 0,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "algeria",
+      "owner": 0,
+      "units": {
+        "infantry": 1,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "libya",
+      "owner": 0,
+      "units": {
+        "infantry": 1,
+        "tank": 1
+      }
+    },
+    {
+      "territory": "united_kingdom",
+      "owner": 3,
+      "factory": true,
+      "units": {
+        "infantry": 2,
+        "artillery": 1,
+        "tank": 1,
+        "aa": 1,
+        "fighter": 2,
+        "bomber": 1
+      }
+    },
+    {
+      "territory": "western_canada",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "eastern_canada",
+      "owner": 3,
+      "units": {
+        "tank": 1
+      }
+    },
+    {
+      "territory": "egypt",
+      "owner": 3,
+      "units": {
+        "infantry": 1,
+        "artillery": 1,
+        "tank": 1,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "union_of_south_africa",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "trans_jordan",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "persia",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "india",
+      "owner": 3,
+      "factory": true,
+      "units": {
+        "aa": 1,
+        "infantry": 3
+      }
+    },
+    {
+      "territory": "burma",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "western_australia",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "eastern_australia",
+      "owner": 3,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "new_zealand",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "iceland",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "gibraltar",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "french_west_africa",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "french_equatorial_africa",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "belgian_congo",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "rhodesia",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "anglo_egyptian_sudan",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "italian_east_africa",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "french_madagascar",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "malaya",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "borneo",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "new_guinea",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "east_indies",
+      "owner": 2,
+      "units": {
+        "infantry": 2
+      }
+    },
+    {
+      "territory": "french_indo_china_thailand",
+      "owner": 2,
+      "units": {
+        "fighter": 1,
+        "infantry": 2,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "solomon_islands",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "caroline_islands",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "philippine_islands",
+      "owner": 2,
+      "units": {
+        "infantry": 1,
+        "artillery": 1
+      }
+    },
+    {
+      "territory": "formosa",
+      "owner": 2,
+      "units": {}
+    },
+    {
+      "territory": "wake_island",
+      "owner": 2,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "hawaiian_islands",
+      "owner": 3,
+      "units": {
+        "infantry": 1,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "midway",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "alaska",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "western_united_states",
+      "owner": 3,
+      "factory": true,
+      "units": {
+        "aa": 1,
+        "infantry": 2,
+        "fighter": 1
+      }
+    },
+    {
+      "territory": "central_united_states",
+      "owner": 3,
+      "units": {
+        "infantry": 1
+      }
+    },
+    {
+      "territory": "eastern_united_states",
+      "owner": 3,
+      "factory": true,
+      "units": {
+        "tank": 1,
+        "aa": 1,
+        "infantry": 2,
+        "artillery": 1,
+        "fighter": 1,
+        "bomber": 1
+      }
+    },
+    {
+      "territory": "east_mexico",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "mexico",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "central_america",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "west_indies",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "greenland",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "brazil",
+      "owner": 3,
+      "units": {}
+    },
+    {
+      "territory": "sz4",
+      "owner": 1,
+      "units": {
+        "submarine": 1
+      }
+    },
+    {
+      "territory": "sz5",
+      "owner": 0,
+      "units": {
+        "transport": 1,
+        "submarine": 2,
+        "cruiser": 1
+      }
+    },
+    {
+      "territory": "sz7",
+      "owner": 3,
+      "units": {
+        "battleship": 1,
+        "transport": 1
+      }
+    },
+    {
+      "territory": "sz9",
+      "owner": 0,
+      "units": {
+        "submarine": 2
+      }
+    },
+    {
+      "territory": "sz10",
+      "owner": 3,
+      "units": {
+        "transport": 1,
+        "destroyer": 1
+      }
+    },
+    {
+      "territory": "sz11",
+      "owner": 3,
+      "units": {
+        "transport": 2,
+        "destroyer": 1
+      }
+    },
+    {
+      "territory": "sz14",
+      "owner": 3,
+      "units": {
+        "cruiser": 1
+      }
+    },
+    {
+      "territory": "sz15",
+      "owner": 0,
+      "units": {
+        "transport": 1,
+        "battleship": 1
+      }
+    },
+    {
+      "territory": "sz17",
+      "owner": 3,
+      "units": {
+        "destroyer": 1
+      }
+    },
+    {
+      "territory": "sz19",
+      "owner": 3,
+      "units": {
+        "cruiser": 1
+      }
+    },
+    {
+      "territory": "sz35",
+      "owner": 3,
+      "units": {
+        "carrier": 1,
+        "transport": 1,
+        "fighter": 1,
+        "cruiser": 1
+      }
+    },
+    {
+      "territory": "sz37",
+      "owner": 2,
+      "units": {
+        "battleship": 1,
+        "fighter": 2,
+        "carrier": 1
+      }
+    },
+    {
+      "territory": "sz39",
+      "owner": 3,
+      "units": {
+        "transport": 1,
+        "submarine": 1,
+        "cruiser": 1
+      }
+    },
+    {
+      "territory": "sz44",
+      "owner": 2,
+      "units": {
+        "submarine": 1
+      }
+    },
+    {
+      "territory": "sz50",
+      "owner": 2,
+      "units": {
+        "fighter": 1,
+        "cruiser": 1,
+        "carrier": 1
+      }
+    },
+    {
+      "territory": "sz53",
+      "owner": 3,
+      "units": {
+        "fighter": 1,
+        "carrier": 1,
+        "submarine": 1,
+        "destroyer": 1
+      }
+    },
+    {
+      "territory": "sz56",
+      "owner": 3,
+      "units": {
+        "battleship": 1,
+        "destroyer": 1,
+        "transport": 1
+      }
+    },
+    {
+      "territory": "sz60",
+      "owner": 2,
+      "units": {
+        "transport": 1,
+        "battleship": 1,
+        "destroyer": 1
+      }
+    },
+    {
+      "territory": "sz61",
+      "owner": 2,
+      "units": {
+        "transport": 1,
+        "destroyer": 1
+      }
+    }
+  ],
+  "neutrals": {
+    "spain_portugal": null,
+    "sweden": null,
+    "switzerland": null,
+    "turkey": null,
+    "saudi_arabia": null,
+    "sahara": null,
+    "afghanistan": null,
+    "himalaya": null,
+    "mongolia": null,
+    "venezuela": null,
+    "colombia_ecuador": null,
+    "peru_argentina": null,
+    "chile": null,
+    "angola": null,
+    "mozambique": null,
+    "eire": null
+  },
+  "neutralGarrison": {
+    "infantry": 3
+  },
+  "note": "Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, Japanese = seat 2, and British + Americans are combined into seat 3 (both powers' territories and starting units belong to seat 3). capitals lists all five board capitals in seat order; seat 3's capital is united_kingdom and eastern_united_states is the fifth entry (the combined seat's second capital). Banks: XML resourceInitialize starting PUs (Germans 41, Russians 24, Japanese 30, British 31 + Americans 42 combined into seat 3). Sea-zone holdings carry the naval starting units from the XML; land holdings cover every power-owned territory. Neutral territories use the default 3-infantry garrison."
+}

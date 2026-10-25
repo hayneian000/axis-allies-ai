@@ -1,0 +1,1209 @@
+{
+  "iwo_jima": {
+    "name": "Iwo Jima",
+    "ipc": 0,
+    "owner": "japan",
+    "neutral": false,
+    "states": "JPN",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "okinawa": {
+    "name": "Okinawa",
+    "ipc": 0,
+    "owner": "japan",
+    "neutral": false,
+    "states": "JPN",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "japan": {
+    "name": "Japan",
+    "ipc": 8,
+    "owner": "japan",
+    "neutral": false,
+    "capital": "Tokyo",
+    "victoryCity": "Tokyo",
+    "states": "JPN",
+    "region": "asia",
+    "domain": "land"
+  },
+  "manchuria": {
+    "name": "Manchuria",
+    "ipc": 3,
+    "owner": "japan",
+    "neutral": false,
+    "states": "CHN,PRK,KOR",
+    "region": "asia",
+    "domain": "land"
+  },
+  "sinkiang": {
+    "name": "Sinkiang",
+    "ipc": 1,
+    "owner": "us",
+    "neutral": false,
+    "states": "CHN",
+    "region": "asia",
+    "domain": "land"
+  },
+  "szechwan": {
+    "name": "Szechwan",
+    "ipc": 1,
+    "owner": "us",
+    "neutral": false,
+    "states": "CHN",
+    "region": "asia",
+    "domain": "land"
+  },
+  "yunnan": {
+    "name": "Yunnan",
+    "ipc": 1,
+    "owner": "us",
+    "neutral": false,
+    "states": "CHN",
+    "region": "asia",
+    "domain": "land"
+  },
+  "kiangsu": {
+    "name": "Kiangsu",
+    "ipc": 2,
+    "owner": "japan",
+    "neutral": false,
+    "victoryCity": "Shanghai",
+    "states": "CHN",
+    "region": "asia",
+    "domain": "land"
+  },
+  "kwangtung": {
+    "name": "Kwangtung",
+    "ipc": 2,
+    "owner": "japan",
+    "neutral": false,
+    "states": "CHN,HKG,MAC",
+    "region": "asia",
+    "domain": "land"
+  },
+  "anhwei": {
+    "name": "Anhwei",
+    "ipc": 1,
+    "owner": "us",
+    "neutral": false,
+    "states": "CHN",
+    "region": "asia",
+    "domain": "land"
+  },
+  "germany": {
+    "name": "Germany",
+    "ipc": 10,
+    "owner": "germany",
+    "neutral": false,
+    "capital": "Berlin",
+    "victoryCity": "Berlin",
+    "states": "DEU,LIE,AUT,CZE",
+    "region": "europe",
+    "domain": "land"
+  },
+  "soviet_far_east": {
+    "name": "Soviet Far East",
+    "ipc": 1,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "RUS",
+    "region": "asia",
+    "domain": "land"
+  },
+  "buryatia_ssr": {
+    "name": "Buryatia S.S.R.",
+    "ipc": 1,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "RUS",
+    "region": "asia",
+    "domain": "land"
+  },
+  "yakut_ssr": {
+    "name": "Yakut S.S.R.",
+    "ipc": 1,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "RUS",
+    "region": "asia",
+    "domain": "land"
+  },
+  "evenki": {
+    "name": "Evenki National Okrug",
+    "ipc": 1,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "RUS",
+    "region": "asia",
+    "domain": "land"
+  },
+  "novosibirsk": {
+    "name": "Novosibirsk",
+    "ipc": 1,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "RUS",
+    "region": "asia",
+    "domain": "land"
+  },
+  "kazakh_ssr": {
+    "name": "Kazakh S.S.R.",
+    "ipc": 2,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "KAZ,UZB,TKM,KGZ,TJK",
+    "region": "asia",
+    "domain": "land"
+  },
+  "caucasus": {
+    "name": "Caucasus",
+    "ipc": 4,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "RUS,GEO,ARM,AZE",
+    "region": "middle_east",
+    "domain": "land"
+  },
+  "vologda": {
+    "name": "Vologda",
+    "ipc": 2,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "RUS",
+    "region": "asia",
+    "domain": "land"
+  },
+  "archangel": {
+    "name": "Archangel",
+    "ipc": 1,
+    "owner": "ussr",
+    "neutral": false,
+    "states": "RUS",
+    "region": "asia",
+    "domain": "land"
+  },
+  "karelia_ssr": {
+    "name": "Karelia S.S.R.",
+    "ipc": 2,
+    "owner": "ussr",
+    "neutral": false,
+    "victoryCity": "Leningrad",
+    "states": "RUS",
+    "region": "europe",
+    "domain": "land"
+  },
+  "west_russia": {
+    "name": "West Russia",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "RUS",
+    "region": "europe",
+    "domain": "land"
+  },
+  "ukraine_ssr": {
+    "name": "Ukraine S.S.R.",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "UKR,MDA",
+    "region": "europe",
+    "domain": "land"
+  },
+  "belorussia": {
+    "name": "Belorussia",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "BLR",
+    "region": "europe",
+    "domain": "land"
+  },
+  "russia": {
+    "name": "Russia",
+    "ipc": 8,
+    "owner": "ussr",
+    "neutral": false,
+    "capital": "Moscow",
+    "victoryCity": "Moscow",
+    "states": "RUS",
+    "region": "europe",
+    "domain": "land"
+  },
+  "france": {
+    "name": "France",
+    "ipc": 6,
+    "owner": "germany",
+    "neutral": false,
+    "victoryCity": "Paris",
+    "states": "FRA,MCO",
+    "region": "europe",
+    "domain": "land"
+  },
+  "northwestern_europe": {
+    "name": "Northwestern Europe",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "NLD,BEL,LUX,DNK",
+    "region": "europe",
+    "domain": "land"
+  },
+  "norway": {
+    "name": "Norway",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "NOR,FRO",
+    "region": "europe",
+    "domain": "land"
+  },
+  "finland": {
+    "name": "Finland",
+    "ipc": 1,
+    "owner": "germany",
+    "neutral": false,
+    "states": "FIN,ALD",
+    "region": "europe",
+    "domain": "land"
+  },
+  "baltic_states": {
+    "name": "Baltic States",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "EST,LVA,LTU",
+    "region": "europe",
+    "domain": "land"
+  },
+  "poland": {
+    "name": "Poland",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "POL,SVK",
+    "region": "europe",
+    "domain": "land"
+  },
+  "bulgaria_romania": {
+    "name": "Bulgaria Romania",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "BGR,ROU,HUN",
+    "region": "europe",
+    "domain": "land"
+  },
+  "italy": {
+    "name": "Italy",
+    "ipc": 3,
+    "owner": "germany",
+    "neutral": false,
+    "victoryCity": "Rome",
+    "states": "ITA,SMR,VAT",
+    "region": "europe",
+    "domain": "land"
+  },
+  "southern_europe": {
+    "name": "Southern Europe",
+    "ipc": 2,
+    "owner": "germany",
+    "neutral": false,
+    "states": "GRC,ALB,SRB,MKD,MNE,BIH,HRV,SVN,KOS",
+    "region": "europe",
+    "domain": "land"
+  },
+  "morocco": {
+    "name": "Morocco",
+    "ipc": 1,
+    "owner": "germany",
+    "neutral": false,
+    "states": "MAR",
+    "region": "africa",
+    "domain": "land"
+  },
+  "algeria": {
+    "name": "Algeria",
+    "ipc": 1,
+    "owner": "germany",
+    "neutral": false,
+    "states": "DZA,TUN",
+    "region": "africa",
+    "domain": "land"
+  },
+  "libya": {
+    "name": "Libya",
+    "ipc": 1,
+    "owner": "germany",
+    "neutral": false,
+    "states": "LBY",
+    "region": "africa",
+    "domain": "land"
+  },
+  "united_kingdom": {
+    "name": "United Kingdom",
+    "ipc": 8,
+    "owner": "uk",
+    "neutral": false,
+    "capital": "London",
+    "victoryCity": "London",
+    "states": "GBR,GGY,JEY,IMN",
+    "region": "europe",
+    "domain": "land"
+  },
+  "western_canada": {
+    "name": "Western Canada",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "CAN",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "eastern_canada": {
+    "name": "Eastern Canada",
+    "ipc": 3,
+    "owner": "uk",
+    "neutral": false,
+    "states": "CAN,SPM",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "egypt": {
+    "name": "Egypt",
+    "ipc": 2,
+    "owner": "uk",
+    "neutral": false,
+    "states": "EGY",
+    "region": "africa",
+    "domain": "land"
+  },
+  "union_of_south_africa": {
+    "name": "Union of South Africa",
+    "ipc": 2,
+    "owner": "uk",
+    "neutral": false,
+    "states": "ZAF,BWA,NAM,LSO,SWZ",
+    "region": "africa",
+    "domain": "land"
+  },
+  "trans_jordan": {
+    "name": "Trans-Jordan",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "JOR,ISR,PSX,LBN,SYR",
+    "region": "middle_east",
+    "domain": "land"
+  },
+  "persia": {
+    "name": "Persia",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "IRN,IRQ",
+    "region": "middle_east",
+    "domain": "land"
+  },
+  "india": {
+    "name": "India",
+    "ipc": 3,
+    "owner": "uk",
+    "neutral": false,
+    "victoryCity": "Calcutta",
+    "states": "IND,PAK,BGD,LKA,KAS",
+    "region": "asia",
+    "domain": "land"
+  },
+  "burma": {
+    "name": "Burma",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "MMR",
+    "region": "asia",
+    "domain": "land"
+  },
+  "western_australia": {
+    "name": "Western Australia",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "AUS",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "eastern_australia": {
+    "name": "Eastern Australia",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "AUS",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "new_zealand": {
+    "name": "New Zealand",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "NZL",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "iceland": {
+    "name": "Iceland",
+    "ipc": 0,
+    "owner": "uk",
+    "neutral": false,
+    "states": "ISL",
+    "region": "europe",
+    "domain": "land"
+  },
+  "gibraltar": {
+    "name": "Gibraltar",
+    "ipc": 0,
+    "owner": "uk",
+    "neutral": false,
+    "states": "ESP",
+    "region": "europe",
+    "domain": "land"
+  },
+  "french_west_africa": {
+    "name": "French West Africa",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "MRT,SEN,GMB,MLI,GIN,GNB,SLE,LBR,CIV,BFA,NER,BEN,NGA,GHA,TGO",
+    "region": "africa",
+    "domain": "land"
+  },
+  "french_equatorial_africa": {
+    "name": "French Equatorial Africa",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "TCD,CAF,COG,GAB,CMR,GNQ",
+    "region": "africa",
+    "domain": "land"
+  },
+  "belgian_congo": {
+    "name": "Belgian Congo",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "COD,RWA,BDI",
+    "region": "africa",
+    "domain": "land"
+  },
+  "rhodesia": {
+    "name": "Rhodesia",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "ZMB,ZWE,MWI",
+    "region": "africa",
+    "domain": "land"
+  },
+  "anglo_egyptian_sudan": {
+    "name": "Anglo-Egyptian Sudan",
+    "ipc": 0,
+    "owner": "uk",
+    "neutral": false,
+    "states": "SDN,SDS",
+    "region": "africa",
+    "domain": "land"
+  },
+  "italian_east_africa": {
+    "name": "Italian East Africa",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "ETH,ERI,SOM,SOL,DJI,KEN,UGA,TZA",
+    "region": "africa",
+    "domain": "land"
+  },
+  "french_madagascar": {
+    "name": "French Madagascar",
+    "ipc": 1,
+    "owner": "uk",
+    "neutral": false,
+    "states": "MDG",
+    "region": "africa",
+    "domain": "land"
+  },
+  "malaya": {
+    "name": "Malaya",
+    "ipc": 1,
+    "owner": "japan",
+    "neutral": false,
+    "states": "MYS,SGP",
+    "region": "asia",
+    "domain": "land"
+  },
+  "borneo": {
+    "name": "Borneo",
+    "ipc": 4,
+    "owner": "japan",
+    "neutral": false,
+    "states": "IDN,MYS,BRN",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "new_guinea": {
+    "name": "New Guinea",
+    "ipc": 1,
+    "owner": "japan",
+    "neutral": false,
+    "states": "PNG,IDN",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "east_indies": {
+    "name": "East Indies",
+    "ipc": 4,
+    "owner": "japan",
+    "neutral": false,
+    "states": "IDN,TLS",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "french_indo_china_thailand": {
+    "name": "French Indo-China Thailand",
+    "ipc": 2,
+    "owner": "japan",
+    "neutral": false,
+    "states": "VNM,LAO,KHM,THA",
+    "region": "asia",
+    "domain": "land"
+  },
+  "solomon_islands": {
+    "name": "Solomon Islands",
+    "ipc": 0,
+    "owner": "japan",
+    "neutral": false,
+    "states": "SLB",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "caroline_islands": {
+    "name": "Caroline Islands",
+    "ipc": 0,
+    "owner": "japan",
+    "neutral": false,
+    "states": "FSM,PLW",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "philippine_islands": {
+    "name": "Philippine Islands",
+    "ipc": 3,
+    "owner": "japan",
+    "neutral": false,
+    "victoryCity": "Manila",
+    "states": "PHL",
+    "region": "asia",
+    "domain": "land"
+  },
+  "formosa": {
+    "name": "Formosa",
+    "ipc": 0,
+    "owner": "japan",
+    "neutral": false,
+    "states": "TWN",
+    "region": "asia",
+    "domain": "land"
+  },
+  "wake_island": {
+    "name": "Wake Island",
+    "ipc": 0,
+    "owner": "japan",
+    "neutral": false,
+    "states": "USA",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "hawaiian_islands": {
+    "name": "Hawaiian Islands",
+    "ipc": 1,
+    "owner": "us",
+    "neutral": false,
+    "victoryCity": "Honolulu",
+    "states": "USA",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "midway": {
+    "name": "Midway",
+    "ipc": 0,
+    "owner": "us",
+    "neutral": false,
+    "states": "USA",
+    "region": "oceania",
+    "domain": "land"
+  },
+  "alaska": {
+    "name": "Alaska",
+    "ipc": 2,
+    "owner": "us",
+    "neutral": false,
+    "states": "USA",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "western_united_states": {
+    "name": "Western United States",
+    "ipc": 10,
+    "owner": "us",
+    "neutral": false,
+    "victoryCity": "San Francisco",
+    "states": "USA",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "central_united_states": {
+    "name": "Central United States",
+    "ipc": 6,
+    "owner": "us",
+    "neutral": false,
+    "states": "USA",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "eastern_united_states": {
+    "name": "Eastern United States",
+    "ipc": 12,
+    "owner": "us",
+    "neutral": false,
+    "capital": "Washington",
+    "victoryCity": "Washington",
+    "states": "USA",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "east_mexico": {
+    "name": "East Mexico",
+    "ipc": 0,
+    "owner": "us",
+    "neutral": false,
+    "states": "MEX",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "mexico": {
+    "name": "Mexico",
+    "ipc": 2,
+    "owner": "us",
+    "neutral": false,
+    "states": "MEX",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "central_america": {
+    "name": "Central America",
+    "ipc": 1,
+    "owner": "us",
+    "neutral": false,
+    "states": "GTM,BLZ,HND,SLV,NIC,CRI,PAN",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "west_indies": {
+    "name": "West Indies",
+    "ipc": 1,
+    "owner": "us",
+    "neutral": false,
+    "states": "CUB,HTI,DOM,BHS,JAM,TTO,PRI,BMU,CYM,TCA,VGB,VIR,MSR",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "greenland": {
+    "name": "Greenland",
+    "ipc": 0,
+    "owner": "us",
+    "neutral": false,
+    "states": "GRL",
+    "region": "north_america",
+    "domain": "land"
+  },
+  "brazil": {
+    "name": "Brazil",
+    "ipc": 3,
+    "owner": "us",
+    "neutral": false,
+    "states": "BRA,GUY,SUR",
+    "region": "south_america",
+    "domain": "land"
+  },
+  "spain_portugal": {
+    "name": "Spain Portugal",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "ESP,PRT,AND",
+    "region": "europe",
+    "domain": "land"
+  },
+  "sweden": {
+    "name": "Sweden",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "SWE",
+    "region": "europe",
+    "domain": "land"
+  },
+  "switzerland": {
+    "name": "Switzerland",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "CHE,LIE",
+    "region": "europe",
+    "domain": "land"
+  },
+  "turkey": {
+    "name": "Turkey",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "TUR,CYP,CYN",
+    "region": "middle_east",
+    "domain": "land"
+  },
+  "saudi_arabia": {
+    "name": "Saudi Arabia",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "SAU,YEM,OMN,ARE,QAT,KWT,BHR",
+    "region": "middle_east",
+    "domain": "land"
+  },
+  "sahara": {
+    "name": "Sahara",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "SAH",
+    "region": "africa",
+    "domain": "land"
+  },
+  "afghanistan": {
+    "name": "Afghanistan",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "AFG",
+    "region": "asia",
+    "domain": "land"
+  },
+  "himalaya": {
+    "name": "Himalaya",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "NPL,BTN",
+    "region": "asia",
+    "domain": "land"
+  },
+  "mongolia": {
+    "name": "Mongolia",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "MNG",
+    "region": "asia",
+    "domain": "land"
+  },
+  "venezuela": {
+    "name": "Venezuela",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "VEN",
+    "region": "south_america",
+    "domain": "land"
+  },
+  "colombia_ecuador": {
+    "name": "Colombia Ecuador",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "COL,ECU",
+    "region": "south_america",
+    "domain": "land"
+  },
+  "peru_argentina": {
+    "name": "Peru Argentina",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "PER,ARG,BOL,PRY,URY,FLK",
+    "region": "south_america",
+    "domain": "land"
+  },
+  "chile": {
+    "name": "Chile",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "CHL",
+    "region": "south_america",
+    "domain": "land"
+  },
+  "angola": {
+    "name": "Angola",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "AGO",
+    "region": "africa",
+    "domain": "land"
+  },
+  "mozambique": {
+    "name": "Mozambique",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "MOZ",
+    "region": "africa",
+    "domain": "land"
+  },
+  "eire": {
+    "name": "Eire",
+    "ipc": 0,
+    "owner": "neutral",
+    "neutral": true,
+    "states": "IRL",
+    "region": "europe",
+    "domain": "land"
+  },
+  "sz1": {
+    "name": "Sea Zone 1",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz2": {
+    "name": "Sea Zone 2",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz3": {
+    "name": "Sea Zone 3",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz4": {
+    "name": "Sea Zone 4",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz5": {
+    "name": "Sea Zone 5",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz6": {
+    "name": "Sea Zone 6",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz7": {
+    "name": "Sea Zone 7",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz8": {
+    "name": "Sea Zone 8",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz9": {
+    "name": "Sea Zone 9",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz10": {
+    "name": "Sea Zone 10",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz11": {
+    "name": "Sea Zone 11",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz12": {
+    "name": "Sea Zone 12",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz13": {
+    "name": "Sea Zone 13",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz14": {
+    "name": "Sea Zone 14",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz15": {
+    "name": "Sea Zone 15",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz16": {
+    "name": "Sea Zone 16",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz17": {
+    "name": "Sea Zone 17",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz18": {
+    "name": "Sea Zone 18",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz19": {
+    "name": "Sea Zone 19",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz20": {
+    "name": "Sea Zone 20",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz21": {
+    "name": "Sea Zone 21",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz22": {
+    "name": "Sea Zone 22",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz23": {
+    "name": "Sea Zone 23",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz24": {
+    "name": "Sea Zone 24",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz25": {
+    "name": "Sea Zone 25",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz26": {
+    "name": "Sea Zone 26",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz27": {
+    "name": "Sea Zone 27",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz28": {
+    "name": "Sea Zone 28",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz29": {
+    "name": "Sea Zone 29",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz30": {
+    "name": "Sea Zone 30",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz31": {
+    "name": "Sea Zone 31",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz32": {
+    "name": "Sea Zone 32",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz33": {
+    "name": "Sea Zone 33",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz34": {
+    "name": "Sea Zone 34",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz35": {
+    "name": "Sea Zone 35",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz36": {
+    "name": "Sea Zone 36",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz37": {
+    "name": "Sea Zone 37",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz38": {
+    "name": "Sea Zone 38",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz39": {
+    "name": "Sea Zone 39",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz40": {
+    "name": "Sea Zone 40",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz41": {
+    "name": "Sea Zone 41",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz42": {
+    "name": "Sea Zone 42",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz43": {
+    "name": "Sea Zone 43",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz44": {
+    "name": "Sea Zone 44",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz45": {
+    "name": "Sea Zone 45",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz46": {
+    "name": "Sea Zone 46",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz47": {
+    "name": "Sea Zone 47",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz48": {
+    "name": "Sea Zone 48",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz49": {
+    "name": "Sea Zone 49",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz50": {
+    "name": "Sea Zone 50",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz51": {
+    "name": "Sea Zone 51",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz52": {
+    "name": "Sea Zone 52",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz53": {
+    "name": "Sea Zone 53",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz54": {
+    "name": "Sea Zone 54",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz55": {
+    "name": "Sea Zone 55",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz56": {
+    "name": "Sea Zone 56",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz57": {
+    "name": "Sea Zone 57",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz58": {
+    "name": "Sea Zone 58",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz59": {
+    "name": "Sea Zone 59",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz60": {
+    "name": "Sea Zone 60",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz61": {
+    "name": "Sea Zone 61",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz62": {
+    "name": "Sea Zone 62",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz63": {
+    "name": "Sea Zone 63",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz64": {
+    "name": "Sea Zone 64",
+    "ipc": 0,
+    "domain": "sea"
+  },
+  "sz65": {
+    "name": "Sea Zone 65",
+    "ipc": 0,
+    "domain": "sea"
+  }
+}

@@ -636,6 +636,53 @@ input::placeholder { color: var(--faint); }
   animation: battlepulse 1.1s ease-in-out infinite;
 }
 @keyframes battlepulse { 50% { stroke-width: 5.5; } }
+
+/* ---------- 1942 board-space mode ----------
+   The board JPEG (ui/board-1942.jpg, rendered as the first child of
+   #vport) is the terrain artwork. Territory polygons are only an
+   interaction layer over it: near-transparent owner tint normally,
+   with the stroke/highlight states doing the talking. The .board-mode
+   class is set on #map by syncFromMap() in ui/main.ts whenever the
+   active map has boardSpace: true; America rendering is untouched. */
+#map.board-mode .board-art { pointer-events: none; }
+#map.board-mode polygon.terr {
+  fill-opacity: 0.16;
+  stroke-width: 2.5;
+}
+#map.board-mode polygon.terr:hover {
+  fill-opacity: 0.3;
+  stroke: #fff;
+  stroke-width: 4;
+}
+#map.board-mode polygon.terr.selfrom {
+  fill-opacity: 0.28;
+  stroke: #fff;
+  stroke-width: 5;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+}
+#map.board-mode polygon.terr.dest {
+  fill-opacity: 0.28;
+  stroke: #ffd23e;
+  stroke-width: 5;
+  stroke-dasharray: 16 9;
+}
+#map.board-mode polygon.terr.battle {
+  stroke: #ff5252;
+  stroke-width: 6;
+  animation: battlepulse-board 1.1s ease-in-out infinite;
+}
+@keyframes battlepulse-board { 50% { stroke-width: 10; } }
+/* Dynamic sea-zone aux lines (cargo / carriers / coexisting forces):
+   game state, not artwork — light text with a dark halo over the art. */
+#map.board-mode text.board-aux {
+  fill: #eef4fa;
+  stroke: rgba(10, 20, 32, 0.9);
+  stroke-width: 5px;
+}
+#map.board-mode .ripple { stroke-width: 6; }
+@media (prefers-reduced-motion: reduce) {
+  #map.board-mode polygon.terr.battle { animation: none; }
+}
 #map .ocean { pointer-events: none; }
 #map polygon.sheen { pointer-events: none; }
 /* Navy phase 1: sea zones read as water, with light labels. */

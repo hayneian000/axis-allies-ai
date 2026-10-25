@@ -65,12 +65,35 @@ export function createGame(opts: CreateGameOptions): GameState {
   }
   state.turnOrder = shuffle(state, state.players.map((p) => p.id));
 
+  /** Sea holdings validated in the loop below; placed after the sea zones
+   *  are initialized (1942 scenario starting fleets). */
+  const seaHoldings: Array<{ territory: string; owner: number; units: UnitCounts }> = [];
+
   const covered = new Set<string>();
   for (const h of scenario.holdings) {
     const def = territoryDef(h.territory);
     if (!def) throw new Error(`Scenario references unknown territory "${h.territory}".`);
-    if (def.domain === 'sea') throw new Error(`Scenario holding "${h.territory}" is a sea zone.`);
     if (h.owner < 0 || h.owner >= numPlayers) throw new Error(`Bad owner for "${h.territory}".`);
+    if (def.domain === 'sea') {
+      // Sea holding: a starting fleet. Units must be naval types or
+      // fighters (carrier air); every unit belongs to the holding's owner
+      // seat. Collected here and placed below, once the sea zones exist.
+      // Sea holdings do not count toward land coverage.
+      const units = emptyUnits();
+      for (const [type, n] of Object.entries(h.units ?? {})) {
+        if (!(type in units) || !Number.isInteger(n) || (n as number) < 0) {
+          throw new Error(`Bad unit entry ${type}x${n} in "${h.territory}".`);
+        }
+        if (!(NAVAL_UNIT_TYPES as string[]).includes(type) && type !== 'fighter') {
+          throw new Error(
+            `Unit "${type}" cannot start at sea ("${h.territory}"): sea holdings take naval units and fighters only.`,
+          );
+        }
+        units[type as UnitType] = n as number;
+      }
+      seaHoldings.push({ territory: h.territory, owner: h.owner, units });
+      continue;
+    }
     const units = emptyUnits();
     for (const [type, n] of Object.entries(h.units ?? {})) {
       if (!(type in units) || !Number.isInteger(n) || (n as number) < 0) {
@@ -109,8 +132,8 @@ export function createGame(opts: CreateGameOptions): GameState {
     state.territories[tid] = { owner: null, units: u, factory: false, factoryFresh: false, cargo: [] };
     covered.add(tid);
   }
-  // Sea zones are never owned, never garrisoned, and exempt from scenario
-  // coverage: they start as uncontrolled waters.
+  // Sea zones are never owned via land holdings, never garrisoned, and
+  // exempt from scenario coverage: they start as uncontrolled waters.
   for (const zid of seaZoneIds()) {
     state.territories[zid] = {
       owner: null,
@@ -119,6 +142,13 @@ export function createGame(opts: CreateGameOptions): GameState {
       factoryFresh: false,
       cargo: [],
     };
+  }
+  // Place the starting fleets. addPlayerSeaUnits follows the naval.ts
+  // sea-force model exactly: the fleet becomes the zone's primary force
+  // (`owner`/`units`), or a `coexist` entry when another owner's fleet
+  // already holds the zone. `covered` still counts land territories only.
+  for (const sh of seaHoldings) {
+    addPlayerSeaUnits(state.territories, sh.territory, sh.owner, sh.units);
   }
   if (covered.size !== landTerritoryIds().length) {
     throw new Error('Scenario does not cover every land territory.');

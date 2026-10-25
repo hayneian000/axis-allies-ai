@@ -20,6 +20,10 @@ export interface TerritoryDef {
   extraPolygons?: Array<Array<[number, number]>>;
   /** Label anchor for name/units text. */
   label: [number, number];
+  /** Board-space name anchor (1942 map only): where the territory / sea-zone
+   *  name text is drawn, from TripleA's name_place.txt. Distinct from
+   *  `label` (the centers.txt anchor that unit icons sit on). */
+  nameLabel?: [number, number];
   /** Coarse world region (1942 map only; the America map groups by `states`). */
   region?: string;
   /** Starting power on the 1942 map: 'ussr' | 'germany' | 'uk' | 'japan' | 'us' | 'neutral'. Land only. */

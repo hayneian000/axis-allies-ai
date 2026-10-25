@@ -679,6 +679,39 @@ input::placeholder { color: var(--faint); }
   stroke: rgba(10, 20, 32, 0.9);
   stroke-width: 5px;
 }
+/* Territory / sea-zone name labels: the raster prints no text at all,
+   so the UI draws names at TripleA's name_place anchors. Land names
+   are dark ink with a pale halo over the light territory art; the IPC
+   line is the same ink, quieter. Sea-zone numbers are light text with
+   a dark halo over the blue. Font sizes are set per element (SVG
+   attribute) in boardNameSize / boardLabels — board space only. */
+#map.board-mode text.board-tname {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  fill: #182430;
+  stroke: rgba(250, 246, 231, 0.65);
+  stroke-width: 6px;
+  paint-order: stroke;
+}
+#map.board-mode text.board-ipc {
+  font-family: var(--font-text);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  fill: #182430;
+  opacity: 0.78;
+  stroke: rgba(250, 246, 231, 0.55);
+  stroke-width: 4px;
+  paint-order: stroke;
+}
+#map.board-mode text.board-seanum {
+  font-family: var(--font-text);
+  font-weight: 700;
+  fill: #e9f2f9;
+  stroke: rgba(9, 22, 38, 0.85);
+  stroke-width: 6px;
+  paint-order: stroke;
+}
 #map.board-mode .ripple { stroke-width: 6; }
 @media (prefers-reduced-motion: reduce) {
   #map.board-mode polygon.terr.battle { animation: none; }

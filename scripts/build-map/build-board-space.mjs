@@ -13,6 +13,10 @@
  * Inputs (all local, see cache/):
  *   cache/triplea/polygons.txt        TripleA territory polygons (board space)
  *   cache/triplea/centers.txt         TripleA label centers (board space)
+ *   cache/triplea/name_place.txt      TripleA name-text anchors (board space;
+ *                                     from triplea-maps/world_war_ii_v5_1942
+ *                                     map/name_place.txt — where TripleA draws
+ *                                     each territory / sea-zone name)
  *   cache/triplea/WW2v5_1942_2nd.xml  TripleA game definition (connections,
  *                                     territory owners, unit setup, starting PUs)
  *   cache/territory-meta-1942.json    Our per-territory metadata, keyed by our
@@ -46,6 +50,7 @@ const meta = JSON.parse(fs.readFileSync(META_PATH, 'utf8'));
 const metaIds = Object.keys(meta); // insertion order == prev-file territory order
 const polygonsText = fs.readFileSync(path.join(TRIPLEA, 'polygons.txt'), 'utf8');
 const centersText = fs.readFileSync(path.join(TRIPLEA, 'centers.txt'), 'utf8');
+const namePlaceText = fs.readFileSync(path.join(TRIPLEA, 'name_place.txt'), 'utf8');
 const xml = fs.readFileSync(path.join(TRIPLEA, 'WW2v5_1942_2nd.xml'), 'utf8');
 
 // ------------------------------------------- constants copied from prev file --
@@ -152,6 +157,23 @@ for (const line of centersText.split(/\r?\n/)) {
   centersById.set(id, [parseInt(m[2], 10), parseInt(m[3], 10)]);
 }
 
+// ------------------------------------------------------------- name_place.txt --
+// One territory per line: `Name  (x,y)` — the anchor TripleA draws the
+// territory / sea-zone NAME text at. Distinct from centers.txt (the unit
+// anchor): names sit where the artwork has room for text, units sit at the
+// territory center. Coverage is asserted at 161/161 below; a missing entry
+// falls back to the center point (and is reported) rather than failing.
+const namePlacesById = new Map();
+for (const line of namePlaceText.split(/\r?\n/)) {
+  if (!line.trim()) continue;
+  const m = line.match(/^(.*?)\s*\((-?\d+),(-?\d+)\)\s*$/);
+  assert(m, `unparseable name_place.txt line: ${line.slice(0, 60)}`);
+  const id = nameToId(m[1].trim());
+  if (!id) continue;
+  assert(!namePlacesById.has(id), `duplicate name place for id "${id}"`);
+  namePlacesById.set(id, [parseInt(m[2], 10), parseInt(m[3], 10)]);
+}
+
 // ------------------------------------------------------------------- the XML --
 const xmlTerritoryNames = [];
 const xmlWaterByName = new Map();
@@ -201,6 +223,20 @@ for (const id of xmlIds) {
 assert(polygonsById.size === 161, `polygons.txt covers ${polygonsById.size} ids, expected 161`);
 assert(centersById.size === 161, `centers.txt covers ${centersById.size} ids, expected 161`);
 
+// Name anchors: name_place.txt should cover every territory. Any id it
+// misses falls back to its centers.txt point (reported in the build log);
+// the emitted map must still carry a nameLabel for all 161 territories.
+const nameLabelFallbacks = metaIds.filter((id) => !namePlacesById.has(id));
+const nameLabelById = new Map(
+  metaIds.map((id) => [id, namePlacesById.get(id) ?? centersById.get(id)]),
+);
+for (const [id, [nx, ny]] of nameLabelById) {
+  assert(
+    nx >= 0 && nx <= 3500 && ny >= 0 && ny <= 2000,
+    `nameLabel for "${id}" [${nx},${ny}] lies outside the 3500x2000 viewBox`,
+  );
+}
+
 // ------------------------------------------------------------- map-1942.json --
 const adjacency = new Map(metaIds.map((id) => [id, new Set()]));
 for (const [a, b] of connections) {
@@ -236,6 +272,7 @@ const territories = metaIds.map((id) => {
   const [points, ...rest] = pieces;
   const neighbors = [...adjacency.get(id)].sort();
   const label = centersById.get(id);
+  const nameLabel = nameLabelById.get(id);
   let t;
   if (m.domain === 'land') {
     t = {
@@ -250,6 +287,7 @@ const territories = metaIds.map((id) => {
     };
     if (rest.length > 0) t.extraPolygons = rest;
     t.label = label;
+    t.nameLabel = nameLabel;
     t.owner = m.owner;
     if (m.capital !== undefined) t.capital = m.capital;
     if (m.victoryCity !== undefined) t.victoryCity = m.victoryCity;
@@ -265,6 +303,7 @@ const territories = metaIds.map((id) => {
     };
     if (rest.length > 0) t.extraPolygons = rest;
     t.label = label;
+    t.nameLabel = nameLabel;
   }
   return t;
 });
@@ -308,6 +347,18 @@ const mapOut = {
     emittedIds.size === metaIds.length && metaIds.every((id) => emittedIds.has(id)),
     'emitted id set differs from the prev-file (meta) id set',
   );
+
+  for (const t of territories) {
+    assert(
+      Array.isArray(t.nameLabel) && t.nameLabel.length === 2,
+      `territory "${t.id}" has no nameLabel anchor`,
+    );
+    const [nx, ny] = t.nameLabel;
+    assert(
+      nx >= 0 && nx <= 3500 && ny >= 0 && ny <= 2000,
+      `nameLabel for "${t.id}" [${nx},${ny}] lies outside the viewBox`,
+    );
+  }
 }
 
 // --------------------------------------------------------- scenario-1942.json --
@@ -478,6 +529,12 @@ fs.writeFileSync(SCENARIO_OUT, `${JSON.stringify(scenarioOut, null, 2)}\n`);
 
 console.log('build-board-space: OK');
 console.log(`  mapped 161/161 TripleA territories (polygons + centers + XML)`);
+console.log(
+  `  name anchors: ${namePlacesById.size}/161 from name_place.txt` +
+    (nameLabelFallbacks.length > 0
+      ? `; FALLBACK to center for: ${nameLabelFallbacks.join(', ')}`
+      : '; no fallbacks'),
+);
 console.log(`  OVERRIDES used: ${overridesUsed.size > 0 ? [...overridesUsed].map((n) => `"${n}" -> ${OVERRIDES[n]}`).join(', ') : '(none)'}`);
 console.log(`  map: 96 land + 65 sea, IPC ussr 24 / germany 41 / uk 31 / japan 30 / us 42, 5 capitals, 13 VCs, 16 neutrals`);
 console.log(`  wrap pairs (${wrapPairs.length}): ${wrapPairs.map((p) => p.join(' <-> ')).join('; ')}`);

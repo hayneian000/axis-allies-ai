@@ -12,6 +12,7 @@ interface T1942 {
   points: Array<[number, number]>;
   extraPolygons?: Array<Array<[number, number]>>;
   label: [number, number];
+  nameLabel: [number, number];
   owner: string;
   neutral?: boolean;
   capital?: string;
@@ -248,6 +249,26 @@ describe('map-1942 board space (TripleA 3500x2000)', () => {
 
   it('territory id set equals the territory-meta cache keys', () => {
     expect(TS.map((t) => t.id).sort()).toEqual(Object.keys(territoryMeta).sort());
+  });
+
+  it('every territory has a nameLabel anchor (TripleA name_place.txt) inside the viewBox', () => {
+    const { width, height } = map1942.viewBox;
+    for (const t of TS) {
+      expect(t.nameLabel, `${t.id} nameLabel present`).toBeDefined();
+      const [nx, ny] = t.nameLabel;
+      expect(nx, `${t.id} nameLabel x`).toBeGreaterThanOrEqual(0);
+      expect(nx, `${t.id} nameLabel x`).toBeLessThanOrEqual(width);
+      expect(ny, `${t.id} nameLabel y`).toBeGreaterThanOrEqual(0);
+      expect(ny, `${t.id} nameLabel y`).toBeLessThanOrEqual(height);
+    }
+    // Spot checks against the raw name_place.txt values (name anchors are
+    // authored separately from the centers.txt unit anchors — e.g. sz5's
+    // name sits in the Baltic, far from its unit center).
+    expect(byId.get('germany')!.nameLabel).toEqual([990, 560]);
+    expect(byId.get('united_kingdom')!.nameLabel).toEqual([773, 381]);
+    expect(byId.get('russia')!.nameLabel).toEqual([1764, 349]);
+    expect(byId.get('sz5')!.nameLabel).toEqual([1264, 297]);
+    expect(byId.get('sz19')!.nameLabel).toEqual([138, 1382]);
   });
 });
 

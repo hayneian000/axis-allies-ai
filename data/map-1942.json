@@ -198,6 +198,10 @@
     2939,
     863
    ],
+   "nameLabel": [
+    2911,
+    843
+   ],
    "owner": "japan",
    "neutral": false
   },
@@ -436,6 +440,10 @@
    "label": [
     2725,
     1105
+   ],
+   "nameLabel": [
+    2688,
+    1075
    ],
    "owner": "japan",
    "neutral": false
@@ -3673,6 +3681,10 @@
     2748,
     716
    ],
+   "nameLabel": [
+    2744,
+    728
+   ],
    "owner": "japan",
    "capital": "Tokyo",
    "victoryCity": "Tokyo",
@@ -5714,6 +5726,10 @@
     2560,
     552
    ],
+   "nameLabel": [
+    2481,
+    558
+   ],
    "owner": "japan",
    "neutral": false
   },
@@ -7253,6 +7269,10 @@
    "label": [
     2114,
     676
+   ],
+   "nameLabel": [
+    2068,
+    661
    ],
    "owner": "us",
    "neutral": false
@@ -8999,6 +9019,10 @@
     2089,
     770
    ],
+   "nameLabel": [
+    2046,
+    783
+   ],
    "owner": "us",
    "neutral": false
   },
@@ -10214,6 +10238,10 @@
    "label": [
     2254,
     919
+   ],
+   "nameLabel": [
+    2226,
+    914
    ],
    "owner": "us",
    "neutral": false
@@ -11537,6 +11565,10 @@
     2448,
     757
    ],
+   "nameLabel": [
+    2396,
+    738
+   ],
    "owner": "japan",
    "victoryCity": "Shanghai",
    "neutral": false
@@ -12692,6 +12724,10 @@
    "label": [
     2394,
     903
+   ],
+   "nameLabel": [
+    2347,
+    912
    ],
    "owner": "japan",
    "neutral": false
@@ -14112,6 +14148,10 @@
    "label": [
     2284,
     685
+   ],
+   "nameLabel": [
+    2246,
+    701
    ],
    "owner": "us",
    "neutral": false
@@ -16152,6 +16192,10 @@
     1067,
     568
    ],
+   "nameLabel": [
+    990,
+    560
+   ],
    "owner": "germany",
    "capital": "Berlin",
    "victoryCity": "Berlin",
@@ -18046,6 +18090,10 @@
    "label": [
     2711,
     131
+   ],
+   "nameLabel": [
+    2638,
+    145
    ],
    "owner": "ussr",
    "neutral": false
@@ -20515,6 +20563,10 @@
     2581,
     366
    ],
+   "nameLabel": [
+    2479,
+    323
+   ],
    "owner": "ussr",
    "neutral": false
   },
@@ -21900,6 +21952,10 @@
    "label": [
     2347,
     244
+   ],
+   "nameLabel": [
+    2314,
+    270
    ],
    "owner": "ussr",
    "neutral": false
@@ -23801,6 +23857,10 @@
     2182,
     286
    ],
+   "nameLabel": [
+    2155,
+    318
+   ],
    "owner": "ussr",
    "neutral": false
   },
@@ -25255,6 +25315,10 @@
    "label": [
     1955,
     520
+   ],
+   "nameLabel": [
+    1916,
+    529
    ],
    "owner": "ussr",
    "neutral": false
@@ -27424,6 +27488,10 @@
    "label": [
     1800,
     724
+   ],
+   "nameLabel": [
+    1761,
+    691
    ],
    "owner": "ussr",
    "neutral": false
@@ -29678,6 +29746,10 @@
     1589,
     595
    ],
+   "nameLabel": [
+    1558,
+    612
+   ],
    "owner": "ussr",
    "neutral": false
   },
@@ -30903,6 +30975,10 @@
    "label": [
     2049,
     227
+   ],
+   "nameLabel": [
+    2007,
+    241
    ],
    "owner": "ussr",
    "neutral": false
@@ -34376,6 +34452,10 @@
     1600,
     224
    ],
+   "nameLabel": [
+    1585,
+    204
+   ],
    "owner": "ussr",
    "neutral": false
   },
@@ -37221,6 +37301,10 @@
     1351,
     232
    ],
+   "nameLabel": [
+    1391,
+    267
+   ],
    "owner": "ussr",
    "victoryCity": "Leningrad",
    "neutral": false
@@ -38942,6 +39026,10 @@
     1609,
     416
    ],
+   "nameLabel": [
+    1599,
+    444
+   ],
    "owner": "germany",
    "neutral": false
   },
@@ -40646,6 +40734,10 @@
     1431,
     624
    ],
+   "nameLabel": [
+    1389,
+    650
+   ],
    "owner": "germany",
    "neutral": false
   },
@@ -41784,6 +41876,10 @@
    "label": [
     1434,
     442
+   ],
+   "nameLabel": [
+    1381,
+    456
    ],
    "owner": "germany",
    "neutral": false
@@ -44161,6 +44257,10 @@
     1814,
     297
    ],
+   "nameLabel": [
+    1764,
+    349
+   ],
    "owner": "ussr",
    "capital": "Moscow",
    "victoryCity": "Moscow",
@@ -45940,6 +46040,10 @@
     802,
     656
    ],
+   "nameLabel": [
+    788,
+    656
+   ],
    "owner": "germany",
    "victoryCity": "Paris",
    "neutral": false
@@ -47195,6 +47299,10 @@
    "label": [
     894,
     482
+   ],
+   "nameLabel": [
+    861,
+    516
    ],
    "owner": "germany",
    "neutral": false
@@ -48823,6 +48931,10 @@
     997,
     226
    ],
+   "nameLabel": [
+    958,
+    242
+   ],
    "owner": "germany",
    "neutral": false
   },
@@ -49825,6 +49937,10 @@
    "label": [
     1190,
     200
+   ],
+   "nameLabel": [
+    1182,
+    216
    ],
    "owner": "germany",
    "neutral": false
@@ -51121,6 +51237,10 @@
     1247,
     368
    ],
+   "nameLabel": [
+    1233,
+    393
+   ],
    "owner": "germany",
    "neutral": false
   },
@@ -52319,6 +52439,10 @@
    "label": [
     1275,
     528
+   ],
+   "nameLabel": [
+    1249,
+    534
    ],
    "owner": "germany",
    "neutral": false
@@ -53783,6 +53907,10 @@
    "label": [
     1268,
     735
+   ],
+   "nameLabel": [
+    1236,
+    760
    ],
    "owner": "germany",
    "neutral": false
@@ -55631,6 +55759,10 @@
     988,
     783
    ],
+   "nameLabel": [
+    990,
+    802
+   ],
    "owner": "germany",
    "victoryCity": "Rome",
    "neutral": false
@@ -57023,6 +57155,10 @@
     1136,
     800
    ],
+   "nameLabel": [
+    1096,
+    812
+   ],
    "owner": "germany",
    "neutral": false
   },
@@ -57672,6 +57808,10 @@
    "label": [
     696,
     999
+   ],
+   "nameLabel": [
+    661,
+    1013
    ],
    "owner": "germany",
    "neutral": false
@@ -58674,6 +58814,10 @@
    "label": [
     798,
     1008
+   ],
+   "nameLabel": [
+    813,
+    1013
    ],
    "owner": "germany",
    "neutral": false
@@ -59884,6 +60028,10 @@
    "label": [
     1020,
     1057
+   ],
+   "nameLabel": [
+    993,
+    1059
    ],
    "owner": "germany",
    "neutral": false
@@ -62451,6 +62599,10 @@
     815,
     343
    ],
+   "nameLabel": [
+    773,
+    381
+   ],
    "owner": "uk",
    "capital": "London",
    "victoryCity": "London",
@@ -62898,6 +63050,10 @@
    "label": [
     3362,
     366
+   ],
+   "nameLabel": [
+    3318,
+    392
    ],
    "owner": "uk",
    "neutral": false
@@ -67946,6 +68102,10 @@
     273,
     415
    ],
+   "nameLabel": [
+    208,
+    475
+   ],
    "owner": "uk",
    "neutral": false
   },
@@ -68985,6 +69145,10 @@
    "label": [
     1225,
     1100
+   ],
+   "nameLabel": [
+    1198,
+    1114
    ],
    "owner": "uk",
    "neutral": false
@@ -70297,6 +70461,10 @@
    "label": [
     1146,
     1843
+   ],
+   "nameLabel": [
+    1129,
+    1892
    ],
    "owner": "uk",
    "neutral": false
@@ -71842,6 +72010,10 @@
     1469,
     1014
    ],
+   "nameLabel": [
+    1403,
+    1030
+   ],
    "owner": "uk",
    "neutral": false
   },
@@ -72850,6 +73022,10 @@
    "label": [
     1683,
     938
+   ],
+   "nameLabel": [
+    1650,
+    952
    ],
    "owner": "uk",
    "neutral": false
@@ -75222,6 +75398,10 @@
     1884,
     1044
    ],
+   "nameLabel": [
+    1855,
+    1058
+   ],
    "owner": "uk",
    "victoryCity": "Calcutta",
    "neutral": false
@@ -76197,6 +76377,10 @@
    "label": [
     2160,
     1025
+   ],
+   "nameLabel": [
+    2126,
+    1038
    ],
    "owner": "uk",
    "neutral": false
@@ -77634,6 +77818,10 @@
    "label": [
     2620,
     1769
+   ],
+   "nameLabel": [
+    2587,
+    1797
    ],
    "owner": "uk",
    "neutral": false
@@ -79272,6 +79460,10 @@
     2790,
     1866
    ],
+   "nameLabel": [
+    2813,
+    1875
+   ],
    "owner": "uk",
    "neutral": false
   },
@@ -80747,6 +80939,10 @@
     3077,
     1853
    ],
+   "nameLabel": [
+    3092,
+    1772
+   ],
    "owner": "uk",
    "neutral": false
   },
@@ -81033,6 +81229,10 @@
    "label": [
     831,
     48
+   ],
+   "nameLabel": [
+    811,
+    61
    ],
    "owner": "uk",
    "neutral": false
@@ -81458,6 +81658,10 @@
    "label": [
     703,
     902
+   ],
+   "nameLabel": [
+    668,
+    933
    ],
    "owner": "uk",
    "neutral": false
@@ -82995,6 +83199,10 @@
    "label": [
     719,
     1260
+   ],
+   "nameLabel": [
+    682,
+    1298
    ],
    "owner": "uk",
    "neutral": false
@@ -84611,6 +84819,10 @@
     962,
     1317
    ],
+   "nameLabel": [
+    909,
+    1355
+   ],
    "owner": "uk",
    "neutral": false
   },
@@ -86019,6 +86231,10 @@
     1077,
     1533
    ],
+   "nameLabel": [
+    1037,
+    1562
+   ],
    "owner": "uk",
    "neutral": false
   },
@@ -87338,6 +87554,10 @@
    "label": [
     1213,
     1606
+   ],
+   "nameLabel": [
+    1170,
+    1619
    ],
    "owner": "uk",
    "neutral": false
@@ -88807,6 +89027,10 @@
    "label": [
     1181,
     1299
+   ],
+   "nameLabel": [
+    1139,
+    1317
    ],
    "owner": "uk",
    "neutral": false
@@ -90354,6 +90578,10 @@
     1381,
     1412
    ],
+   "nameLabel": [
+    1323,
+    1431
+   ],
    "owner": "uk",
    "neutral": false
   },
@@ -91244,6 +91472,10 @@
     1384,
     1819
    ],
+   "nameLabel": [
+    1336,
+    1858
+   ],
    "owner": "uk",
    "neutral": false
   },
@@ -92011,6 +92243,10 @@
    "label": [
     2207,
     1237
+   ],
+   "nameLabel": [
+    2156,
+    1225
    ],
    "owner": "japan",
    "neutral": false
@@ -93318,6 +93554,10 @@
    "label": [
     2436,
     1385
+   ],
+   "nameLabel": [
+    2406,
+    1399
    ],
    "owner": "japan",
    "neutral": false
@@ -94740,6 +94980,10 @@
     2735,
     1537
    ],
+   "nameLabel": [
+    2707,
+    1561
+   ],
    "owner": "japan",
    "neutral": false
   },
@@ -96099,6 +96343,10 @@
     2210,
     1451
    ],
+   "nameLabel": [
+    2201,
+    1481
+   ],
    "owner": "japan",
    "neutral": false
   },
@@ -97409,6 +97657,10 @@
     2244,
     1101
    ],
+   "nameLabel": [
+    2237,
+    1131
+   ],
    "owner": "japan",
    "neutral": false
   },
@@ -98372,6 +98624,10 @@
     3001,
     1495
    ],
+   "nameLabel": [
+    2995,
+    1500
+   ],
    "owner": "japan",
    "neutral": false
   },
@@ -99198,6 +99454,10 @@
    "label": [
     2807,
     1300
+   ],
+   "nameLabel": [
+    2707,
+    1277
    ],
    "owner": "japan",
    "neutral": false
@@ -100566,6 +100826,10 @@
     2545,
     1172
    ],
+   "nameLabel": [
+    2522,
+    1145
+   ],
    "owner": "japan",
    "victoryCity": "Manila",
    "neutral": false
@@ -100733,6 +100997,10 @@
    "label": [
     2486,
     998
+   ],
+   "nameLabel": [
+    2463,
+    987
    ],
    "owner": "japan",
    "neutral": false
@@ -100928,6 +101196,10 @@
    "label": [
     2927,
     1105
+   ],
+   "nameLabel": [
+    2893,
+    1094
    ],
    "owner": "japan",
    "neutral": false
@@ -101616,6 +101888,10 @@
     3202,
     1055
    ],
+   "nameLabel": [
+    3100,
+    1066
+   ],
    "owner": "us",
    "victoryCity": "Honolulu",
    "neutral": false
@@ -101843,6 +102119,10 @@
    "label": [
     3133,
     613
+   ],
+   "nameLabel": [
+    3099,
+    609
    ],
    "owner": "us",
    "neutral": false
@@ -104165,6 +104445,10 @@
     3161,
     248
    ],
+   "nameLabel": [
+    3125,
+    262
+   ],
    "owner": "us",
    "neutral": false
   },
@@ -105047,6 +105331,10 @@
     3389,
     624
    ],
+   "nameLabel": [
+    3367,
+    638
+   ],
    "owner": "us",
    "victoryCity": "San Francisco",
    "neutral": false
@@ -105870,6 +106158,10 @@
    "label": [
     65,
     655
+   ],
+   "nameLabel": [
+    23,
+    686
    ],
    "owner": "us",
    "neutral": false
@@ -107804,6 +108096,10 @@
     252,
     596
    ],
+   "nameLabel": [
+    142,
+    705
+   ],
    "owner": "us",
    "capital": "Washington",
    "victoryCity": "Washington",
@@ -108577,6 +108873,10 @@
    "label": [
     24,
     891
+   ],
+   "nameLabel": [
+    1,
+    902
    ],
    "owner": "us",
    "neutral": false
@@ -109487,6 +109787,10 @@
     3439,
     816
    ],
+   "nameLabel": [
+    3417,
+    823
+   ],
    "owner": "us",
    "neutral": false
   },
@@ -110233,6 +110537,10 @@
     70,
     990
    ],
+   "nameLabel": [
+    10,
+    1050
+   ],
    "owner": "us",
    "neutral": false
   },
@@ -110903,6 +111211,10 @@
    "label": [
     278,
     963
+   ],
+   "nameLabel": [
+    252,
+    958
    ],
    "owner": "us",
    "neutral": false
@@ -111742,6 +112054,10 @@
    "label": [
     390,
     74
+   ],
+   "nameLabel": [
+    326,
+    62
    ],
    "owner": "us",
    "neutral": false
@@ -114117,6 +114433,10 @@
     346,
     1277
    ],
+   "nameLabel": [
+    322,
+    1264
+   ],
    "owner": "us",
    "neutral": false
   },
@@ -115603,6 +115923,10 @@
     636,
     822
    ],
+   "nameLabel": [
+    633,
+    833
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -116852,6 +117176,10 @@
     1065,
     323
    ],
+   "nameLabel": [
+    1025,
+    337
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -117464,6 +117792,10 @@
    "label": [
     956,
     690
+   ],
+   "nameLabel": [
+    902,
+    710
    ],
    "owner": "neutral",
    "neutral": true
@@ -119199,6 +119531,10 @@
     1465,
     929
    ],
+   "nameLabel": [
+    1426,
+    945
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -120886,6 +121222,10 @@
    "label": [
     1518,
     1139
+   ],
+   "nameLabel": [
+    1495,
+    1156
    ],
    "owner": "neutral",
    "neutral": true
@@ -123489,6 +123829,10 @@
     1036,
     1156
    ],
+   "nameLabel": [
+    999,
+    1170
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -124463,6 +124807,10 @@
    "label": [
     1843,
     879
+   ],
+   "nameLabel": [
+    1786,
+    894
    ],
    "owner": "neutral",
    "neutral": true
@@ -125770,6 +126118,10 @@
    "label": [
     2048,
     880
+   ],
+   "nameLabel": [
+    2000,
+    896
    ],
    "owner": "neutral",
    "neutral": true
@@ -127463,6 +127815,10 @@
     2267,
     542
    ],
+   "nameLabel": [
+    2219,
+    558
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -128656,6 +129012,10 @@
     204,
     1084
    ],
+   "nameLabel": [
+    178,
+    1090
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -129803,6 +130163,10 @@
    "label": [
     97,
     1170
+   ],
+   "nameLabel": [
+    64,
+    1168
    ],
    "owner": "neutral",
    "neutral": true
@@ -132247,6 +132611,10 @@
     227,
     1375
    ],
+   "nameLabel": [
+    184,
+    1406
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -133680,6 +134048,10 @@
     185,
     1547
    ],
+   "nameLabel": [
+    153,
+    1570
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -134296,6 +134668,10 @@
    "label": [
     1085,
     1748
+   ],
+   "nameLabel": [
+    1041,
+    1757
    ],
    "owner": "neutral",
    "neutral": true
@@ -134967,6 +135343,10 @@
     1255,
     1774
    ],
+   "nameLabel": [
+    1251,
+    1751
+   ],
    "owner": "neutral",
    "neutral": true
   },
@@ -135447,6 +135827,10 @@
    "label": [
     720,
     288
+   ],
+   "nameLabel": [
+    697,
+    300
    ],
    "owner": "neutral",
    "neutral": true
@@ -137834,6 +138218,10 @@
    "label": [
     249,
     156
+   ],
+   "nameLabel": [
+    376,
+    207
    ]
   },
   {
@@ -138910,6 +139298,10 @@
    "label": [
     498,
     170
+   ],
+   "nameLabel": [
+    589,
+    307
    ]
   },
   {
@@ -139335,6 +139727,10 @@
    "label": [
     810,
     94
+   ],
+   "nameLabel": [
+    1049,
+    104
    ]
   },
   {
@@ -142024,6 +142420,10 @@
    "label": [
     1462,
     40
+   ],
+   "nameLabel": [
+    1217,
+    25
    ]
   },
   {
@@ -144534,6 +144934,10 @@
    "label": [
     1051,
     409
+   ],
+   "nameLabel": [
+    1264,
+    297
    ]
   },
   {
@@ -146447,6 +146851,10 @@
    "label": [
     862,
     254
+   ],
+   "nameLabel": [
+    968,
+    340
    ]
   },
   {
@@ -147620,6 +148028,10 @@
    "label": [
     663,
     223
+   ],
+   "nameLabel": [
+    618,
+    307
    ]
   },
   {
@@ -149678,6 +150090,10 @@
    "label": [
     745,
     475
+   ],
+   "nameLabel": [
+    713,
+    726
    ]
   },
   {
@@ -149734,6 +150150,10 @@
    "label": [
     542,
     512
+   ],
+   "nameLabel": [
+    650,
+    702
    ]
   },
   {
@@ -151486,6 +151906,10 @@
    "label": [
     403,
     599
+   ],
+   "nameLabel": [
+    485,
+    702
    ]
   },
   {
@@ -153298,6 +153722,10 @@
    "label": [
     270,
     767
+   ],
+   "nameLabel": [
+    351,
+    887
    ]
   },
   {
@@ -153355,6 +153783,10 @@
    "label": [
     407,
     847
+   ],
+   "nameLabel": [
+    520,
+    1005
    ]
   },
   {
@@ -154497,6 +154929,10 @@
    "label": [
     568,
     961
+   ],
+   "nameLabel": [
+    630,
+    1005
    ]
   },
   {
@@ -155738,6 +156174,10 @@
    "label": [
     775,
     919
+   ],
+   "nameLabel": [
+    924,
+    950
    ]
   },
   {
@@ -158959,6 +159399,10 @@
    "label": [
     1004,
     938
+   ],
+   "nameLabel": [
+    1141,
+    1011
    ]
   },
   {
@@ -160562,6 +161006,10 @@
    "label": [
     1417,
     831
+   ],
+   "nameLabel": [
+    1543,
+    866
    ]
   },
   {
@@ -162037,6 +162485,10 @@
    "label": [
     1255,
     992
+   ],
+   "nameLabel": [
+    1363,
+    1016
    ]
   },
   {
@@ -163176,6 +163628,10 @@
    "label": [
     280,
     1025
+   ],
+   "nameLabel": [
+    351,
+    1113
    ]
   },
   {
@@ -164245,6 +164701,10 @@
    "label": [
     41,
     1053
+   ],
+   "nameLabel": [
+    138,
+    1382
    ]
   },
   {
@@ -164771,6 +165231,10 @@
    "label": [
     75,
     1506
+   ],
+   "nameLabel": [
+    147,
+    1636
    ]
   },
   {
@@ -166072,6 +166536,10 @@
    "label": [
     223,
     1800
+   ],
+   "nameLabel": [
+    358,
+    1983
    ]
   },
   {
@@ -167100,6 +167568,10 @@
    "label": [
     447,
     1470
+   ],
+   "nameLabel": [
+    513,
+    1599
    ]
   },
   {
@@ -168485,6 +168957,10 @@
    "label": [
     587,
     1437
+   ],
+   "nameLabel": [
+    835,
+    1546
    ]
   },
   {
@@ -169500,6 +169976,10 @@
    "label": [
     905,
     1526
+   ],
+   "nameLabel": [
+    1014,
+    1661
    ]
   },
   {
@@ -169568,6 +170048,10 @@
    "label": [
     595,
     1701
+   ],
+   "nameLabel": [
+    857,
+    1793
    ]
   },
   {
@@ -169621,6 +170105,10 @@
    "label": [
     609,
     1862
+   ],
+   "nameLabel": [
+    856,
+    1984
    ]
   },
   {
@@ -170253,6 +170741,10 @@
    "label": [
     970,
     1836
+   ],
+   "nameLabel": [
+    1114,
+    1984
    ]
   },
   {
@@ -170961,6 +171453,10 @@
    "label": [
     1284,
     1871
+   ],
+   "nameLabel": [
+    1365,
+    1985
    ]
   },
   {
@@ -171224,6 +171720,10 @@
    "label": [
     1589,
     1880
+   ],
+   "nameLabel": [
+    1711,
+    1983
    ]
   },
   {
@@ -171278,6 +171778,10 @@
    "label": [
     1946,
     1881
+   ],
+   "nameLabel": [
+    2119,
+    1984
    ]
   },
   {
@@ -171333,6 +171837,10 @@
    "label": [
     1925,
     1552
+   ],
+   "nameLabel": [
+    2070,
+    1792
    ]
   },
   {
@@ -171909,6 +172417,10 @@
    "label": [
     1682,
     1601
+   ],
+   "nameLabel": [
+    1764,
+    1793
    ]
   },
   {
@@ -173434,6 +173946,10 @@
    "label": [
     1423,
     1579
+   ],
+   "nameLabel": [
+    1534,
+    1667
    ]
   },
   {
@@ -175822,6 +176338,10 @@
    "label": [
     1558,
     1289
+   ],
+   "nameLabel": [
+    1709,
+    1391
    ]
   },
   {
@@ -177266,6 +177786,10 @@
    "label": [
     1910,
     1322
+   ],
+   "nameLabel": [
+    2069,
+    1393
    ]
   },
   {
@@ -179396,6 +179920,10 @@
    "label": [
     2345,
     1228
+   ],
+   "nameLabel": [
+    2380,
+    1295
    ]
   },
   {
@@ -179730,6 +180258,10 @@
    "label": [
     2175,
     1536
+   ],
+   "nameLabel": [
+    2367,
+    1792
    ]
   },
   {
@@ -180237,6 +180769,10 @@
    "label": [
     2345,
     1888
+   ],
+   "nameLabel": [
+    2561,
+    1986
    ]
   },
   {
@@ -181359,6 +181895,10 @@
    "label": [
     2974,
     1884
+   ],
+   "nameLabel": [
+    2986,
+    1983
    ]
   },
   {
@@ -181415,6 +181955,10 @@
    "label": [
     3177,
     1774
+   ],
+   "nameLabel": [
+    3240,
+    1984
    ]
   },
   {
@@ -181469,6 +182013,10 @@
    "label": [
     3337,
     1754
+   ],
+   "nameLabel": [
+    3477,
+    1983
    ]
   },
   {
@@ -181536,6 +182084,10 @@
    "label": [
     3386,
     1395
+   ],
+   "nameLabel": [
+    3475,
+    1637
    ]
   },
   {
@@ -181592,6 +182144,10 @@
    "label": [
     3250,
     1398
+   ],
+   "nameLabel": [
+    3310,
+    1636
    ]
   },
   {
@@ -181662,6 +182218,10 @@
    "label": [
     3007,
     1378
+   ],
+   "nameLabel": [
+    3126,
+    1637
    ]
   },
   {
@@ -182210,6 +182770,10 @@
    "label": [
     2917,
     1665
+   ],
+   "nameLabel": [
+    2986,
+    1793
    ]
   },
   {
@@ -183174,6 +183738,10 @@
    "label": [
     2465,
     1664
+   ],
+   "nameLabel": [
+    2490,
+    1793
    ]
   },
   {
@@ -183458,6 +184026,10 @@
    "label": [
     2457,
     1505
+   ],
+   "nameLabel": [
+    2565,
+    1594
    ]
   },
   {
@@ -183732,6 +184304,10 @@
    "label": [
     2564,
     1079
+   ],
+   "nameLabel": [
+    2647,
+    1341
    ]
   },
   {
@@ -183801,6 +184377,10 @@
    "label": [
     2692,
     1452
+   ],
+   "nameLabel": [
+    2867,
+    1594
    ]
   },
   {
@@ -183857,6 +184437,10 @@
    "label": [
     2765,
     1226
+   ],
+   "nameLabel": [
+    2866,
+    1387
    ]
   },
   {
@@ -183913,6 +184497,10 @@
    "label": [
     2740,
     991
+   ],
+   "nameLabel": [
+    2816,
+    1172
    ]
   },
   {
@@ -183982,6 +184570,10 @@
    "label": [
     2921,
     1032
+   ],
+   "nameLabel": [
+    3051,
+    1257
    ]
   },
   {
@@ -184039,6 +184631,10 @@
    "label": [
     3110,
     1114
+   ],
+   "nameLabel": [
+    3236,
+    1257
    ]
   },
   {
@@ -184094,6 +184690,10 @@
    "label": [
     3312,
     1074
+   ],
+   "nameLabel": [
+    3404,
+    1256
    ]
   },
   {
@@ -184837,6 +185437,10 @@
    "label": [
     3434,
     962
+   ],
+   "nameLabel": [
+    3476,
+    1282
    ]
   },
   {
@@ -185573,6 +186177,10 @@
    "label": [
     3219,
     734
+   ],
+   "nameLabel": [
+    3324,
+    914
    ]
   },
   {
@@ -185631,6 +186239,10 @@
    "label": [
     3074,
     763
+   ],
+   "nameLabel": [
+    3178,
+    915
    ]
   },
   {
@@ -185686,6 +186298,10 @@
    "label": [
     2935,
     618
+   ],
+   "nameLabel": [
+    3022,
+    743
    ]
   },
   {
@@ -185902,6 +186518,10 @@
    "label": [
     2913,
     809
+   ],
+   "nameLabel": [
+    3021,
+    914
    ]
   },
   {
@@ -188196,6 +188816,10 @@
    "label": [
     2787,
     787
+   ],
+   "nameLabel": [
+    2729,
+    914
    ]
   },
   {
@@ -189634,6 +190258,10 @@
    "label": [
     2492,
     936
+   ],
+   "nameLabel": [
+    2429,
+    1073
    ]
   },
   {
@@ -192306,6 +192934,10 @@
    "label": [
     2656,
     641
+   ],
+   "nameLabel": [
+    2586,
+    863
    ]
   },
   {
@@ -194030,6 +194662,10 @@
    "label": [
     2893,
     388
+   ],
+   "nameLabel": [
+    2973,
+    465
    ]
   },
   {
@@ -195649,6 +196285,10 @@
    "label": [
     3028,
     426
+   ],
+   "nameLabel": [
+    3130,
+    465
    ]
   },
   {
@@ -196396,6 +197036,10 @@
    "label": [
     3188,
     444
+   ],
+   "nameLabel": [
+    3274,
+    467
    ]
   }
  ],

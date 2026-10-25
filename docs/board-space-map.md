@@ -15,6 +15,11 @@ coordinate system, so they agree with each other exactly:
 - **Polygons = interaction geometry.** Territory `points` and `label` anchors
   are TripleA's `polygons.txt` / `centers.txt` values, used as traced on that
   raster — clicks, owner tints, and unit chits line up with the printed board.
+- **Names = UI text at TripleA's anchors.** The base artwork prints no
+  territory names or sea-zone numbers (TripleA draws that text itself), so
+  board mode renders them from `nameLabel` anchors — TripleA's
+  `name_place.txt` values, a separate anchor set from the `centers.txt`
+  unit points.
 - **XML = adjacency and setup.** Neighbor lists, starting owners, unit
   placements, and starting PUs come from the TripleA game definition
   `WW2v5_1942_2nd.xml`. Names, IPCs, capitals, and victory cities come from
@@ -32,8 +37,8 @@ by construction rather than by fitting.
 Everything the build reads is cached under `scripts/build-map/cache/`:
 
 - `cache/triplea/polygons.txt`, `cache/triplea/centers.txt`,
-  `cache/triplea/WW2v5_1942_2nd.xml` — from the TripleA
-  `world_war_ii_v5_1942` map package.
+  `cache/triplea/name_place.txt`, `cache/triplea/WW2v5_1942_2nd.xml` — from
+  the TripleA `world_war_ii_v5_1942` map package.
 - `cache/territory-meta-1942.json` — our per-territory metadata (names, IPCs,
   owners, capitals, victory cities), keyed by territory id.
 

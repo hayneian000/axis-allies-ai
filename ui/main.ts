@@ -682,9 +682,9 @@ function drawFactory(g: SVGElement, fresh: boolean): void {
 function layoutLabels(): Map<string, { x: number; y: number }> {
   const pos = new Map<string, { x: number; y: number }>();
   for (const t of MAP.territories) pos.set(t.id, { x: t.label[0], y: t.label[1] });
-  // Board space: text labels are printed in the artwork, so there is no
-  // label stack to fit or de-conflict — unit markers sit exactly on the
-  // authored label points.
+  // Board space: names sit at the authored name_place anchors and unit
+  // markers exactly on the authored label points, so there is no label
+  // stack to fit or de-conflict.
   if (isBoardSpace()) return pos;
   const bbOf = (tid: string) => bboxOf(MAP.territories.find((t) => t.id === tid)!.points);
 
@@ -969,18 +969,31 @@ function seaLabels(
   return g;
 }
 
-/** Board-space labels: the name, owner line and IPC value are printed
- *  in the board artwork, so NONE of that text is rendered here. What
- *  must still render at the territory's label point is the dynamic
- *  state the artwork cannot know: unit icons + counts (land and sea)
- *  and the factory indicator. Icon rows are scaled up (BOARD_SCALE)
- *  because board coordinates are ~3.5x the America map's — unscaled
- *  15px chits would be unreadable at full-board zoom. Sea zones also
- *  keep their dynamic aux lines (cargo, carrier capacity, coexisting
- *  forces), which are game state, not artwork. */
+/** Board-space name text size: the name anchors come from TripleA's
+ *  name_place.txt, authored for this exact artwork; long names step
+ *  down a size or two so they stay inside their territories. */
+function boardNameSize(name: string): number {
+  if (name.length > 20) return 25;
+  if (name.length > 14) return 29;
+  return 34;
+}
+
+/** Board-space labels. TripleA's base artwork prints NO territory names
+ *  or sea-zone numbers (TripleA draws that text itself from
+ *  name_place.txt), so board mode renders the names here, at the
+ *  name_place anchors (t.nameLabel): land names in dark ink with a
+ *  light halo, the IPC value on a smaller second line, and sea zones
+ *  as a bare zone number in light text. What renders at the territory's
+ *  label point is the dynamic state the artwork cannot know: unit
+ *  icons + counts (land and sea) and the factory indicator. Icon rows
+ *  are scaled up (BOARD_SCALE) because board coordinates are ~3.5x the
+ *  America map's — unscaled 15px chits would be unreadable at
+ *  full-board zoom. Sea zones also keep their dynamic aux lines
+ *  (cargo, carrier capacity, coexisting forces), which are game state,
+ *  not artwork. */
 const BOARD_UNIT_SCALE = 3;
 function boardLabels(
-  s: GameState, tid: string, lx: number, ly: number,
+  s: GameState, tid: string, inBattle: boolean, lx: number, ly: number,
 ): SVGElement {
   const t = MAP.territories.find((x) => x.id === tid)!;
   const st = s.territories[tid];
@@ -989,6 +1002,44 @@ function boardLabels(
     'data-terr': tid,
     'pointer-events': 'none',
   });
+  // Name text at the name_place anchor (falls back to the label point
+  // for any map that predates nameLabel).
+  const [nx, ny] = t.nameLabel ?? [lx, ly];
+  if (t.domain === 'sea') {
+    const num = svgEl('text', {
+      x: String(nx),
+      y: String(ny),
+      'text-anchor': 'middle',
+      'dominant-baseline': 'central',
+      'font-size': '40',
+      class: 'board-seanum',
+    });
+    num.textContent = tid.replace(/^sz/, '');
+    g.appendChild(num);
+  } else {
+    const size = boardNameSize(t.name);
+    const nm = svgEl('text', {
+      x: String(nx),
+      y: String(ny + Math.round(size * 0.35)),
+      'text-anchor': 'middle',
+      'font-size': String(size),
+      class: 'board-tname',
+    });
+    nm.textContent = `${DISPLAY_NAME[tid] ?? t.name}${inBattle ? ' ⚔' : ''}`;
+    g.appendChild(nm);
+    const ipc = ipcOf(tid);
+    if (ipc > 0) {
+      const ip = svgEl('text', {
+        x: String(nx),
+        y: String(ny + Math.round(size * 0.35) + size + 4),
+        'text-anchor': 'middle',
+        'font-size': '24',
+        class: 'board-ipc',
+      });
+      ip.textContent = `IPC ${ipc}`;
+      g.appendChild(ip);
+    }
+  }
   const present = UNIT_ORDER.filter((u) => st.units[u] > 0);
   let below = ly;
   if (present.length > 0) {
@@ -1235,14 +1286,14 @@ function renderMap(s: GameState): void {
   }
 
   // Layer 3: labels, badges, unit icons — above water.
-  // Board space renders only the dynamic markers (units + factory):
-  // all territory text is printed in the artwork.
+  // Board space renders name text at the name_place anchors (the
+  // artwork prints none) plus the dynamic markers (units + factory).
   const layout = layoutLabels();
   for (const t of MAP.territories) {
     const p = layout.get(t.id)!;
     vport.appendChild(
       board
-        ? boardLabels(s, t.id, p.x, p.y)
+        ? boardLabels(s, t.id, battles.has(t.id), p.x, p.y)
         : terrLabels(s, t.id, battles.has(t.id), p.x, p.y),
     );
   }

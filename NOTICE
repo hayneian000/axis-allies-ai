@@ -1,0 +1,36 @@
+NOTICE
+
+License scope
+-------------
+The MIT License in the LICENSE file covers the original code and
+documentation written for this repository.
+
+Third-party-derived assets (not covered by the MIT License)
+------------------------------------------------------------
+The 1942 board artwork and data listed below are derived from the TripleA
+project's `world_war_ii_v5_1942` map package:
+
+- `ui/board-1942.jpg` - board artwork stitched from that package's map
+  tiles.
+- The territory polygons, center points, and name anchors used to build
+  `data/map-1942.json`.
+- The game-definition data used to build `data/map-1942.json` and
+  `data/scenario-1942.json` (adjacency, starting ownership, unit
+  placements, and starting income).
+- The source files kept under `scripts/build-map/cache/triplea/`
+  (`polygons.txt`, `centers.txt`, `name_place.txt`,
+  `WW2v5_1942_2nd.xml`).
+
+TripleA is an open-source project licensed under the GNU General Public
+License v3 (GPLv3). This project is non-commercial and includes those
+assets with attribution; they are NOT covered by the MIT License above
+and remain under their original terms.
+
+See `docs/board-space-map.md` for how the derivation works and how to
+rebuild the 1942 map data.
+
+Trademark
+---------
+Axis & Allies is a trademark of Hasbro, Inc. This is an unofficial,
+non-commercial fan project. It is not affiliated with, sponsored by, or
+endorsed by Hasbro, Inc. or Avalon Hill.

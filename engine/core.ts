@@ -1,7 +1,7 @@
 /**
  * engine/core.ts — Cross-cutting engine primitives: RNG, dice, results, logging, validation, state readers.
  */
-import { ipcOf, isSea } from '../data/data';
+import { ipcOf, isSea, victoryCityIds } from '../data/data';
 import type { ActionResult, Battle, GameState, Phase } from './types';
 
 
@@ -128,6 +128,13 @@ export function capitalsOf(state: GameState, playerId: number): string[] {
  *  capital-blocked (no purchase, no income) only when it holds none. */
 export function ownsCapital(state: GameState, playerId: number): boolean {
   return capitalsOf(state, playerId).some((c) => state.territories[c]?.owner === playerId);
+}
+
+
+/** Victory cities the seat currently holds (territories flagged
+ *  victoryCity on the active map whose owner is this seat). */
+export function victoryCitiesHeld(state: GameState, playerId: number): number {
+  return victoryCityIds().filter((t) => state.territories[t]?.owner === playerId).length;
 }
 
 

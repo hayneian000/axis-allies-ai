@@ -10,6 +10,12 @@
     ]
   ],
   "capitalsToWin": 3,
+  "victoryCitiesToWin": [
+    6,
+    5,
+    6,
+    8
+  ],
   "seatNames": [
     "Germany",
     "USSR",
@@ -783,5 +789,5 @@
     }
   ],
   "neutrals": {},
-  "note": "Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, Japanese = seat 2, and British + Americans are combined into seat 3 (both powers' territories and starting units belong to seat 3). capitals has one entry per seat; seat 3's entry lists both of its capitals, united_kingdom (primary) and eastern_united_states, and both are registered seat capitals in the engine. Banks: XML resourceInitialize starting PUs (Germans 41, Russians 24, Japanese 30, British 31 + Americans 42 combined into seat 3). Sea-zone holdings carry the naval starting units from the XML; land holdings cover every power-owned territory. The 16 neutral territories are impassable (1942 2e): they hold no garrison and can never be entered, overflown, or captured."
+  "note": "Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, Japanese = seat 2, and British + Americans are combined into seat 3 (both powers' territories and starting units belong to seat 3). capitals has one entry per seat; seat 3's entry lists both of its capitals, united_kingdom (primary) and eastern_united_states, and both are registered seat capitals in the engine. Banks: XML resourceInitialize starting PUs (Germans 41, Russians 24, Japanese 30, British 31 + Americans 42 combined into seat 3). Sea-zone holdings carry the naval starting units from the XML; land holdings cover every power-owned territory. The 16 neutral territories are impassable (1942 2e): they hold no garrison and can never be entered, overflown, or captured. Victory cities: the scenario also plays the 1942 2e standard victory (rulebook p.6) in per-seat form - at the end of a complete round, a seat holding 3 more victory cities than it started with wins (victoryCitiesToWin per seat: Germany 6, USSR 5, Japan 6, UK + US 8; the book's side totals are Axis 9 / Allies 10)."
 }

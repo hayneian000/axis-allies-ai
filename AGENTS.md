@@ -1,25 +1,19 @@
 # AGENTS.md
 
-Operating conventions for AI agents working in this repo
+Operating conventions for contributors and AI agents working in this repo
 (`axis-allies-ai`: an Axis & Allies-style strategy game with a headless
 TypeScript rules engine, SVG UI, and LLM-agent players).
 
-## If you are a Muse agent
-
-Read `docs/muse-workflow.md` first. It covers the Muse-specific workflow:
-approval-gated GitHub writes, batching pushes to minimize approval cards,
-and the permissions picture (what the agent can and cannot do).
-
-## Repo conventions (all agents)
+## Repo conventions
 
 - **Branches:** feature branches off `main` (`<area>-<thing>`, e.g.
-  `m3-diplomacy`); docs-only branches may use `docs/<thing>`. Ian merges
-  PRs himself.
-- **Never push `.github/*`.** The GitHub App lacks the Workflows permission
-  (403 on write); workflow edits are manual by Ian.
+  `m3-diplomacy`); docs-only branches may use `docs/<thing>`. The maintainer
+  merges PRs.
+- **Workflow changes need maintainer review.** Changes under `.github/`
+  affect CI for everyone; call them out in the PR description.
 - **`engine/` and `data/` are the stable core.** Agent/UI work lives in
   `agents/` + `ui/` and must not redesign the engine. If your work seems to
-  need an engine change, the abstraction leaked — fix the abstraction, not
+  need an engine change, the abstraction leaked - fix the abstraction, not
   the caller.
 - **`docs/` is the system of record.** Keep plan docs current in the same
   branch as the code they describe.

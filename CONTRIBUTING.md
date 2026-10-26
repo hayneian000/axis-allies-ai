@@ -1,46 +1,52 @@
 # Contributing to axis-allies-ai
 
-## Pull Request Requirements
+Thanks for your interest. Small, focused pull requests are the easiest to
+review and merge.
 
-### Visual Evidence (Required)
+## Getting started
 
-**Every PR that changes anything visual MUST include visual evidence provided by the
-contributor.** CI does not run browser screenshots (GitHub free tier minutes are limited).
-It is the contributor's responsibility to demonstrate their changes work.
+Prerequisites: Node.js 18+ (20 LTS recommended) and npm 9+.
 
-**For LLM contributors:** you MUST attach a screen recording or screenshots of your changes
-in the PR description or via message. Do not present mockups or approximations as real
-renders. If you cannot produce a real browser capture in your environment, say so explicitly
-and describe the manual verification steps instead.
+```bash
+npm install
+npm run dev      # start the dev server (usually http://localhost:5173)
+npm test         # run the full test suite
+```
 
-This includes:
-- Map geometry changes (territory shapes, new polygons, label positions)
-- UI changes (new screens, redesigned components, new animations)
-- New visual features (intro sequences, effects, transitions)
-- Style/theme changes (colors, fonts, layout)
-
-**What counts as visual evidence:**
-- Screenshots of the changed UI (before/after for redesigns)
-- For animations/sequences: a composite showing key frames, or an animated GIF
-- For map changes: a rendered map screenshot highlighting the changed area
-
-**How to add it:**
-1. Generate the screenshot using `node scripts/screenshot.mjs <output.png>` for the game map, or capture the UI directly.
-2. Attach the image to the PR description or as a PR comment.
-3. Describe what the image shows and what to look for.
-
-**PRs without visual evidence will be asked to add it before merge.**
-
-### Code Requirements
+## Code requirements
 
 - `npx tsc --noEmit` must pass with zero errors.
 - `npx vitest run` must pass (all tests green).
 - New game rules must have rulebook citations in tests (`// 1942 2e p.XX`).
 - Game logic lives in `engine/` (pure functions, no DOM). UI lives in `ui/`.
 
-### Branch & PR Workflow
+## Visual changes
+
+CI does not run browser screenshots, so for any change that affects what
+the game looks like, please include screenshots in your PR so reviewers can
+see the result. Real captures of the running game only - please do not
+present mockups or approximations as renders. If you cannot produce a real
+browser capture in your environment, say so in the PR and describe the
+manual verification steps you took instead.
+
+This applies to:
+
+- Map geometry changes (territory shapes, new polygons, label positions)
+- UI changes (new screens, redesigned components, new animations)
+- New visual features (intro sequences, effects, transitions)
+- Style/theme changes (colors, fonts, layout)
+
+To capture the game map, you can use the screenshot harness
+(`npm run screenshots`, or `node scripts/screenshot.mjs <output.png>`), or
+capture the UI directly in a browser. Attach the images to the PR
+description and note what to look for; before/after pairs help for
+redesigns.
+
+## Branch and PR workflow
 
 - Create feature branches from `main`. Do not commit directly to `main`.
-- Open a PR with: summary of changes, test results, rule changes (if any), known deviations, and source citations.
-- Do not merge without explicit approval.
-- Note: The GitHub App cannot push `.github/*` — workflow file changes must be made manually.
+- Open a PR with: summary of changes, test results, rule changes (if any),
+  known deviations, and source citations.
+- Do not merge without explicit approval from the maintainer.
+- Changes under `.github/` (CI workflows) need maintainer review; mention
+  them in the PR description.

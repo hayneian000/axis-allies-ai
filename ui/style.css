@@ -636,6 +636,99 @@ input::placeholder { color: var(--faint); }
   animation: battlepulse 1.1s ease-in-out infinite;
 }
 @keyframes battlepulse { 50% { stroke-width: 5.5; } }
+
+/* ---------- 1942 board-space mode ----------
+   The board JPEG (ui/board-1942.jpg, rendered as the first child of
+   #vport) is the terrain artwork. Territory polygons over it carry the
+   official power color of the holding nation (near-solid on land,
+   a wash at sea) so controlled territory reads like the printed
+   board, with the stroke/highlight states doing the talking. The
+   .board-mode class is set on #map by syncFromMap() in ui/main.ts
+   whenever the active map has boardSpace: true; America rendering is
+   untouched. */
+#map.board-mode .board-art { pointer-events: none; }
+/* Land carries the official nation color (ui/main.ts boardTintHex) at
+   near-board strength: the printed board's territories ARE their power
+   colors, so the tint is close to solid and the pale base art only
+   textures it. Sea zones wear the same palette at a lighter wash so
+   controlled waters read as tinted, not painted. */
+#map.board-mode polygon.terr {
+  fill-opacity: 0.75;
+  stroke-width: 2.5;
+}
+#map.board-mode polygon.terr.sea {
+  fill-opacity: 0.38;
+}
+#map.board-mode polygon.terr:hover {
+  fill-opacity: 0.85;
+  stroke: #fff;
+  stroke-width: 4;
+}
+#map.board-mode polygon.terr.sea:hover {
+  fill-opacity: 0.5;
+}
+#map.board-mode polygon.terr.selfrom {
+  fill-opacity: 0.85;
+  stroke: #fff;
+  stroke-width: 5;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7));
+}
+#map.board-mode polygon.terr.dest {
+  fill-opacity: 0.85;
+  stroke: #ffd23e;
+  stroke-width: 5;
+  stroke-dasharray: 16 9;
+}
+#map.board-mode polygon.terr.battle {
+  stroke: #ff5252;
+  stroke-width: 6;
+  animation: battlepulse-board 1.1s ease-in-out infinite;
+}
+@keyframes battlepulse-board { 50% { stroke-width: 10; } }
+/* Dynamic sea-zone aux lines (cargo / carriers / coexisting forces):
+   game state, not artwork — light text with a dark halo over the art. */
+#map.board-mode text.board-aux {
+  fill: #eef4fa;
+  stroke: rgba(10, 20, 32, 0.9);
+  stroke-width: 5px;
+}
+/* Territory / sea-zone name labels: the raster prints no text at all,
+   so the UI draws names at TripleA's name_place anchors. Land names
+   are dark ink with a pale halo over the light territory art; the IPC
+   line is the same ink, quieter. Sea-zone numbers are light text with
+   a dark halo over the blue. Font sizes are set per element (SVG
+   attribute) in boardNameSize / boardLabels — board space only. */
+#map.board-mode text.board-tname {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  fill: #182430;
+  stroke: rgba(250, 246, 231, 0.65);
+  stroke-width: 6px;
+  paint-order: stroke;
+}
+#map.board-mode text.board-ipc {
+  font-family: var(--font-text);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  fill: #182430;
+  opacity: 0.78;
+  stroke: rgba(250, 246, 231, 0.55);
+  stroke-width: 4px;
+  paint-order: stroke;
+}
+#map.board-mode text.board-seanum {
+  font-family: var(--font-text);
+  font-weight: 700;
+  fill: #e9f2f9;
+  stroke: rgba(9, 22, 38, 0.85);
+  stroke-width: 6px;
+  paint-order: stroke;
+}
+#map.board-mode .ripple { stroke-width: 6; }
+@media (prefers-reduced-motion: reduce) {
+  #map.board-mode polygon.terr.battle { animation: none; }
+}
 #map .ocean { pointer-events: none; }
 #map polygon.sheen { pointer-events: none; }
 /* Navy phase 1: sea zones read as water, with light labels. */

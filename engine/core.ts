@@ -115,8 +115,19 @@ export function incomeOf(state: GameState, playerId: number): number {
 }
 
 
+/** All capitals belonging to a seat (multi-capital seats: 1942 seat 3
+ *  holds both London and Washington). Falls back to the primary capital
+ *  for saves created before the `capitals` field existed. */
+export function capitalsOf(state: GameState, playerId: number): string[] {
+  const p = state.players[playerId];
+  return p.capitals ?? [p.capital];
+}
+
+
+/** True while the seat holds at least one of its capitals. A seat is
+ *  capital-blocked (no purchase, no income) only when it holds none. */
 export function ownsCapital(state: GameState, playerId: number): boolean {
-  return state.territories[state.players[playerId].capital]?.owner === playerId;
+  return capitalsOf(state, playerId).some((c) => state.territories[c]?.owner === playerId);
 }
 
 

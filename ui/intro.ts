@@ -82,7 +82,7 @@ export function playIntro(state: GameState, onDone: () => void): void {
   const overlay = document.createElement('div');
   overlay.id = 'intro-overlay';
   overlay.innerHTML = `
-    <svg id="intro-map" viewBox="0 0 1000 470" aria-hidden="true">
+    <svg id="intro-map" viewBox="0 0 ${MAP.viewBox.width} ${MAP.viewBox.height}" aria-hidden="true">
       <defs>
         <filter id="intro-ink-roughen" x="-5%" y="-5%" width="110%" height="110%">
           <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" result="noise"/>

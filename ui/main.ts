@@ -1,7 +1,10 @@
-import { MAP, NAVAL_UNIT_TYPES, UNITS, centroid, ipcOf, neighborsOf, pointInPolygon, type TerritoryDef, type UnitType } from '../data/data';
+import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, boardTintHex, canalBetween, centroid, ipcOf, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
+import boardUrl from './board-1942.jpg';
 import { playIntro } from './intro';
 import {
   autoCasualties,
+  canalEdgeOpen,
+  capitalsOf,
   chooseCasualties,
   combatMove,
   countAir,
@@ -97,6 +100,19 @@ let lastLaunchMsg: string | null = null;
 const $ = (id: string): HTMLElement => document.getElementById(id)!;
 const svg = (): SVGSVGElement => $('map') as unknown as SVGSVGElement;
 
+// ------------------------------------------------------------ maps ---
+// Active-map contract from data/data.ts:
+//   export let MAP (live binding), setActiveMap(id: MapId),
+//   activeMapId(), and scenarioFor() honoring the active map.
+// MAP is read fresh on every render, so a setActiveMap() swap is picked
+// up by all rendering below without any cache invalidation here.
+
+/** True when the active map is a board-space map (1942: the board JPEG is
+ *  the terrain artwork and the polygons are only an interaction layer). */
+function isBoardSpace(): boolean {
+  return MAP.boardSpace === true;
+}
+
 /** Design-system button factory. variant: 'brass' (primary) or 'steel' (default). */
 function mkButton(label: string, variant: 'brass' | 'steel' = 'steel'): HTMLButtonElement {
   const b = document.createElement('button');
@@ -133,8 +149,41 @@ function boot(): void {
       numPlayers = parseInt(tag.dataset.players ?? '4', 10);
     });
   }
+  const forceFourPlayers = (): void => {
+    numPlayers = 4;
+    const four = dogtags.find((t) => t.dataset.players === '4');
+    // Clicking (not just class-toggling) also fires the AI lobby's own
+    // dogtag listener, so its seat cards rebuild for 4 players.
+    if (four && !four.classList.contains('active')) four.click();
+    else dogtags.forEach((t) => t.classList.toggle('active', t === four));
+  };
+
+  // Map folio selection (the mode plaques have their own handlers in
+  // aiLobby.ts; the folios had none). Locked folios are disabled and
+  // never fire.
+  let selectedMap: MapId = 'america';
+  const folios = Array.from(document.querySelectorAll<HTMLButtonElement>('.map-folio[data-map]'));
+  for (const folio of folios) {
+    folio.addEventListener('click', () => {
+      if (folio.disabled) return;
+      folios.forEach((f) => f.classList.remove('active'));
+      folio.classList.add('active');
+      selectedMap = (folio.dataset.map as MapId | undefined) ?? 'america';
+      // The 1942 scenario is 4-seat only.
+      if (selectedMap === 'world1942') forceFourPlayers();
+    });
+  }
+
+  // Viewport starts from whichever map data is active at boot.
+  syncFromMap();
 
   $('startBtn').addEventListener('click', () => {
+    // Map choice first — BEFORE any game creation, in every mode: the
+    // data layer (MAP / scenarioFor), the viewport, and (for 1942) the
+    // player count all follow the selected folio.
+    if (selectedMap === 'world1942') forceFourPlayers();
+    setActiveMap(selectedMap);
+    syncFromMap();
     // Phase 2: AI modes are owned by the lobby (ui/aiLobby.ts).
     if (getAiMode() !== 'hotseat') {
       startAiGameFromLobby();
@@ -142,6 +191,7 @@ function boot(): void {
     }
     const seed = parseInt(($('seed') as HTMLInputElement).value, 10) || 1;
     S = createGame({ numPlayers, seed });
+    syncFromMap();
     resetTransientUi();
     // A previous AI game may have revealed the AI tab; hot-seat hides it.
     $('tab-ai').hidden = true;
@@ -212,6 +262,7 @@ function boot(): void {
         $('setup').hidden = true;
         $('game').hidden = false;
         showError('');
+        syncFromMap();
         render();
       } catch (err) {
         showError(`Load failed: ${(err as Error).message}`);
@@ -313,13 +364,13 @@ function boot(): void {
   );
   map.addEventListener('dblclick', (e) => {
     e.preventDefault();
-    view = { x: 0, y: 0, k: 1 };
+    view = homeView();
     applyView();
   });
   $('zin').addEventListener('click', () => zoomOnPoint({ x: VB_W / 2, y: VB_H / 2 }, 1.25));
   $('zout').addEventListener('click', () => zoomOnPoint({ x: VB_W / 2, y: VB_H / 2 }, 1 / 1.25));
   $('zreset').addEventListener('click', () => {
-    view = { x: 0, y: 0, k: 1 };
+    view = homeView();
     applyView();
   });
 
@@ -503,9 +554,59 @@ function unitSummary(s: GameState, tid: string): string {
 
 // ------------------------------------------------------------ map view ---
 // Pan/zoom state persists across renders; applied to the #vport group.
-const VB_W = 1000;
-const VB_H = 470;
+// The viewport size is NOT hardcoded: it follows MAP.viewBox (America
+// 1000x470, 1942 board space 3500x2000). Every consumer below (zoom,
+// client->svg mapping, clamp, pan) reads VB_W/VB_H, so syncing those
+// two lets is all a map switch needs.
+let VB_W = 1000;
+let VB_H = 470;
 let view = { x: 0, y: 0, k: 1 };
+let syncedViewBox = '';
+
+/** Board-space fit: the 1942 board's edge labels (Central America at
+ *  x=10, the United States names at both wrap edges, sz21 at the bottom)
+ *  are authored ON the board edge and their text overflows the 3500x2000
+ *  frame, so an exact 1:1 fit clips them at the panel edge. The home view
+ *  therefore fits the board at 93%, centered — the whole board plus its
+ *  edge text sits inside the panel, letterboxed by the ocean backdrop.
+ *  Other maps home at exactly 1:1 (their labels stay inside the frame). */
+const BOARD_FIT_K = 0.93;
+
+function homeView(): { x: number; y: number; k: number } {
+  if (!isBoardSpace()) return { x: 0, y: 0, k: 1 };
+  const k = BOARD_FIT_K;
+  return { x: (VB_W - VB_W * k) / 2, y: (VB_H - VB_H * k) / 2, k };
+}
+
+function minZoom(): number {
+  return isBoardSpace() ? BOARD_FIT_K : 1;
+}
+
+/** Pull VB_W/VB_H + the #map viewBox attribute from the active MAP.
+ *  Called at init and whenever a game starts/restarts (and at the top
+ *  of renderMap, which covers the AI-driver and load-game paths).
+ *  Switching dimensions resets pan/zoom so a stale America transform
+ *  can never strand the much larger board off-screen. */
+function syncFromMap(): void {
+  const w = MAP.viewBox?.width || 1000;
+  const h = MAP.viewBox?.height || 470;
+  const key = `${w}x${h}`;
+  const dimsChanged = key !== syncedViewBox;
+  VB_W = w;
+  VB_H = h;
+  const m = document.getElementById('map') as unknown as SVGSVGElement | null;
+  if (m) {
+    m.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    m.classList.toggle('board-mode', isBoardSpace());
+    m.dataset.boardSpace = isBoardSpace() ? 'true' : 'false';
+    m.dataset.map = activeMapId();
+  }
+  if (dimsChanged) {
+    syncedViewBox = key;
+    view = homeView();
+    if (document.getElementById('vport')) applyView();
+  }
+}
 
 function svgEl(tag: string, attrs: Record<string, string> = {}): SVGElement {
   const e = document.createElementNS(SVGNS, tag);
@@ -602,6 +703,10 @@ function drawFactory(g: SVGElement, fresh: boolean): void {
 function layoutLabels(): Map<string, { x: number; y: number }> {
   const pos = new Map<string, { x: number; y: number }>();
   for (const t of MAP.territories) pos.set(t.id, { x: t.label[0], y: t.label[1] });
+  // Board space: names sit at the authored name_place anchors and unit
+  // markers exactly on the authored label points, so there is no label
+  // stack to fit or de-conflict.
+  if (isBoardSpace()) return pos;
   const bbOf = (tid: string) => bboxOf(MAP.territories.find((t) => t.id === tid)!.points);
 
   // Keep the label stack (IPC pill spans ~39px above anchor) inside the tile.
@@ -692,14 +797,21 @@ function seaTile(
   g.appendChild(tip);
   const pts = t.points.map((p) => p.join(',')).join(' ');
   const ownerHex = st.owner === null ? '#7fb3d9' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
+  // Board space: controlled waters tint with the occupying seat's
+  // official nation color (subtler than land — see the board-mode CSS);
+  // open waters keep the pale blue.
+  const boardHex = st.owner === null ? '#7fb3d9' : boardTintHex(t, st.owner);
   let cls = 'terr sea';
   if (tid === sel) cls += ' selfrom';
   else if (isDest) cls += ' dest';
   if (inBattle) cls += ' battle';
   const attrs: Record<string, string> = {
     points: pts,
-    fill: '#2e5a7d',
-    stroke: ownerHex,
+    // Board space: the artwork is the water — the polygon is an
+    // interaction layer carrying the owner tint (its fill-opacity is
+    // set by the #map.board-mode CSS).
+    fill: isBoardSpace() ? boardHex : '#2e5a7d',
+    stroke: isBoardSpace() ? boardHex : ownerHex,
     'stroke-width': st.owner === null ? '1.5' : '2.5',
   };
   if (st.owner === null) attrs['stroke-dasharray'] = '7 4';
@@ -730,10 +842,20 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
 
   const pts = t.points.map((p) => p.join(',')).join(' ');
   const ownerHex = st.owner === null ? '#6e6e6a' : PLAYER_COLORS[st.owner % PLAYER_COLORS.length];
+  const board = isBoardSpace();
+  // Board space: the tint IS the territory's color on the printed board —
+  // the official color of the nation holding it (data.ts boardTintHex:
+  // original nation's color while its own seat holds it, the capturer's
+  // lead nation after a capture, cream for neutrals), at the solid
+  // fill-opacity set by the board-mode CSS.
+  const boardHex = boardTintHex(t, st.owner);
   const base = svgEl('polygon', {
     points: pts,
-    fill: 'var(--paper, #c9b98a)',
-    stroke: ownerHex,
+    // Board space: interaction layer over the board JPEG carrying the
+    // official-color control tint. America keeps its parchment base +
+    // tint wash below.
+    fill: board ? boardHex : 'var(--paper, #c9b98a)',
+    stroke: board ? boardHex : ownerHex,
     'stroke-width': '2',
   });
   let cls = 'terr';
@@ -752,31 +874,37 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
     g.appendChild(
       svgEl('polygon', {
         points: epts,
-        fill: 'var(--paper, #c9b98a)',
-        stroke: ownerHex,
+        fill: board ? boardHex : 'var(--paper, #c9b98a)',
+        stroke: board ? boardHex : ownerHex,
         'stroke-width': '2',
         class: cls,
         'data-owner': st.owner === null ? 'null' : String(st.owner),
       }),
     );
+    if (!board) {
+      g.appendChild(
+        svgEl('polygon', {
+          points: epts,
+          fill: ownerHex,
+          'fill-opacity': '0.35',
+          'pointer-events': 'none',
+        }),
+      );
+    }
+  }
+  // Control tint wash — player color at ~35% over parchment.
+  // (Skipped in board space: the base polygon already carries the
+  // owner tint, and a second wash would obscure the artwork.)
+  if (!board) {
     g.appendChild(
       svgEl('polygon', {
-        points: epts,
+        points: pts,
         fill: ownerHex,
         'fill-opacity': '0.35',
         'pointer-events': 'none',
       }),
     );
   }
-  // Control tint wash — player color at ~35% over parchment.
-  g.appendChild(
-    svgEl('polygon', {
-      points: pts,
-      fill: ownerHex,
-      'fill-opacity': '0.35',
-      'pointer-events': 'none',
-    }),
-  );
   return g;
 }
 
@@ -872,6 +1000,171 @@ function seaLabels(
   return g;
 }
 
+/** Board-space name text size: the name anchors come from TripleA's
+ *  name_place.txt, authored for this exact artwork; long names step
+ *  down a size or two so they stay inside their territories. */
+function boardNameSize(name: string): number {
+  if (name.length > 20) return 25;
+  if (name.length > 14) return 29;
+  return 34;
+}
+
+/** Board-space labels, in two layers. TripleA's base artwork prints NO
+ *  territory names or sea-zone numbers (TripleA draws that text itself
+ *  from name_place.txt), so board mode renders the names here, at the
+ *  name_place anchors (t.nameLabel): land names in dark ink with a
+ *  light halo, the IPC value on a smaller second line, and sea zones
+ *  as a bare zone number in light text. What renders at the territory's
+ *  label point is the dynamic state the artwork cannot know: unit
+ *  icons + counts (land and sea) and the factory indicator. Icon rows
+ *  are scaled up (BOARD_UNIT_SCALE) because board coordinates are ~3.5x
+ *  the America map's — unscaled 15px chits would be unreadable at
+ *  full-board zoom. Sea zones also keep their dynamic aux lines
+ *  (cargo, carrier capacity, coexisting forces), which are game state,
+ *  not artwork.
+ *
+ *  Layering: renderMap draws every territory's MARKERS (unit chits,
+ *  factory badge, sea aux lines) first and every territory's NAMES in a
+ *  second pass, so a name is never painted under a neighboring stack.
+ *  The handful of names whose anchor still sits directly on their own
+ *  stack carry a data-driven `nameNudge` (build script's NAME_NUDGES
+ *  table) that moves them into open space. Both layers are
+ *  pointer-events: none. */
+const BOARD_UNIT_SCALE = 3;
+
+/** Name layer (drawn last, above all unit chits): the territory name +
+ *  IPC line, or the sea-zone number, at the name_place anchor plus the
+ *  territory's optional nameNudge. */
+function boardNames(
+  s: GameState, tid: string, inBattle: boolean, lx: number, ly: number,
+): SVGElement {
+  const t = MAP.territories.find((x) => x.id === tid)!;
+  const g = svgEl('g', {
+    class: t.domain === 'sea' ? 'tlabels sealabels boardlabels' : 'tlabels boardlabels',
+    'data-terr': tid,
+    'pointer-events': 'none',
+  });
+  // Name text at the name_place anchor (falls back to the label point
+  // for any map that predates nameLabel), shifted by the optional
+  // data-driven nudge for stack-collision territories.
+  const [ax, ay] = t.nameLabel ?? [lx, ly];
+  const nx = ax + (t.nameNudge?.[0] ?? 0);
+  const ny = ay + (t.nameNudge?.[1] ?? 0);
+  if (t.domain === 'sea') {
+    const num = svgEl('text', {
+      x: String(nx),
+      y: String(ny),
+      'text-anchor': 'middle',
+      'dominant-baseline': 'central',
+      'font-size': '40',
+      class: 'board-seanum',
+    });
+    num.textContent = tid.replace(/^sz/, '');
+    g.appendChild(num);
+  } else {
+    const size = boardNameSize(t.name);
+    const nm = svgEl('text', {
+      x: String(nx),
+      y: String(ny + Math.round(size * 0.35)),
+      'text-anchor': 'middle',
+      'font-size': String(size),
+      class: 'board-tname',
+    });
+    nm.textContent = `${DISPLAY_NAME[tid] ?? t.name}${inBattle ? ' ⚔' : ''}`;
+    g.appendChild(nm);
+    const ipc = ipcOf(tid);
+    if (ipc > 0) {
+      const ip = svgEl('text', {
+        x: String(nx),
+        y: String(ny + Math.round(size * 0.35) + size + 4),
+        'text-anchor': 'middle',
+        'font-size': '24',
+        class: 'board-ipc',
+      });
+      ip.textContent = `IPC ${ipc}`;
+      g.appendChild(ip);
+    }
+  }
+  return g;
+}
+
+/** Marker layer (drawn before the name layer): unit icon row + counts
+ *  at the centers.txt label point, the factory badge, and — for sea
+ *  zones — the dynamic aux lines (cargo, carrier capacity, coexisting
+ *  forces). */
+function boardMarkers(
+  s: GameState, tid: string, inBattle: boolean, lx: number, ly: number,
+): SVGElement {
+  const t = MAP.territories.find((x) => x.id === tid)!;
+  const st = s.territories[tid];
+  const g = svgEl('g', {
+    class: t.domain === 'sea' ? 'tlabels sealabels boardmarkers' : 'tlabels boardmarkers',
+    'data-terr': tid,
+    'pointer-events': 'none',
+  });
+  const present = UNIT_ORDER.filter((u) => st.units[u] > 0);
+  let below = ly;
+  if (present.length > 0) {
+    const gap = 5;
+    const slots = present.map((u) => ({ u, w: ICON_W + 3 + String(st.units[u]).length * 6 }));
+    const rowW = slots.reduce((sum, x) => sum + x.w, 0) + gap * (slots.length - 1);
+    const row = svgEl('g', {
+      class: 'uicons',
+      transform:
+        `translate(${(lx - (rowW * BOARD_UNIT_SCALE) / 2).toFixed(1)} ` +
+        `${(ly - (ICON_H * BOARD_UNIT_SCALE) / 2).toFixed(1)}) scale(${BOARD_UNIT_SCALE})`,
+    });
+    let cx = 0;
+    for (const sl of slots) {
+      const ig = svgEl('g', { class: 'uicon', 'data-unit': sl.u, transform: `translate(${cx} 0)` });
+      drawUnitIcon(ig, sl.u);
+      const count = svgEl('text', { x: String(ICON_W + 2.5), y: '9.5', 'font-size': '9', class: 'ucount' });
+      count.textContent = String(st.units[sl.u]);
+      ig.appendChild(count);
+      row.appendChild(ig);
+      cx += sl.w + gap;
+    }
+    g.appendChild(row);
+    below = ly + (ICON_H * BOARD_UNIT_SCALE) / 2;
+  }
+  // Factory indicator (kept from the America rendering).
+  if (t.domain !== 'sea' && st.factory) {
+    const fac = svgEl('g', {
+      class: 'facbadge',
+      transform:
+        `translate(${(lx - (15 * BOARD_UNIT_SCALE) / 2).toFixed(1)} ${(below + 6).toFixed(1)}) ` +
+        `scale(${BOARD_UNIT_SCALE})`,
+    });
+    drawFactory(fac, st.factoryFresh);
+    g.appendChild(fac);
+    below += 6 + 11 * BOARD_UNIT_SCALE;
+  }
+  if (t.domain === 'sea') {
+    const aux: string[] = [];
+    const cargo = cargoSummary(s, tid);
+    if (cargo) aux.push(`(${cargo})`);
+    if (st.units.carrier > 0) {
+      aux.push(`carriers ${st.units.carrier} — fighters ${st.units.fighter}/${2 * st.units.carrier}`);
+    }
+    const co = st.coexist ?? [];
+    if (co.length > 0) {
+      aux.push(co.map((f) => `${s.players[f.owner].name}: ${describeUnits(f.units)}`).join(' | '));
+    }
+    aux.forEach((line, i) => {
+      const tx = svgEl('text', {
+        x: String(lx),
+        y: String(below + 34 + i * 34),
+        'text-anchor': 'middle',
+        'font-size': '28',
+        class: 'seafont board-aux',
+      });
+      tx.textContent = line;
+      g.appendChild(tx);
+    });
+  }
+  return g;
+}
+
 /** Labels, badges, unit icons — drawn in a layer above water. */
 function terrLabels(
   s: GameState, tid: string, inBattle: boolean, lx: number, ly: number,
@@ -881,7 +1174,7 @@ function terrLabels(
   if (t.domain === 'sea') return seaLabels(s, tid, t, st, inBattle, lx, ly);
   const bb = bboxOf(t.points);
   const g = svgEl('g', { class: 'tlabels', 'data-terr': tid, 'pointer-events': 'none' });
-  const isCap = s.players.some((p) => p.capital === tid);
+  const isCap = s.players.some((p) => capitalsOf(s, p.id).includes(tid));
 
   // Name + owner stacked on the label anchor, with breathing room below the IPC lozenge.
   const name = svgEl('text', {
@@ -964,6 +1257,10 @@ function terrLabels(
 }
 
 function renderMap(s: GameState): void {
+  // The active map may have been switched since the last render (start
+  // button, AI driver, loaded save) — viewport + board mode follow it.
+  syncFromMap();
+  const board = isBoardSpace();
   const m = svg();
   m.innerHTML = '';
   const defs = document.createElementNS(SVGNS, 'defs');
@@ -1006,6 +1303,24 @@ function renderMap(s: GameState): void {
   });
   m.appendChild(vport);
 
+  // Board space: the board JPEG is the terrain artwork. It is the
+  // FIRST child inside the pan/zoom group so it transforms together
+  // with the interaction polygons drawn over it.
+  if (board) {
+    vport.appendChild(
+      svgEl('image', {
+        href: boardUrl,
+        x: '0',
+        y: '0',
+        width: String(VB_W),
+        height: String(VB_H),
+        preserveAspectRatio: 'none',
+        'pointer-events': 'none',
+        class: 'board-art',
+      }),
+    );
+  }
+
   const battles = new Set(openBattles(s).map((b) => b.territoryId));
   const dests = legalDestinations(s);
   // Layer 1: land tiles.
@@ -1014,8 +1329,9 @@ function renderMap(s: GameState): void {
   }
 
   // Layer 2: water overlays — above land, below labels; pointer-events none
-  // so territory clicks pass through.
-  for (const lake of MAP.lakes ?? []) {
+  // so territory clicks pass through. (Skipped in board space: lakes
+  // are part of the board artwork.)
+  for (const lake of board ? [] : MAP.lakes ?? []) {
     const pts = lake.points.map((p) => p.join(',')).join(' ');
     const tip = document.createElementNS(SVGNS, 'title');
     tip.textContent = lake.name;
@@ -1032,10 +1348,25 @@ function renderMap(s: GameState): void {
   }
 
   // Layer 3: labels, badges, unit icons — above water.
+  // Board space renders name text at the name_place anchors (the
+  // artwork prints none) plus the dynamic markers (units + factory),
+  // in two passes: all markers first, then all names, so names are
+  // never painted under a neighboring territory's unit stack.
   const layout = layoutLabels();
-  for (const t of MAP.territories) {
-    const p = layout.get(t.id)!;
-    vport.appendChild(terrLabels(s, t.id, battles.has(t.id), p.x, p.y));
+  if (board) {
+    for (const t of MAP.territories) {
+      const p = layout.get(t.id)!;
+      vport.appendChild(boardMarkers(s, t.id, battles.has(t.id), p.x, p.y));
+    }
+    for (const t of MAP.territories) {
+      const p = layout.get(t.id)!;
+      vport.appendChild(boardNames(s, t.id, battles.has(t.id), p.x, p.y));
+    }
+  } else {
+    for (const t of MAP.territories) {
+      const p = layout.get(t.id)!;
+      vport.appendChild(terrLabels(s, t.id, battles.has(t.id), p.x, p.y));
+    }
   }
 
   // Draft-move arrows above the tiles.
@@ -1056,7 +1387,8 @@ function renderMap(s: GameState): void {
     line.setAttribute('x2', String(b.x));
     line.setAttribute('y2', String(b.y));
     line.setAttribute('stroke', d.hostile ? '#ff5252' : '#69f0ae');
-    line.setAttribute('stroke-width', '3');
+    // Board coordinates are ~3.5x America's — arrows scale with them.
+    line.setAttribute('stroke-width', board ? '10' : '3');
     line.setAttribute('marker-end', d.hostile ? 'url(#arr-red)' : 'url(#arr-green)');
     line.setAttribute('pointer-events', 'none');
     vport.appendChild(line);
@@ -1092,7 +1424,10 @@ function applyView(): void {
 /** Keep the map from scrolling away: the transformed viewBox must always
  *  cover the viewport (with a small margin). */
 function clampView(): void {
-  const M = 120; // px of overscroll allowed beyond the map edge
+  // px of overscroll allowed beyond the map edge (120 on the America
+  // map; scales with the viewport so the 3500-wide board gets a
+  // proportionally similar allowance).
+  const M = Math.max(120, Math.round(VB_W * 0.12));
   const minX = VB_W - view.k * VB_W - M;
   const maxX = M;
   const minY = VB_H - view.k * VB_H - M;
@@ -1112,9 +1447,9 @@ function svgPoint(clientX: number, clientY: number): { x: number; y: number } {
 }
 
 function zoomOnPoint(p: { x: number; y: number }, factor: number): void {
-  const k2 = Math.min(6, Math.max(1, view.k * factor));
-  if (k2 === 1) {
-    view = { x: 0, y: 0, k: 1 };
+  const k2 = Math.min(6, Math.max(minZoom(), view.k * factor));
+  if (k2 === minZoom()) {
+    view = homeView();
   } else {
     view = {
       x: p.x - ((p.x - view.x) * k2) / view.k,
@@ -1131,10 +1466,17 @@ function legalDestinations(s: GameState): Set<string> {
   if (!sel || s.phase === 'gameover') return out;
   if (s.territories[sel].owner !== s.currentPlayer) return out;
   const pid = s.currentPlayer;
+  const from = sel;
+  // A closed canal edge is not a legal destination highlight either
+  // (canalBetween is undefined for ordinary edges and for maps without
+  // canals, so this only bites on the 1942 board's two canal edges).
+  const canalShut = (n: string): boolean =>
+    !!canalBetween(from, n) && !canalEdgeOpen(s.territories, from, n, pid);
   if (s.phase === 'combatMove') {
-    for (const n of neighborsOf(sel)) out.add(n);
+    for (const n of neighborsOf(sel)) if (!canalShut(n)) out.add(n);
   } else if (s.phase === 'nonCombat') {
     for (const n of neighborsOf(sel)) {
+      if (canalShut(n)) continue;
       const o = s.territories[n].owner;
       // Friendly waters (empty or yours) are legal naval destinations.
       if (s.territories[n] && MAP.territories.find((t) => t.id === n)?.domain === 'sea') {
@@ -1176,7 +1518,7 @@ function onTerrClick(tid: string, e?: MouseEvent): void {
     const c = svgEl('circle', {
       cx: ripple.x.toFixed(1),
       cy: ripple.y.toFixed(1),
-      r: '6',
+      r: isBoardSpace() ? '21' : '6',
       class: 'ripple',
       'pointer-events': 'none',
     });
@@ -1323,7 +1665,8 @@ function renderInspector(s: GameState): void {
   const mine = t.owner === s.currentPlayer;
   const head = document.createElement('div');
   head.className = 'insp-head';
-  const isCap = s.players.some((p) => p.capital === sel);
+  const selId = sel;
+  const isCap = selId !== null && s.players.some((p) => capitalsOf(s, p.id).includes(selId));
   const ownerLabel =
     t.owner === null ? (def.domain === 'sea' ? 'open waters' : 'neutral') : s.players[t.owner].name;
   head.innerHTML =
@@ -1395,14 +1738,30 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     seaMoveDialogBody(s, el, tid, isCombat, prefix);
     return;
   }
+  // Aircraft left aloft over a finished battle here (non-combat phase) are
+  // dialable alongside the units on the ground — the engine lands aloft
+  // air first. Without this, the phase panel's "land this air" instruction
+  // cannot be followed from a land territory (the sea dialog already
+  // handles the carrier case).
+  const aloft: Partial<UnitCounts> = {};
+  if (!isCombat) {
+    for (const b of s.battles) {
+      if (b.territoryId === tid && b.attackerId === pid && b.over) {
+        if (b.attack.fighter) aloft.fighter = (aloft.fighter ?? 0) + b.attack.fighter;
+        if (b.attack.bomber) aloft.bomber = (aloft.bomber ?? 0) + b.attack.bomber;
+      }
+    }
+  }
+  const aloftN = (aloft.fighter ?? 0) + (aloft.bomber ?? 0);
   const grid = document.createElement('div');
   grid.className = 'stepgrid';
   let any = false;
   for (const u of UNIT_ORDER) {
     if (u === 'aa' && isCombat) continue; // AA can't attack
-    if (t.units[u] <= 0) continue;
+    const availHere = t.units[u] + (aloft[u] ?? 0);
+    if (availHere <= 0) continue;
     any = true;
-    grid.appendChild(stepper(prefix, u, t.units[u]));
+    grid.appendChild(stepper(prefix, u, availHere));
   }
   if (!any) {
     const p = document.createElement('p');
@@ -1411,6 +1770,11 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     return;
   }
   el.appendChild(grid);
+  if (aloftN > 0) {
+    const p = document.createElement('p');
+    p.textContent = `${aloftN} aircraft aloft over the finished battle here — dial them above and pick a landing spot.`;
+    el.appendChild(p);
+  }
   if (isCombat) {
     const viaLab = document.createElement('label');
     viaLab.textContent = 'Via (tank blitz) ';
@@ -1430,7 +1794,22 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
   const h = document.createElement('p');
   h.innerHTML = '<strong>Send to:</strong>';
   el.appendChild(h);
-  const dests = neighborsOf(tid).filter((n) => {
+  // Destinations: adjacent territories, plus — when aircraft are based
+  // here (on the ground or aloft) — every territory within their range.
+  // Adjacent-only lists would strand land-based air (e.g. a bomber on an
+  // island territory could never reach a target); the engine validates
+  // the exact per-unit range and landing feasibility when moves launch.
+  let airRange = 0;
+  for (const u of ['fighter', 'bomber'] as const) {
+    if (t.units[u] + (aloft[u] ?? 0) > 0) airRange = Math.max(airRange, UNITS[u].move);
+  }
+  const destIds = new Set(neighborsOf(tid));
+  if (airRange > 0) {
+    for (const d of MAP.territories) {
+      if (d.id !== tid && airDistance(tid, d.id) <= airRange) destIds.add(d.id);
+    }
+  }
+  const dests = [...destIds].filter((n) => {
     const dd = MAP.territories.find((x) => x.id === n)!;
     if (isCombat) return true;
     if (dd.domain === 'sea') {
@@ -1452,7 +1831,9 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     btn.dataset.dest = d;
     const owner = dt.owner === null ? 'neutral' : dt.owner === pid ? 'yours' : s.players[dt.owner].name;
     const embarkTag = ddef.domain === 'sea' ? ' (embark)' : '';
-    btn.textContent = `${DISPLAY_NAME[d] ?? ddef.name}${embarkTag} (${owner}, ${describeUnits(dt.units)}${dt.factory ? ', FAC' : ''})`;
+    const dist = airDistance(tid, d);
+    const rangeTag = dist > 1 ? ` · ${dist} away` : '';
+    btn.textContent = `${DISPLAY_NAME[d] ?? ddef.name}${embarkTag} (${owner}, ${describeUnits(dt.units)}${dt.factory ? ', FAC' : ''})${rangeTag}`;
     btn.addEventListener('click', () => {
       const units = readUnits(s.phase === 'combatMove' ? 'mv' : 'nc');
       const full = { ...emptyUnits(), ...units };
@@ -1508,9 +1889,38 @@ function seaMoveDialogBody(
       atkLab.append(' Attack subs/transports (uncheck to ignore & coexist) ', atkBox);
       el.appendChild(atkLab);
     }
-    const dests = neighborsOf(tid).filter(
-      (n) => MAP.territories.find((x) => x.id === n)?.domain === 'sea',
+    // Destinations: adjacent zones, plus zones two steps away reached
+    // through non-hostile water (ships move up to 2 sea zones; hostile
+    // transit is barred but the destination itself may be hostile —
+    // 1942 2e p.27; the engine applies the exact per-unit rules,
+    // including submarine/destroyer exceptions, when moves launch).
+    // Canal edges (Panama, Suez) are offered only while the canal is
+    // open to this seat — the same canalEdgeOpen rule the engine
+    // validates with, so the dialog never offers a route the engine
+    // would reject as canal_closed.
+    const destSet = new Set(
+      neighborsOf(tid).filter(
+        (n) =>
+          MAP.territories.find((x) => x.id === n)?.domain === 'sea' &&
+          canalEdgeOpen(s.territories, tid, n, pid),
+      ),
     );
+    const hostileZone = (z: string): boolean => {
+      const o = s.territories[z].owner;
+      return o !== null && o !== pid;
+    };
+    for (const n1 of [...destSet]) {
+      if (hostileZone(n1)) continue;
+      for (const n2 of neighborsOf(n1)) {
+        if (
+          MAP.territories.find((x) => x.id === n2)?.domain === 'sea' &&
+          canalEdgeOpen(s.territories, n1, n2, pid)
+        ) {
+          destSet.add(n2);
+        }
+      }
+    }
+    const dests = [...destSet];
     for (const d of dests) {
       const ddef = MAP.territories.find((x) => x.id === d)!;
       const dt = s.territories[d];
@@ -1563,7 +1973,13 @@ function seaMoveDialogBody(
       showError('');
       render();
     };
-    const airDests = neighborsOf(tid).filter((n) => {
+    // Fighter launch destinations: adjacent, plus anything within
+    // fighter range (carrier strikes are not limited to the next zone).
+    const airDestIds = new Set(neighborsOf(tid));
+    for (const d of MAP.territories) {
+      if (d.id !== tid && airDistance(tid, d.id) <= UNITS.fighter.move) airDestIds.add(d.id);
+    }
+    const airDests = [...airDestIds].filter((n) => {
       const dd = MAP.territories.find((x) => x.id === n)!;
       if (dd.domain === 'sea') return true;
       const o = s.territories[n].owner;

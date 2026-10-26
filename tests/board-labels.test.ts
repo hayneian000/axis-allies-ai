@@ -78,6 +78,20 @@ describe('board-space name labels (1942 map)', () => {
     expect(sz5.getAttribute('y')).toBe(String(byId.get('sz5')!.nameLabel[1]));
   });
 
+  it('roster shows per-seat victory-city counts and targets', () => {
+    const roster = el('roster').textContent ?? '';
+    expect(roster).toContain('VC 3/6'); // Germany
+    expect(roster).toContain('VC 2/5'); // USSR
+    expect(roster).toContain('VC 5/8'); // UK + US (Japan is also 3/6)
+  });
+
+  it('inspector calls out a victory city by name', () => {
+    const poly = document.querySelector('#map g.tgroup[data-terr="germany"] polygon.terr');
+    expect(poly, 'tile for germany').not.toBeNull();
+    poly!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(el('selinfo').textContent).toContain('victory city: Berlin');
+  });
+
   it('renders an IPC line for every land territory with IPC > 0', () => {
     const lines = [...document.querySelectorAll('#map text.board-ipc')];
     const withIpc = TS.filter((t) => t.domain === 'land' && t.ipc > 0);

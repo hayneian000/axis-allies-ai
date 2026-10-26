@@ -41,7 +41,7 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 | 6-phase turn (purchase, combat move, combat, noncombat, mobilize, income) | Same 6 phases |
 | Unit roster: inf, art, tank, fighter, bomber, AA, sub, destroyer, carrier, battleship, transport | Full roster: inf, art, tank, fighter, bomber, AA + transport, submarine, destroyer, cruiser, carrier, battleship |
 | IPC income from territories | Same, GDP-weighted (61 total) |
-| Victory: 9/10 victory cities | Majority of capitals held simultaneously (scenario-overridable via capitalsToWin), or highest income at 20-round cap |
+| Victory: 9/10 victory cities | Two win paths on the 1942 board: majority of capitals held simultaneously (immediate, scenario-overridable via capitalsToWin), or the book's victory cities in per-seat form (starting count + 3, checked at the end of a complete round, via victoryCitiesToWin). America map: capitals only. Either board: highest income at 20-round cap |
 | Research & technology | Omitted (not in 1942 2e base rules either) |
 | Strategic bombing raids | Included: bombers may raid factory territories, AA fires first, 1d6 IPC damage |
 
@@ -60,7 +60,7 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 - **Neutral territories (America map)**: Have garrisons that must be defeated before capture (blocks tank blitz). Default: 3 infantry; each map/scenario may customize via `neutralGarrison` or per-territory `neutrals`.
 - **Impassable territories (1942 map)**: The board's 16 neutrals (Spain-Portugal, Sahara, Himalaya, Switzerland, Mongolia, and the rest, flagged `neutral: true` in the map data) are impassable, exactly as in 1942 2e — they are NOT garrisoned neutrals. No unit may enter, land in, fly over, or capture them; they are never owned. The engine rejects any such move with code `impassable`, air range never routes through them, and the UI never offers them as destinations.
 - **Capital capture**: Captor steals the victim's entire saved IPC bank (1942 2e p.20).
-- **Victory**: Hold a majority of capitals simultaneously (3 of 4 on the America map; 3 of 5 on the 1942 board). Scenarios may override via `capitalsToWin`.
+- **Victory**: Hold a majority of capitals simultaneously (3 of 4 on the America map; 3 of 5 on the 1942 board) - that win fires immediately, the moment the capitals are held. Scenarios may override via `capitalsToWin`. The 1942 board adds a second path: the 1942 2e standard victory (rulebook p.6 - a side wins holding 3 more victory cities than it started with, Axis 9 / Allies 10, "at the end of a complete round of play"; restated under Winning the Game, p.13), dealt out per seat because the game is free-for-all. Each seat's target is its starting victory-city count + 3 (Germany 6, USSR 5, Japan 6, UK + US 8), declared per scenario via `victoryCitiesToWin`. Victory cities are evaluated only when a complete round ends: crossing a target mid-round wins nothing if a city is lost again before the round ends. If two seats qualify at the same round end, the seat holding more victory cities wins; still tied, the seat earlier in turn order wins.
 - **No allied powers**: Every other player is hostile. All "friendly power" rules are ignored — no guest fighters on carriers, no shared transports, no allied destroyers cancelling sub abilities. A destroyer hostile to a submarine always cancels its abilities.
 
 ---

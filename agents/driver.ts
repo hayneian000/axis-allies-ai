@@ -345,6 +345,8 @@ function summarizeOk(name: string, args: Record<string, unknown>): string {
       if (!items || items.length === 0) return 'purchased nothing';
       return `purchased ${items.map((i) => `${i.count} ${i.type}`).join(', ')}`;
     }
+    case 'repair':
+      return `repaired ${String(args.points ?? '?')} damage at ${String(args.territory_id ?? '?')}`;
     case 'combat_move': {
       const n = listLen(args.moves);
       return n === 0 ? 'no combat moves' : `ordered ${n} combat move${n === 1 ? '' : 's'}`;

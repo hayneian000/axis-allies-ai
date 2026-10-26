@@ -133,6 +133,7 @@ export function createGame(opts: CreateGameOptions): GameState {
       units,
       factory: h.factory === true,
       factoryFresh: false,
+      factoryDamage: 0,
       cargo: [],
     };
     covered.add(h.territory);
@@ -156,7 +157,7 @@ export function createGame(opts: CreateGameOptions): GameState {
       }
       u[type as UnitType] = n as number;
     }
-    state.territories[tid] = { owner: null, units: u, factory: false, factoryFresh: false, cargo: [] };
+    state.territories[tid] = { owner: null, units: u, factory: false, factoryFresh: false, factoryDamage: 0, cargo: [] };
     covered.add(tid);
   }
   // Impassable territories (1942 map only): never owned, never garrisoned,
@@ -164,7 +165,7 @@ export function createGame(opts: CreateGameOptions): GameState {
   // rendering, income, and coverage treat every land territory uniformly.
   for (const tid of landTerritoryIds()) {
     if (!isImpassable(tid) || covered.has(tid)) continue;
-    state.territories[tid] = { owner: null, units: emptyUnits(), factory: false, factoryFresh: false, cargo: [] };
+    state.territories[tid] = { owner: null, units: emptyUnits(), factory: false, factoryFresh: false, factoryDamage: 0, cargo: [] };
     covered.add(tid);
   }
   // Sea zones are never owned via land holdings, never garrisoned, and
@@ -175,6 +176,7 @@ export function createGame(opts: CreateGameOptions): GameState {
       units: emptyUnits(),
       factory: false,
       factoryFresh: false,
+      factoryDamage: 0,
       cargo: [],
     };
   }
@@ -230,6 +232,55 @@ export function purchase(state: GameState, playerId: number, items: PurchaseItem
     state.purchased[item.type] = (state.purchased[item.type] ?? 0) + item.count;
   }
   log(state, 'purchase', `${state.players[playerId].name} spends ${cost} IPCs: ${items.map((i) => `${i.count}x${i.type}`).join(', ') || 'nothing'}.`);
+  return { ok: true };
+}
+
+
+/**
+ * Repair factory damage (1942 2e p.10, Phase 1 step 2 "Pay for Units &
+ * Industrial Complex Repairs"; p.23 unit profile): during your Purchase
+ * Units phase, pay 1 IPC per damage marker to remove it from one of your
+ * own industrial complexes. Repairs take effect immediately; partial
+ * repairs are allowed. Damage never touches income - it only reduces the
+ * complex's mobilization capacity (p.21), so an unrepaired factory is a
+ * production problem, not a treasury one.
+ */
+export function repair(
+  state: GameState,
+  playerId: number,
+  territoryId: string,
+  points: number,
+): ActionResult {
+  const phaseErr = requirePhase(state, ['purchase']);
+  if (phaseErr) return phaseErr;
+  const turnErr = requireCurrentAlive(state, playerId);
+  if (turnErr) return turnErr;
+  if (!territoryDef(territoryId)) {
+    return fail('unknown_territory', `Unknown territory "${territoryId}".`);
+  }
+  const t = state.territories[territoryId];
+  if (t.owner !== playerId) return fail('not_owner', `You do not hold ${territoryId}.`);
+  if (!t.factory) return fail('no_factory', `${territoryId} has no factory to repair.`);
+  if (!Number.isInteger(points) || points < 1) {
+    return fail('bad_count', 'Repair points must be a positive integer.');
+  }
+  if (points > (t.factoryDamage ?? 0)) {
+    return fail(
+      'over_repair',
+      `${territoryId} has only ${t.factoryDamage ?? 0} damage marker(s); cannot repair ${points}.`,
+    );
+  }
+  const cost = points; // 1 IPC per damage marker (p.10).
+  if (cost > state.players[playerId].ipcs) {
+    return fail('funds', `Repairing ${points} damage costs ${cost} IPCs; you hold ${state.players[playerId].ipcs}.`);
+  }
+  state.players[playerId].ipcs -= cost;
+  t.factoryDamage -= points;
+  log(
+    state,
+    'repair',
+    `${state.players[playerId].name} repairs ${points} damage at ${territoryId} for ${cost} IPCs (${t.factoryDamage} damage left).`,
+  );
   return { ok: true };
 }
 
@@ -1277,10 +1328,16 @@ export function mobilize(state: GameState, playerId: number, placements: Mobiliz
 
   // Capacity comes from turn-start factories the player still holds.
   // Fresh factories (built or captured this turn) produce from next turn.
+  // Each damage marker on a complex cuts its capacity by one (1942 2e
+  // p.21: "Each plastic chip (damage marker) under an industrial complex
+  // means one less new unit can enter the game at that industrial
+  // complex"), so effective capacity is IPC value minus factory damage.
   const caps: Record<string, number> = {};
   for (const terr of state.turnStartFactories) {
     const t = state.territories[terr];
-    if (t.owner === playerId && t.factory && !t.factoryFresh) caps[terr] = ipcOf(terr);
+    if (t.owner === playerId && t.factory && !t.factoryFresh) {
+      caps[terr] = Math.max(0, ipcOf(terr) - (t.factoryDamage ?? 0));
+    }
   }
   const pool: Record<string, number> = { ...(state.purchased as Record<string, number>) };
   const need: Record<string, number> = {};
@@ -1354,6 +1411,13 @@ export function mobilize(state: GameState, playerId: number, placements: Mobiliz
   }
   for (const [terr, n] of Object.entries(need)) {
     if (n > (caps[terr] ?? 0)) {
+      const dmg = state.territories[terr].factoryDamage ?? 0;
+      if (dmg > 0) {
+        return fail(
+          'factory_damaged',
+          `${terr} can mobilize at most ${caps[terr]} units: its factory carries ${dmg} damage marker(s), cutting capacity from ${ipcOf(terr)} to ${caps[terr]} (1942 2e p.21). Repair damage during your Purchase phase.`,
+        );
+      }
       return fail('capacity', `${terr} can mobilize at most ${caps[terr]} units (its IPC value).`);
     }
   }

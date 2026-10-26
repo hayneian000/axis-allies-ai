@@ -30,13 +30,14 @@ landing aircraft), `battles` (open + finished this turn).
 | Function | Phase | Notes |
 |---|---|---|
 | `purchase(items)` | purchase | Deducts IPCs to a mobilize pool. Empty list passes. Blocked without capital. |
+| `repair(tid, points)` | purchase | Pays 1 IPC per damage marker to remove SBR damage from an own factory (1942 2e p.10). Partial repairs allowed; also exposed as an agent tool. |
 | `combatMove(moves)` | combatMove | All-or-nothing: validated on a copy, then committed. Supports `via` (tank blitz, captures empty ground in passing) and `sbr` (bombers vs factories). AA may not move here. |
 | `resolveCombatRound(tid)` | combat | AA fires first (once, at air, hit on 1), then simultaneous exchange. Artillery boosts paired infantry 1:1. Neutral garrisons auto-lose. Sets pending casualties. |
 | `chooseCasualties(tid, side, units)` | combat | Exact-count selection, AA never selectable. |
 | `autoCasualties(tid, side)` | combat | Policy: infantry → artillery → tank → fighter → bomber. Phase 2 uses this to skip choice. |
 | `retreat(tid, toId)` | combat | Attacker only, after ≥1 round, land to one origin. Air stays to land later. |
 | `nonCombatMove(moves)` | nonCombat | Friendly ground only; air must end on turn-start ground. |
-| `mobilize(placements)` | mobilize | Per-factory IPC caps; new factories need IPC ≥ 2 ground. Unplaced purchases are forfeited. |
+| `mobilize(placements)` | mobilize | Per-factory caps = territory IPC minus factory damage markers (SBR, 1942 2e p.14/p.21); new factories need IPC ≥ 2 ground. Unplaced purchases are forfeited. |
 | `endPhase()` | any | purchase → combatMove → combat → nonCombat (stranded air destroyed) → mobilize → income + next player (or turn-cap ending). |
 | `sendMessage(from, to, text)` | any | Appends to `chatLog` + event. |
 | `summarizeState(pid)` | — | <800-word board brief for LLM prompts. |

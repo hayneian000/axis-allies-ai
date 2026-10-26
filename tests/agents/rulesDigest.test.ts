@@ -51,6 +51,14 @@ describe('rules digest currency (America)', () => {
     expect(buildRulesDigest()).toContain('neutral garrison');
     expect(buildRulesDigest()).not.toContain('IMPASSABLE');
   });
+
+  it('describes SBR as factory damage markers, never a bank tax', () => {
+    expect(RULES_DIGEST).toContain('damage markers');
+    expect(RULES_DIGEST).toContain("twice its territory's IPC value");
+    expect(RULES_DIGEST).toContain('repair tool at 1 IPC per marker');
+    expect(RULES_DIGEST).not.toContain("victim's bank");
+    expect(RULES_DIGEST).not.toContain('IPC damage to the victim');
+  });
 });
 
 describe('rules digest on the 1942 world map', () => {
@@ -160,5 +168,15 @@ describe('rules digest on the 1942 world map', () => {
     setActiveMap('america');
     const cmAmerica = buildPhasePrompt({ phase: 'combatMove', stateBrief: 'X' });
     expect(cmAmerica).toContain('neutral garrisons');
+  });
+
+  it('describes SBR as factory damage markers, never a bank tax', () => {
+    setActiveMap('world1942');
+    const d = buildRulesDigest();
+    expect(d).toContain('damage markers');
+    expect(d).toContain("twice its territory's IPC value");
+    expect(d).toContain('repair tool at 1 IPC per marker');
+    expect(d).not.toContain("victim's bank");
+    expect(d).not.toContain('IPC damage to the victim');
   });
 });

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { UNITS, airDistance, ipcOf, isSea, neighborsOf, setActiveMap } from '../data/data';
+import { UNITS, airDistance, ipcOf, isImpassable, isSea, neighborsOf, setActiveMap } from '../data/data';
 import {
   autoCasualties,
+  carrierSpare,
   combatMove,
   countLand,
   countUnits,
@@ -64,6 +65,7 @@ function landTarget(s: GameState, pid: number, from: string): string | null {
   let bestScore = Infinity;
   for (const n of neighborsOf(from)) {
     if (isSea(n)) continue; // phase-1 bot runs no naval operations
+    if (isImpassable(n)) continue; // impassable ground can never be attacked
     const t = s.territories[n];
     if (t.owner === pid) continue;
     const score = countUnits(t.units) * 10 - ipcOf(n);
@@ -134,6 +136,7 @@ function botCombatMove(s: GameState, pid: number, rng: () => number, stats: BotS
       const maxDist = Math.floor(UNITS[air].move / 2);
       const targets = neighborsOf(from)
         .filter((t) => !isSea(t)) // phase-1 bot runs no naval operations
+        .filter((t) => !isImpassable(t))
         .filter((t) => s.territories[t].owner !== pid)
         .filter((t) => airDistance(from, t) <= maxDist)
         .filter((t) => landing.some((l) => airDistance(t, l) <= UNITS[air].move - airDistance(from, t)));
@@ -149,6 +152,9 @@ function botCombatMove(s: GameState, pid: number, rng: () => number, stats: BotS
     const bomberBase = ownedTerritories(s, pid).find((t) => availAt(t).bomber > 0);
     const factoryTarget = Object.keys(s.territories).find(
       (t) =>
+        // Never raid a territory already targeted by a regular attack in
+        // this same combat move - the engine rejects that as mixed_battle.
+        !moves.some((m) => m.to === t) &&
         s.territories[t].owner !== pid &&
         s.territories[t].factory &&
         bomberBase &&

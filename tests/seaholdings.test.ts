@@ -55,10 +55,12 @@ describe('createGame with the world1942 map active', () => {
     expect(s.territories.sz1.owner).toBeNull();
     expect(countUnits(s.territories.sz1.units)).toBe(0);
 
-    // Land setup is unchanged: capitals hold factories, neutrals garrisoned.
+    // Land setup: capitals hold factories; the board's neutrals are
+    // impassable in 1942 2e, so they hold NO garrison (see
+    // tests/impassable.test.ts for the full behavior suite).
     expect(s.territories.germany).toMatchObject({ owner: 0, factory: true });
     expect(s.territories.spain_portugal.owner).toBeNull();
-    expect(s.territories.spain_portugal.units.infantry).toBe(3);
+    expect(countUnits(s.territories.spain_portugal.units)).toBe(0);
   });
 
   it('rejects a land unit in a sea holding', () => {

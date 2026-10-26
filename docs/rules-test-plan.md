@@ -90,7 +90,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] Tank blitz: first territory must be unoccupied (no combat)
 - [ ] Tank cannot blitz through occupied hostile territory
 - [ ] Tank cannot blitz through friendly-neutral? (define: unowned = hostile for FFA)
-- [ ] Units cannot move through impassable (none on US map, but test the check)
+- [x] Units cannot move through impassable (1942 map's 16 impassable neutrals; tests/impassable.test.ts)
 - [ ] Cannot move out of territory after combat declared there? (units committed)
 
 ### Tests — Air Units

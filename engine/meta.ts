@@ -3,7 +3,7 @@
  */
 import { describeUnits } from './units';
 import { MAX_CHAT_LENGTH, fail, incomeOf, log, ownedTerritories } from './core';
-import { ALL_UNIT_TYPES, MAP, activeMapId, ipcOf, setActiveMap, type MapId } from '../data/data';
+import { ALL_UNIT_TYPES, MAP, activeMapId, ipcOf, isImpassable, setActiveMap, type MapId } from '../data/data';
 import type { ActionResult, ChatMessage, GameState, UnitCounts } from './types';
 
 
@@ -76,7 +76,8 @@ export function summarizeState(state: GameState, playerId: number): string {
     .filter((t) => state.territories[t].owner !== playerId)
     .map((t) => {
       const s = state.territories[t];
-      const owner = s.owner === null ? 'neutral' : state.players[s.owner].name;
+      const owner =
+        s.owner === null ? (isImpassable(t) ? 'impassable' : 'neutral') : state.players[s.owner].name;
       return `${t}(${ipcOf(t)},${owner}):${fmtUnits(s.units)}`;
     })
     .join(' ');

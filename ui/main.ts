@@ -1,4 +1,4 @@
-import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, boardTintHex, canalBetween, centroid, ipcOf, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
+import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, boardTintHex, canalBetween, centroid, ipcOf, isImpassable, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
 import boardUrl from './board-1942.jpg';
 import { playIntro } from './intro';
 import {
@@ -836,7 +836,7 @@ function terrTile(s: GameState, tid: string, inBattle: boolean, isDest: boolean)
   // Native tooltip + accessible summary + test hook for force contents.
   const tip = document.createElementNS(SVGNS, 'title');
   tip.textContent =
-    `${DISPLAY_NAME[tid] ?? t.name} — ${st.owner === null ? 'neutral' : s.players[st.owner].name}` +
+    `${DISPLAY_NAME[tid] ?? t.name} — ${st.owner === null ? (isImpassable(tid) ? 'impassable' : 'neutral') : s.players[st.owner].name}` +
     ` — IPC ${ipcOf(tid)} — ${unitSummary(s, tid)}`;
   g.appendChild(tip);
 
@@ -1473,10 +1473,10 @@ function legalDestinations(s: GameState): Set<string> {
   const canalShut = (n: string): boolean =>
     !!canalBetween(from, n) && !canalEdgeOpen(s.territories, from, n, pid);
   if (s.phase === 'combatMove') {
-    for (const n of neighborsOf(sel)) if (!canalShut(n)) out.add(n);
+    for (const n of neighborsOf(sel)) if (!canalShut(n) && !isImpassable(n)) out.add(n);
   } else if (s.phase === 'nonCombat') {
     for (const n of neighborsOf(sel)) {
-      if (canalShut(n)) continue;
+      if (canalShut(n) || isImpassable(n)) continue;
       const o = s.territories[n].owner;
       // Friendly waters (empty or yours) are legal naval destinations.
       if (s.territories[n] && MAP.territories.find((t) => t.id === n)?.domain === 'sea') {
@@ -1667,8 +1667,15 @@ function renderInspector(s: GameState): void {
   head.className = 'insp-head';
   const selId = sel;
   const isCap = selId !== null && s.players.some((p) => capitalsOf(s, p.id).includes(selId));
+  const impassable = isImpassable(sel);
   const ownerLabel =
-    t.owner === null ? (def.domain === 'sea' ? 'open waters' : 'neutral') : s.players[t.owner].name;
+    t.owner === null
+      ? def.domain === 'sea'
+        ? 'open waters'
+        : impassable
+          ? 'impassable'
+          : 'neutral'
+      : s.players[t.owner].name;
   head.innerHTML =
     `<strong>${DISPLAY_NAME[sel] ?? def.name}</strong> ` +
     `<span class="chip" style="background:${ownerColor(s, t.owner)}">${ownerLabel}</span> ` +
@@ -1676,7 +1683,9 @@ function renderInspector(s: GameState): void {
   el.appendChild(head);
   const units = document.createElement('div');
   units.className = 'insp-units';
-  units.textContent = `Units here: ${describeUnits(t.units)}`;
+  units.textContent = impassable
+    ? 'Impassable (1942 2e): no units may enter, land here, or fly over.'
+    : `Units here: ${describeUnits(t.units)}`;
   el.appendChild(units);
   const cargo = cargoSummary(s, sel);
   if (cargo) {
@@ -1690,8 +1699,9 @@ function renderInspector(s: GameState): void {
   if (!mine) {
     const p = document.createElement('p');
     p.className = 'insp-hint';
-    p.textContent =
-      s.phase === 'combatMove'
+    p.textContent = impassable
+      ? 'Impassable territory: it can never be entered, captured, or overflown.'
+      : s.phase === 'combatMove'
         ? 'Enemy ground — dial units at one of your territories, then click here to attack.'
         : 'Not yours.';
     el.appendChild(p);
@@ -1810,6 +1820,7 @@ function moveDialogBody(s: GameState, el: HTMLElement): void {
     }
   }
   const dests = [...destIds].filter((n) => {
+    if (isImpassable(n)) return false; // never offered: engine rejects them too
     const dd = MAP.territories.find((x) => x.id === n)!;
     if (isCombat) return true;
     if (dd.domain === 'sea') {
@@ -1980,6 +1991,7 @@ function seaMoveDialogBody(
       if (d.id !== tid && airDistance(tid, d.id) <= UNITS.fighter.move) airDestIds.add(d.id);
     }
     const airDests = [...airDestIds].filter((n) => {
+      if (isImpassable(n)) return false; // fighters may not strike or cross it
       const dd = MAP.territories.find((x) => x.id === n)!;
       if (dd.domain === 'sea') return true;
       const o = s.territories[n].owner;
@@ -2023,6 +2035,7 @@ function seaMoveDialogBody(
     }
     el.appendChild(cgrid);
     const lands = neighborsOf(tid).filter((n) => {
+      if (isImpassable(n)) return false; // no amphibious offload into impassable ground
       const dd = MAP.territories.find((x) => x.id === n)!;
       if (dd.domain !== 'land') return false;
       const o = s.territories[n].owner;

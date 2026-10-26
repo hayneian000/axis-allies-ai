@@ -30,6 +30,7 @@ import {
   serialize,
   submergeSubs,
   submergeTurn,
+  victoryCitiesHeld,
 } from '../engine/engine';
 import type { CombatMove, GameState, NonCombatMove, TerritoryState, UnitCounts } from '../engine/types';
 import { bridge } from './driverBridge';
@@ -474,13 +475,25 @@ function renderModal(s: GameState): void {
   root.hidden = false;
 }
 
+/** Friendly text for the engine's winReason codes (shown in the banner
+ *  and the game-over panel). Unknown codes print as-is. */
+const WIN_REASON_TEXT: Record<string, string> = {
+  majority_capitals: 'majority of capitals',
+  victory_cities: 'victory cities',
+  turn_cap: 'highest income at the turn cap',
+};
+
+function winReasonText(reason: string | null): string {
+  return reason ? (WIN_REASON_TEXT[reason] ?? reason) : '';
+}
+
 function renderBanner(s: GameState): void {
   const me = s.players[s.currentPlayer];
   // Chips are pure styling: textContent stays byte-identical to before.
   const sep = '<span class="bsep"> — </span>';
   $('banner').innerHTML =
     s.phase === 'gameover'
-      ? `<span class="bstat">Game over</span>${sep}<span class="bstat turn">${s.players[s.winner!].name} wins (${s.winReason})</span>`
+      ? `<span class="bstat">Game over</span>${sep}<span class="bstat turn">${s.players[s.winner!].name} wins (${winReasonText(s.winReason)})</span>`
       : `<span class="bstat">Round ${s.round}</span>${sep}` +
         `<span class="bstat turn">${me.name}'s turn</span>${sep}` +
         `<span class="bstat">phase: ${s.phase}</span>${sep}` +
@@ -512,6 +525,7 @@ function renderRoster(s: GameState): void {
       `<span class="pdot" style="background:${p.color}"></span>` +
       `<span class="pinfo"><strong>${p.name}</strong>` +
       `<span class="dim">${ownedTerritories(s, p.id).length} terr · ${p.ipcs} IPCs` +
+      `${s.victoryCitiesToWin ? ` · VC ${victoryCitiesHeld(s, p.id)}/${s.victoryCitiesToWin[p.id]}` : ''}` +
       `${ownsCapital(s, p.id) ? '' : ' · NO CAPITAL'}</span></span>` +
       (p.alive ? '' : '<span class="out">OUT</span>');
     el.appendChild(d);
@@ -1679,7 +1693,7 @@ function renderInspector(s: GameState): void {
   head.innerHTML =
     `<strong>${DISPLAY_NAME[sel] ?? def.name}</strong> ` +
     `<span class="chip" style="background:${ownerColor(s, t.owner)}">${ownerLabel}</span> ` +
-    `<span>${def.domain === 'sea' ? 'sea zone' : `IPC ${ipcOf(sel)}`}</span>${isCap ? ' ★capital' : ''}${t.factory ? ' ⚙factory' : ''}`;
+    `<span>${def.domain === 'sea' ? 'sea zone' : `IPC ${ipcOf(sel)}`}</span>${isCap ? ' ★capital' : ''}${def.victoryCity ? ` ◆victory city: ${def.victoryCity}` : ''}${t.factory ? ' ⚙factory' : ''}`;
   el.appendChild(head);
   const units = document.createElement('div');
   units.className = 'insp-units';
@@ -2199,7 +2213,7 @@ function renderPhasePanel(s: GameState): void {
   else if (s.phase === 'mobilize') mobilizePanel(s, el);
   else {
     const p = document.createElement('p');
-    p.textContent = `${s.players[s.winner!].name} wins (${s.winReason}). Start a new game to play again.`;
+    p.textContent = `${s.players[s.winner!].name} wins (${winReasonText(s.winReason)}). Start a new game to play again.`;
     el.appendChild(p);
   }
 }

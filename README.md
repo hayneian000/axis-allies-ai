@@ -182,6 +182,8 @@ Allies teams, on both maps.
 - Turn: purchase, combat move, combat, non-combat, mobilize, collect income.
 - Victory: hold a majority of capitals simultaneously (3 of 4 on America,
   3 of 5 on 1942 World). 20-round cap, then highest income wins (tie: bank).
+- Victory cities (1942 World only): a seat holding its victory-city target
+  (its starting count + 3) at the end of a complete round also wins.
 - Capturing a capital transfers the victim's bank. No capital = no purchases, no income.
 - Aircraft must end non-combat on ground held since turn start or they are lost.
 - AA guns move **only** during non-combat (never in combat movement).

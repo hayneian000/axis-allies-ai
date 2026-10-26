@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UNITS, airDistance, ipcOf, isSea, neighborsOf } from '../data/data';
+import { UNITS, airDistance, ipcOf, isSea, neighborsOf, setActiveMap } from '../data/data';
 import {
   autoCasualties,
   combatMove,
@@ -310,6 +310,25 @@ export function playBotGame(seed: number, numPlayers: number, maxRounds = 60): {
   }
   return { state, stats };
 }
+
+describe('headless simulation on the 1942 board-space map', () => {
+  it('plays at least 3 full rounds with all 4 seats (seed 7)', () => {
+    setActiveMap('world1942');
+    try {
+      // maxRounds caps the turn guard; the assertion is on rounds actually
+      // completed with every engine call the strict bot makes succeeding.
+      const { state, stats } = playBotGame(7, 4, 6);
+      expect(state.round).toBeGreaterThanOrEqual(4);
+      expect(stats.captures).toBeGreaterThan(0);
+      assertValidUnits(state);
+      console.log(
+        `1942 sim seed=7: rounds=${stats.rounds} battles=${stats.battles} captures=${stats.captures} phase=${state.phase} winner=${state.winner}`,
+      );
+    } finally {
+      setActiveMap('america');
+    }
+  }, 120000);
+});
 
 describe('headless full-game simulation', () => {
   for (const numPlayers of [2, 3, 4]) {

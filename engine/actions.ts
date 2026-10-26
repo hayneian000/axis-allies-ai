@@ -3,9 +3,9 @@
  */
 import { AIR_UNIT_TYPES, CARGO_TYPES, LAND_UNIT_TYPES, addUnits, countAir, countLand, countSea, countUnits, describeUnits, emptyUnits, hasEnough, subUnits, validCounts } from './units';
 import { DEFAULT_TURN_CAP, PLAYER_COLORS, fail, incomeOf, log, openBattles, ownedTerritories, ownsCapital, requireCurrentAlive, requirePhase, shuffle, usedKey } from './core';
-import { CARRIER_FIGHTERS, addPlayerSeaUnits, arriveSeaZone, cargoOf, carrierSpare, carryCargoAlong, consolidateDefender, destroyCargo, disembarkUnits, embarkUnits, findDestroyerIntercept, hasHostileDestroyer, hasSurfaceWarships, landingOptions, movePower, normalizeSeaZone, playerCarrierForce, playerSeaForce, removeSeaUnits, seaZoneForces, seaZoneHostileTo } from './naval';
+import { CARRIER_FIGHTERS, addPlayerSeaUnits, arriveSeaZone, canalBlockFailure, canalEdgeOpen, cargoOf, carrierSpare, carryCargoAlong, consolidateDefender, destroyCargo, disembarkUnits, embarkUnits, findDestroyerIntercept, hasHostileDestroyer, hasSurfaceWarships, landingOptions, movePower, normalizeSeaZone, playerCarrierForce, playerSeaForce, removeSeaUnits, seaZoneForces, seaZoneHostileTo } from './naval';
 import { resolveCapture } from './combat';
-import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, UNITS, airDistance, areAdjacent, ipcOf, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
+import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, NATION_COLORS_1942, SEAT_NATION_1942, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
 import type { UnitType } from '../data/data';
 import type { ActionResult, CombatMove, GameState, MobilizePlacement, NonCombatMove, PurchaseItem, TerritoryState, UnitCounts } from './types';
 
@@ -28,6 +28,7 @@ export function createGame(opts: CreateGameOptions): GameState {
   const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31);
   const state: GameState = {
     version: 3,
+    mapId: activeMapId(),
     seed,
     rngState: seed >>> 0,
     numPlayers,
@@ -53,24 +54,55 @@ export function createGame(opts: CreateGameOptions): GameState {
   };
 
   const names = opts.playerNames ?? [];
+  // On the 1942 board, seat chrome takes the official color of the seat's
+  // lead nation (data.ts NATION_COLORS_1942 / SEAT_NATION_1942) so the
+  // sidebar, banner, and territory tints share one palette. Other maps
+  // keep the classic PLAYER_COLORS.
+  const onBoard1942 = activeMapId() === 'world1942';
   for (let i = 0; i < numPlayers; i++) {
+    const caps = scenario.capitals[i];
+    const capitals = Array.isArray(caps) ? [...caps] : [caps];
     state.players.push({
       id: i,
       name: names[i] || `Player ${i + 1}`,
-      color: PLAYER_COLORS[i],
+      color: onBoard1942 ? NATION_COLORS_1942[SEAT_NATION_1942[i]] : PLAYER_COLORS[i],
       alive: true,
       ipcs: scenario.banks[i] ?? 0,
-      capital: scenario.capitals[i],
+      capital: capitals[0],
+      capitals,
     });
   }
   state.turnOrder = shuffle(state, state.players.map((p) => p.id));
+
+  /** Sea holdings validated in the loop below; placed after the sea zones
+   *  are initialized (1942 scenario starting fleets). */
+  const seaHoldings: Array<{ territory: string; owner: number; units: UnitCounts }> = [];
 
   const covered = new Set<string>();
   for (const h of scenario.holdings) {
     const def = territoryDef(h.territory);
     if (!def) throw new Error(`Scenario references unknown territory "${h.territory}".`);
-    if (def.domain === 'sea') throw new Error(`Scenario holding "${h.territory}" is a sea zone.`);
     if (h.owner < 0 || h.owner >= numPlayers) throw new Error(`Bad owner for "${h.territory}".`);
+    if (def.domain === 'sea') {
+      // Sea holding: a starting fleet. Units must be naval types or
+      // fighters (carrier air); every unit belongs to the holding's owner
+      // seat. Collected here and placed below, once the sea zones exist.
+      // Sea holdings do not count toward land coverage.
+      const units = emptyUnits();
+      for (const [type, n] of Object.entries(h.units ?? {})) {
+        if (!(type in units) || !Number.isInteger(n) || (n as number) < 0) {
+          throw new Error(`Bad unit entry ${type}x${n} in "${h.territory}".`);
+        }
+        if (!(NAVAL_UNIT_TYPES as string[]).includes(type) && type !== 'fighter') {
+          throw new Error(
+            `Unit "${type}" cannot start at sea ("${h.territory}"): sea holdings take naval units and fighters only.`,
+          );
+        }
+        units[type as UnitType] = n as number;
+      }
+      seaHoldings.push({ territory: h.territory, owner: h.owner, units });
+      continue;
+    }
     const units = emptyUnits();
     for (const [type, n] of Object.entries(h.units ?? {})) {
       if (!(type in units) || !Number.isInteger(n) || (n as number) < 0) {
@@ -109,8 +141,8 @@ export function createGame(opts: CreateGameOptions): GameState {
     state.territories[tid] = { owner: null, units: u, factory: false, factoryFresh: false, cargo: [] };
     covered.add(tid);
   }
-  // Sea zones are never owned, never garrisoned, and exempt from scenario
-  // coverage: they start as uncontrolled waters.
+  // Sea zones are never owned via land holdings, never garrisoned, and
+  // exempt from scenario coverage: they start as uncontrolled waters.
   for (const zid of seaZoneIds()) {
     state.territories[zid] = {
       owner: null,
@@ -120,12 +152,21 @@ export function createGame(opts: CreateGameOptions): GameState {
       cargo: [],
     };
   }
+  // Place the starting fleets. addPlayerSeaUnits follows the naval.ts
+  // sea-force model exactly: the fleet becomes the zone's primary force
+  // (`owner`/`units`), or a `coexist` entry when another owner's fleet
+  // already holds the zone. `covered` still counts land territories only.
+  for (const sh of seaHoldings) {
+    addPlayerSeaUnits(state.territories, sh.territory, sh.owner, sh.units);
+  }
   if (covered.size !== landTerritoryIds().length) {
     throw new Error('Scenario does not cover every land territory.');
   }
   for (const p of state.players) {
-    if (!state.territories[p.capital]?.factory) {
-      throw new Error(`Capital ${p.capital} has no factory.`);
+    for (const cap of p.capitals ?? [p.capital]) {
+      if (!state.territories[cap]?.factory) {
+        throw new Error(`Capital ${cap} has no factory.`);
+      }
     }
   }
 
@@ -312,10 +353,16 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
       const nSubs = units.submarine ?? 0;
       const otherSeaN = seaN - nSubs;
       if (nSubs > 0) {
-        const reach = seaReachable(move.from, UNITS.submarine.move, (z) =>
-          z === move.to ? true : !hasHostileDestroyer(work, z, playerId),
+        const subPassable = (z: string) =>
+          z === move.to ? true : !hasHostileDestroyer(work, z, playerId);
+        const reach = seaReachable(move.from, UNITS.submarine.move, subPassable, (a, b) =>
+          canalEdgeOpen(work, a, b, playerId),
         );
         if (!reach.has(move.to)) {
+          const canalErr = canalBlockFailure(
+            work, move.from, move.to, UNITS.submarine.move, subPassable, playerId,
+          );
+          if (canalErr) return canalErr;
           const intercept = findDestroyerIntercept(work, move.from, playerId);
           if (intercept) {
             return fail(
@@ -327,10 +374,16 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
         }
       }
       if (otherSeaN > 0) {
-        const reach = seaReachable(move.from, UNITS.transport.move, (z) =>
-          z === move.to ? true : !seaZoneHostileTo(work, z, playerId),
+        const shipPassable = (z: string) =>
+          z === move.to ? true : !seaZoneHostileTo(work, z, playerId);
+        const reach = seaReachable(move.from, UNITS.transport.move, shipPassable, (a, b) =>
+          canalEdgeOpen(work, a, b, playerId),
         );
         if (!reach.has(move.to)) {
+          const canalErr = canalBlockFailure(
+            work, move.from, move.to, UNITS.transport.move, shipPassable, playerId,
+          );
+          if (canalErr) return canalErr;
           return fail(
             'range',
             `Ships in ${move.from} cannot reach ${move.to} (2 sea zones, no hostile transit).`,
@@ -974,10 +1027,16 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
       const nSubs = units.submarine ?? 0;
       const otherSeaN = seaN - nSubs;
       if (nSubs > 0) {
-        const reach = seaReachable(move.from, UNITS.submarine.move, (z) =>
-          z === move.to ? true : !hasHostileDestroyer(work, z, playerId),
+        const subPassable = (z: string) =>
+          z === move.to ? true : !hasHostileDestroyer(work, z, playerId);
+        const reach = seaReachable(move.from, UNITS.submarine.move, subPassable, (a, b) =>
+          canalEdgeOpen(work, a, b, playerId),
         );
         if (!reach.has(move.to)) {
+          const canalErr = canalBlockFailure(
+            work, move.from, move.to, UNITS.submarine.move, subPassable, playerId,
+          );
+          if (canalErr) return canalErr;
           const intercept = findDestroyerIntercept(work, move.from, playerId);
           if (intercept) {
             return fail(
@@ -989,8 +1048,15 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
         }
       }
       if (otherSeaN > 0) {
-        const reach = seaReachable(move.from, UNITS.transport.move, (z) => !seaZoneHostileTo(work, z, playerId));
+        const shipPassable = (z: string) => !seaZoneHostileTo(work, z, playerId);
+        const reach = seaReachable(move.from, UNITS.transport.move, shipPassable, (a, b) =>
+          canalEdgeOpen(work, a, b, playerId),
+        );
         if (!reach.has(move.to)) {
+          const canalErr = canalBlockFailure(
+            work, move.from, move.to, UNITS.transport.move, shipPassable, playerId,
+          );
+          if (canalErr) return canalErr;
           return fail('range', `Ships in ${move.from} cannot reach ${move.to} (2 non-hostile sea zones).`);
         }
       }

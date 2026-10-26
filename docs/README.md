@@ -13,6 +13,7 @@ the codebase.
 | [`ui-guide.md`](ui-guide.md) | You're restyling or adding UI — design tokens, DOM conventions, review workflow |
 | [`phase2-agents.md`](phase2-agents.md) | You're working on the agent system — providers, prompts, driver, streaming, performance (implemented, not a sketch) |
 | [`m3-diplomacy.md`](m3-diplomacy.md) | You're working on diplomacy — the freeform-talk spec, token budgets, JSON dump |
+| [`board-space-map.md`](board-space-map.md) | You're touching the 1942 world map — TripleA board space (3500×2000), sources, rebuild, known gaps |
 | [`rules-test-plan.md`](rules-test-plan.md) | You're writing rule tests — the rulebook-cited plan behind `tests/rules/` |
 | [`style-guide.md`](style-guide.md) | You're doing visual work — the "war room, not board-game café" direction |
 | [`muse-workflow.md`](muse-workflow.md) | You're an AI contributor — repo-specific operating notes (generic conventions live in root `AGENTS.md`) |

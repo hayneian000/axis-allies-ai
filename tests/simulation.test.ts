@@ -9,6 +9,7 @@ import {
   createGame,
   emptyUnits,
   endPhase,
+  landingOptions,
   mobilize,
   nonCombatMove,
   openBattles,
@@ -151,6 +152,9 @@ function botCombatMove(s: GameState, pid: number, rng: () => number, stats: BotS
     const bomberBase = ownedTerritories(s, pid).find((t) => availAt(t).bomber > 0);
     const factoryTarget = Object.keys(s.territories).find(
       (t) =>
+        // Never raid a territory already targeted by a regular attack in
+        // this same combat move - the engine rejects that as mixed_battle.
+        !moves.some((m) => m.to === t) &&
         s.territories[t].owner !== pid &&
         s.territories[t].factory &&
         bomberBase &&
@@ -188,18 +192,19 @@ function botCombat(s: GameState, pid: number): void {
 }
 
 function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
-  // Land every aircraft on the nearest legal landing spot.
-  const landing = s.ownedAtTurnStart.filter((t) => s.territories[t]?.owner === pid);
+  // Land every aircraft on the nearest legal landing spot. Legal spots are
+  // the engine's own landingOptions (turn-start owned land, plus sea zones
+  // with spare friendly carrier capacity for fighters); bombers can only
+  // use the land spots - the raw ownedAtTurnStart list also names sea
+  // zones, and sending a bomber to one is an engine rejection.
+  const fighterSpots = landingOptions(s, pid);
+  const landSpots = fighterSpots.filter((t) => !isSea(t));
   const moves: Array<{ from: string; to: string; units: Partial<UnitCounts> }> = [];
-  // Nearest LEGAL landing spot (mirrors the engine's landingOptions):
-  // land held since turn start — plus, for fighters only, a sea zone with
-  // spare carrier capacity. Bombers can never land at sea, and a sea zone
-  // without a carrier is not a landing spot at all.
   const nearest = (from: string, air: 'fighter' | 'bomber'): string | null => {
+    const spots = air === 'bomber' ? landSpots : fighterSpots;
     let best: string | null = null;
     let bestD = Infinity;
-    for (const l of landing) {
-      if (isSea(l) && (air === 'bomber' || carrierSpare(s.territories, l, pid) <= 0)) continue;
+    for (const l of spots) {
       const d = airDistance(from, l);
       if (d < bestD) {
         bestD = d;
@@ -223,7 +228,7 @@ function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
   }
   // Air sitting on newly captured (non-landing) ground.
   for (const t of ownedTerritories(s, pid)) {
-    if (landing.includes(t)) continue;
+    if (landSpots.includes(t)) continue;
     for (const air of ['fighter', 'bomber'] as const) {
       const n = s.territories[t].units[air];
       if (n > 0) {

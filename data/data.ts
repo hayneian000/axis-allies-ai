@@ -172,6 +172,15 @@ export interface ScenarioDef {
   neutralGarrison?: Partial<Record<UnitType, number>>;
   /** Capitals a player must hold simultaneously to win. Defaults to majority. */
   capitalsToWin?: number;
+  /** Display names for the seats, one per seat (1942: the power names -
+   *  "Germany", "USSR", "Japan", "UK + US"). Used as the default player
+   *  names when a game does not supply its own. */
+  seatNames?: string[];
+  /** Fixed turn order (seat ids, first to last). When present, createGame
+   *  uses it verbatim instead of the seeded shuffle - the 1942 scenario
+   *  plays in the 1942 2e power order (Germany, USSR, Japan, UK + US).
+   *  Free-for-all scenarios without one keep the shuffled order. */
+  turnOrder?: number[];
   /** Free-text provenance / conversion notes (e.g. the 1942 scenario's
    *  five-powers-to-four-seats merge and bank source). Display only. */
   note?: string;
@@ -274,6 +283,15 @@ const SCENARIOS: Record<number, ScenarioDef> = {
   3: scenario3p as ScenarioDef,
   4: scenario4p as ScenarioDef,
 };
+
+/** Seat display names declared by a map's scenario (1942: the power
+ *  names), independent of which map is currently active - for setup UI
+ *  that runs before setActiveMap. Undefined for maps whose scenarios do
+ *  not name their seats. */
+export function seatNamesForMap(id: MapId): string[] | undefined {
+  if (id === 'world1942') return SCENARIO_1942.seatNames;
+  return undefined;
+}
 
 export function scenarioFor(playerCount: number): ScenarioDef {
   if (activeId === 'world1942') {

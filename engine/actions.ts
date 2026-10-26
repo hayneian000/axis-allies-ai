@@ -64,7 +64,9 @@ export function createGame(opts: CreateGameOptions): GameState {
     const capitals = Array.isArray(caps) ? [...caps] : [caps];
     state.players.push({
       id: i,
-      name: names[i] || `Player ${i + 1}`,
+      // Caller-supplied names win; then the scenario's seat names (1942:
+      // the power names); then the generic default.
+      name: names[i] || scenario.seatNames?.[i] || `Player ${i + 1}`,
       color: onBoard1942 ? NATION_COLORS_1942[SEAT_NATION_1942[i]] : PLAYER_COLORS[i],
       alive: true,
       ipcs: scenario.banks[i] ?? 0,
@@ -72,7 +74,19 @@ export function createGame(opts: CreateGameOptions): GameState {
       capitals,
     });
   }
-  state.turnOrder = shuffle(state, state.players.map((p) => p.id));
+  // A scenario with a fixed turn order (1942: the 1942 2e power order)
+  // plays in that order verbatim. All other games shuffle the seats with
+  // the seeded RNG - free-for-all design, so no seat is always first.
+  if (scenario.turnOrder) {
+    const want = [...scenario.turnOrder].sort((a, b) => a - b);
+    const got = state.players.map((p) => p.id);
+    if (want.length !== got.length || want.some((v, i) => v !== got[i])) {
+      throw new Error('Scenario turnOrder must list every seat exactly once.');
+    }
+    state.turnOrder = [...scenario.turnOrder];
+  } else {
+    state.turnOrder = shuffle(state, state.players.map((p) => p.id));
+  }
 
   /** Sea holdings validated in the loop below; placed after the sea zones
    *  are initialized (1942 scenario starting fleets). */

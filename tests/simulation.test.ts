@@ -16,6 +16,7 @@ import {
   ownedTerritories,
   ownsCapital,
   purchase,
+  repair,
   resolveCombatRound,
 } from '../engine/engine';
 import type { CombatMove, GameState, UnitCounts } from '../engine/types';
@@ -78,6 +79,18 @@ function landTarget(s: GameState, pid: number, from: string): string | null {
 }
 
 function botPurchase(s: GameState, pid: number): void {
+  // Simple deterministic repair policy: if one of the bot's factories is
+  // fully shut down by damage (effective capacity 0) and the bank covers
+  // it, clear that damage first so production can resume. Repair runs in
+  // the purchase phase and is legal even with the capital enemy-held.
+  let bankNow = s.players[pid].ipcs;
+  for (const [tid, t] of Object.entries(s.territories)) {
+    const dmg = t.factoryDamage ?? 0;
+    if (t.owner === pid && t.factory && dmg > 0 && ipcOf(tid) - dmg <= 0 && bankNow >= dmg) {
+      expect(repair(s, pid, tid, dmg).ok).toBe(true);
+      bankNow -= dmg;
+    }
+  }
   if (!ownsCapital(s, pid)) {
     expect(purchase(s, pid, []).ok).toBe(true);
     return;
@@ -270,7 +283,12 @@ function botMobilize(s: GameState, pid: number): void {
   const remaining = { ...pool };
   for (const f of factories) {
     if (s.territories[f]?.owner !== pid || !s.territories[f]?.factory) continue;
-    let cap = ipcOf(f);
+    // Effective capacity: factory damage markers cut production (p.21).
+    // Note a factory captured this turn is factoryFresh and the engine
+    // rejects placements there; the capital-first list can still name it
+    // right after a capture. Skip fresh factories like the engine does.
+    if (s.territories[f]?.factoryFresh) continue;
+    let cap = Math.max(0, ipcOf(f) - (s.territories[f]?.factoryDamage ?? 0));
     const units: Partial<UnitCounts> = {};
     for (const t of ['infantry', 'tank', 'fighter', 'artillery', 'bomber', 'aa'] as const) {
       if (cap <= 0) break;

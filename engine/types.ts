@@ -50,6 +50,14 @@ export interface TerritoryState {
   factory: boolean;
   /** True when built or captured this turn: cannot produce until next turn. */
   factoryFresh: boolean;
+  /** Damage markers on this territory's industrial complex from strategic
+   *  bombing raids (1942 2e p.14). Each marker cuts the factory's
+   *  mobilization capacity by one (p.21); total damage is capped at twice
+   *  the territory's IPC value. Markers stay on the complex when the
+   *  territory changes hands (p.18) and are removed only by repair during
+   *  the owner's Purchase phase, 1 IPC per marker (p.10). 0 when there is
+   *  no factory or the factory is undamaged. */
+  factoryDamage: number;
   /** Transport cargo manifest. Meaningful only for sea zones. */
   cargo: TransportLoad[];
   /** Foreign forces coexisting in a sea zone without a battle (1942 2e p.29:

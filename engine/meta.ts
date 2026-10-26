@@ -63,10 +63,30 @@ export function summarizeState(state: GameState, playerId: number): string {
             : `capital ${cid} held by ${state.players[cap.owner].name}`;
       })
       .join(', ');
-    const factories = Object.keys(state.territories).filter(
-      (t) => state.territories[t].owner === p.id && state.territories[t].factory,
-    );
+    const factories = Object.keys(state.territories)
+      .filter((t) => state.territories[t].owner === p.id && state.territories[t].factory)
+      .map((t) => {
+        const dmg = state.territories[t].factoryDamage ?? 0;
+        return dmg > 0 ? `${t} (damage ${dmg}, capacity ${Math.max(0, ipcOf(t) - dmg)} of ${ipcOf(t)})` : t;
+      });
     lines.push(`${p.name}${p.alive ? '' : ' (OUT)'}: ${terrs} terr, bank ${p.ipcs}, income ${incomeOf(state, p.id)}, ${capStatus}, factories [${factories.join(',') || 'none'}].`);
+  }
+  const myDamaged = Object.keys(state.territories).filter(
+    (t) =>
+      state.territories[t].owner === playerId &&
+      state.territories[t].factory &&
+      (state.territories[t].factoryDamage ?? 0) > 0,
+  );
+  if (myDamaged.length > 0) {
+    const desc = myDamaged
+      .map((t) => {
+        const dmg = state.territories[t].factoryDamage;
+        return `${t}: damage ${dmg}, mobilization capacity ${Math.max(0, ipcOf(t) - dmg)} of ${ipcOf(t)}`;
+      })
+      .join('; ');
+    lines.push(
+      `Your damaged factories: ${desc}. Damage does not reduce income. Repair with the repair tool during your purchase phase at 1 IPC per damage marker (you hold ${me.ipcs} IPCs).`,
+    );
   }
   if (state.victoryCitiesToWin) {
     const targets = state.victoryCitiesToWin;
@@ -78,7 +98,7 @@ export function summarizeState(state: GameState, playerId: number): string {
     );
   }
   const mine = ownedTerritories(state, playerId)
-    .map((t) => `${t}(${ipcOf(t)}):${fmtUnits(state.territories[t].units)}${state.territories[t].factory ? '+FAC' : ''}`)
+    .map((t) => `${t}(${ipcOf(t)}):${fmtUnits(state.territories[t].units)}${state.territories[t].factory ? '+FAC' : ''}${(state.territories[t].factoryDamage ?? 0) > 0 ? `(dmg${state.territories[t].factoryDamage})` : ''}`)
     .join(' ');
   lines.push(`Yours: ${mine}`);
   const others = Object.keys(state.territories)
@@ -137,6 +157,8 @@ export function deserialize(json: string): GameState {
     }
     // Saves from before navy phase 1 lack the cargo manifest.
     if (!Array.isArray(s.cargo)) s.cargo = [];
+    // Saves from before factory damage lack the damage-marker count.
+    if (typeof s.factoryDamage !== 'number') s.factoryDamage = 0;
     for (const u of ALL_UNIT_TYPES) {
       if (s.units[u] === undefined) s.units[u] = 0;
     }

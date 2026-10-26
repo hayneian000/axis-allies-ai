@@ -18,11 +18,11 @@ import {
 } from '../../helpers';
 
 /**
- * Tank — 1942 2e p.10 (unit profile), p.14 (blitz).
+ * Tank - 1942 2e p.10 (unit profile), p.14 (blitz).
  * Cost 6 (FAQ errata: not 5), attack 3, defense 3, move 2, blitz.
  */
 describe('tank profile', () => {
-  it('costs 6 IPCs — FAQ errata, not 5 (1942 2e p.10, FAQ Nov 2012)', () => {
+  it('costs 6 IPCs - FAQ errata, not 5 (1942 2e p.10, FAQ Nov 2012)', () => {
     expect(UNITS.tank.cost).toBe(6);
     const s = freshGame(2, 1);
     const pid = s.currentPlayer;
@@ -175,7 +175,7 @@ describe('tank blitz (1942 2e p.14)', () => {
   });
 
   it('cannot blitz through a defended neutral (FFA decision: neutrals garrisoned)', () => {
-    // FFA decision (Ian, Oct 3 2026): neutral territories hold 2-infantry
+    // FFA decision (project decision, Oct 3 2026): neutral territories hold 2-infantry
     // garrisons, so they are occupied and block blitzing.
     const s = freshGame(2, 50);
     gotoCombatMove(s);

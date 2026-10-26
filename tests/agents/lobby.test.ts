@@ -6,10 +6,10 @@ describe('buildSeats', () => {
   it('builds one SeatConfig per player, pairing seatIndex to playerId', () => {
     const seats = buildSeats(
       [
-        { kind: 'human', name: 'Ian' },
+        { kind: 'human', name: 'Alex' },
         { kind: 'ai', provider: 'anthropic', model: 'claude-sonnet-5', name: 'Claude' },
       ],
-      ['Ian', 'Claude'],
+      ['Alex', 'Claude'],
     );
     expect(seats).toHaveLength(2);
     expect(seats[0]).toEqual({ seatIndex: 0, playerId: 0, kind: 'human' });

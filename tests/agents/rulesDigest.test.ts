@@ -86,6 +86,23 @@ describe('rules digest on the 1942 world map', () => {
     expect(d).toContain('no shuffle');
   });
 
+  it('states the victory-cities win from the scenario data', () => {
+    setActiveMap('world1942');
+    const s = scenarioFor(4);
+    const targets = s.victoryCitiesToWin as number[];
+    const cities = MAP.territories.filter((t) => t.victoryCity);
+    const d = buildRulesDigest();
+    expect(d).toContain('VICTORY CITIES');
+    expect(d).toContain(`${cities.length} victory cities`);
+    for (const c of cities) expect(d).toContain(c.victoryCity);
+    // Per-seat targets, named from the scenario seat names.
+    for (let i = 0; i < targets.length; i++) {
+      expect(d).toContain(`${(s.seatNames ?? [])[i]} ${targets[i]}`);
+    }
+    // Round-end timing, not mid-round.
+    expect(d).toContain('END of a complete round');
+  });
+
   it('explains the two-capital seat from the scenario data', () => {
     setActiveMap('world1942');
     const s = scenarioFor(4);

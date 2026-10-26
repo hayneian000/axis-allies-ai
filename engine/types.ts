@@ -230,6 +230,11 @@ export interface GameState {
   turnCap: number;
   /** Capitals a player must hold simultaneously to win (scenario-overridable, defaults to majority). */
   capitalsToWin: number;
+  /** Per-seat victory-city thresholds, or null when the scenario has no
+   *  victory-city win path (America games). Checked only at the end of a
+   *  complete round; absent in saves from before this win path existed
+   *  (deserialize restores it from the scenario). */
+  victoryCitiesToWin?: number[] | null;
   winner: number | null;
   winReason: string | null;
   events: GameEvent[];

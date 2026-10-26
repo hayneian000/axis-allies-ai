@@ -2,8 +2,8 @@
  * engine/meta.ts — Chat, state summaries for agents/prompts, and save/load serialization.
  */
 import { describeUnits } from './units';
-import { MAX_CHAT_LENGTH, fail, incomeOf, log, ownedTerritories } from './core';
-import { ALL_UNIT_TYPES, MAP, activeMapId, ipcOf, isImpassable, setActiveMap, type MapId } from '../data/data';
+import { MAX_CHAT_LENGTH, fail, incomeOf, log, ownedTerritories, victoryCitiesHeld } from './core';
+import { ALL_UNIT_TYPES, MAP, activeMapId, ipcOf, isImpassable, scenarioFor, setActiveMap, victoryCityTargets, type MapId } from '../data/data';
 import type { ActionResult, ChatMessage, GameState, UnitCounts } from './types';
 
 
@@ -67,6 +67,15 @@ export function summarizeState(state: GameState, playerId: number): string {
       (t) => state.territories[t].owner === p.id && state.territories[t].factory,
     );
     lines.push(`${p.name}${p.alive ? '' : ' (OUT)'}: ${terrs} terr, bank ${p.ipcs}, income ${incomeOf(state, p.id)}, ${capStatus}, factories [${factories.join(',') || 'none'}].`);
+  }
+  if (state.victoryCitiesToWin) {
+    const targets = state.victoryCitiesToWin;
+    const counts = state.players
+      .map((p) => `${p.name} ${victoryCitiesHeld(state, p.id)}/${targets[p.id]}`)
+      .join(', ');
+    lines.push(
+      `Victory cities (held/target): ${counts}. Victory on victory cities is decided only at the end of a complete round: a seat at or above its target when the round ends wins.`,
+    );
   }
   const mine = ownedTerritories(state, playerId)
     .map((t) => `${t}(${ipcOf(t)}):${fmtUnits(state.territories[t].units)}${state.territories[t].factory ? '+FAC' : ''}`)
@@ -138,6 +147,13 @@ export function deserialize(json: string): GameState {
   // Saves from before multi-capital seats lack the per-seat capital list.
   for (const p of data.players) {
     if (!Array.isArray(p.capitals) || p.capitals.length === 0) p.capitals = [p.capital];
+  }
+  // Saves from before the victory-cities win path lack the per-seat
+  // targets; restore them from the save's own scenario (null on maps
+  // whose scenarios declare none). The map was restored above, so
+  // scenarioFor sees the save's scenario.
+  if (data.victoryCitiesToWin === undefined) {
+    data.victoryCitiesToWin = victoryCityTargets(scenarioFor(data.numPlayers), data.numPlayers);
   }
   // Saves from before navy phase 1 lack the naval battle fields.
   for (const b of data.battles) {

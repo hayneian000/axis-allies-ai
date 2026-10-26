@@ -172,6 +172,12 @@ export interface ScenarioDef {
   neutralGarrison?: Partial<Record<UnitType, number>>;
   /** Capitals a player must hold simultaneously to win. Defaults to majority. */
   capitalsToWin?: number;
+  /** Victory cities a seat must hold AT THE END OF A COMPLETE ROUND to
+   *  win (1942 2e standard victory, rulebook p.6): either one threshold per
+   *  seat (1942: each seat's starting victory-city count + 3, the per-seat
+   *  form of the book's Axis 9 / Allies 10 side totals) or a single number
+   *  applied to every seat. Absent = no victory-city win path. */
+  victoryCitiesToWin?: number | number[];
   /** Display names for the seats, one per seat (1942: the power names -
    *  "Germany", "USSR", "Japan", "UK + US"). Used as the default player
    *  names when a game does not supply its own. */
@@ -351,6 +357,24 @@ export function landTerritoryIds(): string[] {
 
 export function seaZoneIds(): string[] {
   return MAP.territories.filter((t) => t.domain === 'sea').map((t) => t.id);
+}
+
+/** Territories carrying a victory city on the active map (1942 board only). */
+export function victoryCityIds(): string[] {
+  return MAP.territories.filter((t) => t.victoryCity !== undefined).map((t) => t.id);
+}
+
+/** A scenario's victory-city thresholds normalized to one entry per seat,
+ *  or null when the scenario declares no victory-city win path. A bare
+ *  number applies the same threshold to every seat. */
+export function victoryCityTargets(scenario: ScenarioDef, numPlayers: number): number[] | null {
+  const vc = scenario.victoryCitiesToWin;
+  if (vc === undefined) return null;
+  const targets = Array.isArray(vc) ? [...vc] : Array.from({ length: numPlayers }, () => vc);
+  if (targets.length !== numPlayers || targets.some((n) => !Number.isInteger(n) || n < 1)) {
+    throw new Error('Scenario victoryCitiesToWin must give one positive threshold per seat.');
+  }
+  return targets;
 }
 
 export function centroid(points: Array<[number, number]>): { x: number; y: number } {

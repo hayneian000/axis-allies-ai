@@ -4,8 +4,8 @@
 import { AIR_UNIT_TYPES, CARGO_TYPES, LAND_UNIT_TYPES, addUnits, countAir, countLand, countSea, countUnits, describeUnits, emptyUnits, hasEnough, subUnits, validCounts } from './units';
 import { DEFAULT_TURN_CAP, PLAYER_COLORS, fail, incomeOf, log, openBattles, ownedTerritories, ownsCapital, requireCurrentAlive, requirePhase, shuffle, usedKey } from './core';
 import { CARRIER_FIGHTERS, addPlayerSeaUnits, arriveSeaZone, canalBlockFailure, canalEdgeOpen, cargoOf, carrierSpare, carryCargoAlong, consolidateDefender, destroyCargo, disembarkUnits, embarkUnits, findDestroyerIntercept, hasHostileDestroyer, hasSurfaceWarships, landingOptions, movePower, normalizeSeaZone, playerCarrierForce, playerSeaForce, removeSeaUnits, seaZoneForces, seaZoneHostileTo } from './naval';
-import { resolveCapture } from './combat';
-import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, NATION_COLORS_1942, SEAT_NATION_1942, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isImpassable, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
+import { checkWinByVictoryCities, resolveCapture } from './combat';
+import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, NATION_COLORS_1942, SEAT_NATION_1942, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isImpassable, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef, victoryCityTargets } from '../data/data';
 import type { UnitType } from '../data/data';
 import type { ActionResult, CombatMove, GameState, MobilizePlacement, NonCombatMove, PurchaseItem, TerritoryState, UnitCounts } from './types';
 
@@ -47,6 +47,7 @@ export function createGame(opts: CreateGameOptions): GameState {
     nextBattleId: 1,
     turnCap: DEFAULT_TURN_CAP,
     capitalsToWin: scenario.capitalsToWin ?? (Math.floor(numPlayers / 2) + 1),
+    victoryCitiesToWin: victoryCityTargets(scenario, numPlayers),
     winner: null,
     winReason: null,
     events: [],
@@ -1517,7 +1518,14 @@ export function endPhase(state: GameState, playerId: number): ActionResult {
       const wrapped = nextIdx <= state.orderIndex;
       state.orderIndex = nextIdx;
       state.currentPlayer = state.turnOrder[nextIdx];
-      if (wrapped) state.round++;
+      if (wrapped) {
+        // A complete round just ended. Victory cities are evaluated only
+        // now (1942 2e: the standard victory is checked at the end of a
+        // complete round of play), and before the turn-cap tiebreak for
+        // that same round: a round-end VC win beats the cap.
+        if (checkWinByVictoryCities(state)) return { ok: true };
+        state.round++;
+      }
       if (state.round > state.turnCap) {
         return endByTurnCap(state);
       }

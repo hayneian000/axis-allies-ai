@@ -190,8 +190,9 @@ Allies teams, on both maps.
   3 infantry) that must be defeated in combat before capture.
 - The America map's IPC table sums to **61** - values kept as specified.
 - Four Corners point-contacts (CO-AZ, NM-UT) are not adjacency.
-- Turn order is shuffled at game start on both maps (a free-for-all
-  adaptation), rather than following a fixed power order.
+- Turn order on the America map is shuffled at game start (a free-for-all
+  adaptation). The 1942 World scenario uses the historical power order -
+  Germany, USSR, Japan, then UK + US - and seats carry their power names.
 
 ## Roadmap
 

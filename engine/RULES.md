@@ -129,6 +129,7 @@ Sequence: 1. sea combat (if defending surface warships are present; lone subs/tr
 - One defender per sea battle.
 - Fighters moving with a fleet into a sea battle is the engine's established abstraction (phases 1–2); the launch rule is enforced for attacks launched from a zone the fighter arrived in this phase.
 - Convoy disruption (economic warfare) is not implemented.
+- Scramble and kamikaze are also absent, but for a different reason: neither is an Axis & Allies 1942 Second Edition rule. Both come from the 1940/Global games, so they are out of scope for this ruleset rather than simplifications of it.
 
 ---
 

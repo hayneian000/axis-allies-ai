@@ -6,7 +6,7 @@ import { freshGame } from '../helpers';
 /**
  * Victory Conditions
  *
- * FFA Decision (Ian, Oct 3 2026): Majority of capitals held simultaneously wins.
+ * FFA Decision (project decision, Oct 3 2026): Majority of capitals held simultaneously wins.
  * For 4 players: 3 of 4. For 3 players: 2 of 3. For 2 players: 2 of 2.
  * Map-specific victory conditions going forward.
  *
@@ -64,7 +64,7 @@ describe('victory by capitals', () => {
     const s = freshGame(4, 1);
     const pid = s.currentPlayer;
     const caps = s.players.map((p) => p.capital);
-    // Capture one, lose it, capture another — never hold 3 at once
+    // Capture one, lose it, capture another - never hold 3 at once
     const o1 = (pid + 1) % 4;
     const o2 = (pid + 2) % 4;
     s.territories[caps[o1]].owner = pid;

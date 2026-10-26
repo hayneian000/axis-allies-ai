@@ -37,7 +37,7 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 | 1942 2e Rule | Project Implementation |
 |---|---|
 | 5 powers, Axis vs Allies teams | 2–4 players, free-for-all |
-| World map, sea zones, naval units | 26-territory continental US + 3 sea zones (Pacific, Gulf, Atlantic); full 1942 2e naval roster |
+| World map, sea zones, naval units | Two maps: continental US (26 land territories + 7 sea zones) and the 1942 world board (96 land territories + 65 sea zones); full 1942 2e naval roster |
 | 6-phase turn (purchase, combat move, combat, noncombat, mobilize, income) | Same 6 phases |
 | Unit roster: inf, art, tank, fighter, bomber, AA, sub, destroyer, carrier, battleship, transport | Full roster: inf, art, tank, fighter, bomber, AA + transport, submarine, destroyer, cruiser, carrier, battleship |
 | IPC income from territories | Same, GDP-weighted (61 total) |
@@ -49,17 +49,18 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 - **Turn sequence**: Purchase → Combat Move → Combat → Noncombat Move → Mobilize → Income
 - **Combat**: Attacker/defender hit profiles per unit type, casualty selection, retreat rules
 - **Movement**: Land units move 1 (tanks 2 with blitz), air units move per type, must land safely
-- **AA fire**: Fires once per combat round at attacking air units
+- **AA fire**: Fires once per battle, before the first combat round, at attacking air units
 - **AA movement**: AA guns move ONLY in the noncombat phase (1942 2e p.30: "this is the only phase in which antiaircraft artillery units can move")
 - **Artillery support**: Boosts paired infantry attack
 - **Factory placement**: New units placed at owned factories, limited by territory IPC value
 - **Strategic bombing raids**: Bombers may raid factory territories; AA fires first; 1d6 IPC damage to victim bank
 - **Naval warfare (phase 1)**: Sea zones, transports/cargo, amphibious assaults, surface sea combat, battleship 2-hit tracking — see Naval appendix below
 
-### FFA Adaptations (Ian's decisions)
-- **Neutral territories**: Have garrisons that must be defeated before capture (blocks tank blitz). Default: 3 infantry; each map/scenario may customize via `neutralGarrison` or per-territory `neutrals`.
+### FFA Adaptations (project decisions)
+- **Neutral territories (America map)**: Have garrisons that must be defeated before capture (blocks tank blitz). Default: 3 infantry; each map/scenario may customize via `neutralGarrison` or per-territory `neutrals`.
+- **Impassable territories (1942 map)**: The board's 16 neutrals (Spain-Portugal, Sahara, Himalaya, Switzerland, Mongolia, and the rest, flagged `neutral: true` in the map data) are impassable, exactly as in 1942 2e — they are NOT garrisoned neutrals. No unit may enter, land in, fly over, or capture them; they are never owned. The engine rejects any such move with code `impassable`, air range never routes through them, and the UI never offers them as destinations.
 - **Capital capture**: Captor steals the victim's entire saved IPC bank (1942 2e p.20).
-- **Victory**: Hold a majority of capitals simultaneously (3 of 4 on the current map). Scenarios may override via `capitalsToWin`.
+- **Victory**: Hold a majority of capitals simultaneously (3 of 4 on the America map; 3 of 5 on the 1942 board). Scenarios may override via `capitalsToWin`.
 - **No allied powers**: Every other player is hostile. All "friendly power" rules are ignored — no guest fighters on carriers, no shared transports, no allied destroyers cancelling sub abilities. A destroyer hostile to a submarine always cancels its abilities.
 
 ---
@@ -69,7 +70,7 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 All citations are to the Axis & Allies 1942 Second Edition rulebook (2012).
 
 ### Sea zones
-- The US map has three sea zones — **Pacific** (west coast), **Atlantic** (east coast), **Gulf of Mexico** (south) — linked Pacific↔Gulf↔Atlantic (the Gulf link is a Panama-canal abstraction).
+- The US map has seven sea zones — **Pacific Northwest** and **California Coast** (west), **North Atlantic**, **Mid-Atlantic Waters**, and **South Atlantic** (east), **Western Gulf** and **Eastern Gulf** (south) — chained California Coast↔Western Gulf↔Eastern Gulf↔South Atlantic along the Gulf coast. The 1942 world map has 65 numbered sea zones, including the Panama and Suez canal edges (control-gated; see `docs/board-space-map.md`).
 - Sea zones are never owned, worth 0 IPCs, hold no garrisons, and are exempt from scenario coverage checks. Only sea units (and aircraft) operate in them.
 
 ### Unit profiles (p.27–30)

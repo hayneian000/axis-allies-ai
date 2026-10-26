@@ -770,26 +770,6 @@
       }
     }
   ],
-  "neutrals": {
-    "spain_portugal": null,
-    "sweden": null,
-    "switzerland": null,
-    "turkey": null,
-    "saudi_arabia": null,
-    "sahara": null,
-    "afghanistan": null,
-    "himalaya": null,
-    "mongolia": null,
-    "venezuela": null,
-    "colombia_ecuador": null,
-    "peru_argentina": null,
-    "chile": null,
-    "angola": null,
-    "mozambique": null,
-    "eire": null
-  },
-  "neutralGarrison": {
-    "infantry": 3
-  },
-  "note": "Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, Japanese = seat 2, and British + Americans are combined into seat 3 (both powers' territories and starting units belong to seat 3). capitals has one entry per seat; seat 3's entry lists both of its capitals, united_kingdom (primary) and eastern_united_states, and both are registered seat capitals in the engine. Banks: XML resourceInitialize starting PUs (Germans 41, Russians 24, Japanese 30, British 31 + Americans 42 combined into seat 3). Sea-zone holdings carry the naval starting units from the XML; land holdings cover every power-owned territory. Neutral territories use the default 3-infantry garrison."
+  "neutrals": {},
+  "note": "Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, Japanese = seat 2, and British + Americans are combined into seat 3 (both powers' territories and starting units belong to seat 3). capitals has one entry per seat; seat 3's entry lists both of its capitals, united_kingdom (primary) and eastern_united_states, and both are registered seat capitals in the engine. Banks: XML resourceInitialize starting PUs (Germans 41, Russians 24, Japanese 30, British 31 + Americans 42 combined into seat 3). Sea-zone holdings carry the naval starting units from the XML; land holdings cover every power-owned territory. The 16 neutral territories are impassable (1942 2e): they hold no garrison and can never be entered, overflown, or captured."
 }

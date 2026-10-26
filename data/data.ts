@@ -315,6 +315,18 @@ export function isLand(id: string): boolean {
   return !!byId[id] && byId[id].domain !== 'sea';
 }
 
+/**
+ * True for impassable territories: the 1942 map's 16 strict neutrals,
+ * flagged `neutral: true` in the map data. In 1942 2e they are closed to
+ * all movement — no unit may enter, land in, fly over, or capture them,
+ * and they are never owned or garrisoned. Maps without the flag (the
+ * America map, whose neutrals are ordinary garrisoned territories) have
+ * no impassable territories, so this is false for every id there.
+ */
+export function isImpassable(id: string): boolean {
+  return byId[id]?.neutral === true;
+}
+
 export function landTerritoryIds(): string[] {
   return MAP.territories.filter((t) => t.domain !== 'sea').map((t) => t.id);
 }
@@ -368,14 +380,19 @@ export function canalBetween(
   );
 }
 
-/** BFS step-distance over all territories (aircraft ignore ground ownership). */
+/** BFS step-distance over all territories (aircraft ignore ground ownership).
+ *  Impassable territories are neither destinations nor waypoints: aircraft
+ *  may not fly over them (1942 2e), so routes bend around them and an
+ *  impassable destination is unreachable (Infinity). */
 export function airDistance(from: string, to: string): number {
   if (from === to) return 0;
+  if (isImpassable(to)) return Infinity;
   const dist: Record<string, number> = { [from]: 0 };
   const queue = [from];
   while (queue.length > 0) {
     const cur = queue.shift()!;
     for (const n of neighborsOf(cur)) {
+      if (isImpassable(n)) continue;
       if (dist[n] === undefined) {
         dist[n] = dist[cur] + 1;
         if (n === to) return dist[n];
@@ -430,6 +447,7 @@ export function landPaths(
     if (stepsLeft === 0) return;
     for (const n of neighborsOf(cur)) {
       if (path.includes(n)) continue;
+      if (isImpassable(n)) continue; // impassable ground blocks land paths too
       if (!isFriendly(n) && !isEmptyEnemy(n)) continue;
       const next = [...path, n];
       paths.push(next);

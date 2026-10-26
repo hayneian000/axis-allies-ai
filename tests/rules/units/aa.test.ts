@@ -19,9 +19,9 @@ import {
 } from '../../helpers';
 
 /**
- * AA gun — 1942 2e p.10 (unit profile), p.18 (AA fire), p.25 (lone AA).
+ * AA gun - 1942 2e p.10 (unit profile), p.18 (AA fire), p.25 (lone AA).
  * Cost 5, no attack/defense values, move 1.
- * FFA decision (Ian, Oct 3 2026): real rules — AA may reposition during the
+ * FFA decision (project decision, Oct 3 2026): real rules - AA may reposition during the
  * combat phase but never fires offensively.
  */
 describe('AA profile', () => {
@@ -170,11 +170,11 @@ describe('AA movement', () => {
     expect(s.territories['montana'].units.aa).toBe(1);
   });
 
-  it('cannot move during combat movement — AA moves only in noncombat (1942 2e p.30)', () => {
+  it('cannot move during combat movement - AA moves only in noncombat (1942 2e p.30)', () => {
     // 1942 2e Noncombat Move, "Where Units Can Move": "Note, this is the
     // only phase in which antiaircraft artillery units can move."
     // Correction (Oct 4 2026): an earlier FFA decision recorded "real rules
-    // allow AA to reposition in combat movement" was wrong — the rulebook
+    // allow AA to reposition in combat movement" was wrong - the rulebook
     // explicitly bars AA movement outside noncombat.
     const s = freshGame(2, 69);
     gotoCombatMove(s);
@@ -190,7 +190,7 @@ describe('AA movement', () => {
     expect(s.territories['montana'].units.aa).toBe(0);
   });
 
-  it('cannot join an attack — AA moved with attackers is rejected as offensive', () => {
+  it('cannot join an attack - AA moved with attackers is rejected as offensive', () => {
     const s = freshGame(2, 70);
     gotoCombatMove(s);
     const pid = s.currentPlayer;

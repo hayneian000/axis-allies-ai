@@ -1,8 +1,17 @@
 {
-  "name": "ai-aaa",
+  "name": "axis-allies-ai",
   "version": "1.0.0",
-  "private": true,
+  "description": "Browser-based Axis & Allies-style strategy game with LLM AI players (BYOK). Two maps: America FFA and the 1942 world board.",
+  "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hayneian000/axis-allies-ai.git"
+  },
+  "homepage": "https://github.com/hayneian000/axis-allies-ai",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

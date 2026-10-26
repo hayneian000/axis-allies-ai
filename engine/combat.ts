@@ -2,7 +2,7 @@
  * engine/combat.ts — Battle resolution: rounds, surprise strikes, casualties, bombardment, retreat, capture.
  */
 import { CARGO_TYPES, addUnits, countAir, countLand, countSea, countUnits, describeUnits, emptyUnits, hasEnough, subUnits, undamagedBB, validCounts } from './units';
-import { capitalsOf, fail, log, logEvent, requireCurrentAlive, requirePhase, rollDie, rollHits, usedKey } from './core';
+import { capitalsOf, fail, log, logEvent, requireCurrentAlive, requirePhase, rollDie, rollHits, usedKey, victoryCitiesHeld } from './core';
 import { CARRIER_FIGHTERS, addPlayerSeaUnits, cargoOf, carrierSpare, carryCargoAlong, disembarkUnits, normalizeSeaZone, sinkTransportCargo } from './naval';
 import { NAVAL_UNIT_TYPES, UNITS, isLand, isSea, landTerritoryIds, neighborsOf } from '../data/data';
 import type { UnitType } from '../data/data';
@@ -1078,6 +1078,45 @@ function checkWinByCapitals(state: GameState): void {
       return;
     }
   }
+}
+
+
+/**
+ * Victory cities (1942 2e standard victory, rulebook p.6): a side wins by
+ * controlling 3 more victory cities than it started with (Axis 9, Allies
+ * 10), checked "at the end of a complete round of play". The FFA deals the
+ * +3 out per seat (scenario victoryCitiesToWin), and this check runs ONLY
+ * at round end, from endPhase's turn wrap: a seat that crosses its target
+ * mid-round but loses a city before the round ends does not win. Unlike
+ * the capitals check above this is not a capture-time check, so it lives
+ * here for symmetry but is called from actions.ts.
+ *
+ * Simultaneous qualifiers (possible when one seat's captures hand another
+ * seat its target in the same round): the seat holding MORE victory
+ * cities wins; still tied, the seat earlier in turn order wins.
+ * Returns true when the game ended.
+ */
+export function checkWinByVictoryCities(state: GameState): boolean {
+  const targets = state.victoryCitiesToWin;
+  if (!targets || state.phase === 'gameover' || state.winner !== null) return false;
+  const counts = state.players.map((p) => victoryCitiesHeld(state, p.id));
+  const qualified = state.players
+    .filter((p) => p.alive && counts[p.id] >= (targets[p.id] ?? Number.POSITIVE_INFINITY))
+    .map((p) => p.id);
+  if (qualified.length === 0) return false;
+  qualified.sort(
+    (a, b) => counts[b] - counts[a] || state.turnOrder.indexOf(a) - state.turnOrder.indexOf(b),
+  );
+  const winner = qualified[0];
+  state.winner = winner;
+  state.winReason = 'victory_cities';
+  state.phase = 'gameover';
+  log(
+    state,
+    'game_over',
+    `${state.players[winner].name} holds ${counts[winner]} victory cities (target ${targets[winner]}) at the end of round ${state.round} and wins!`,
+  );
+  return true;
 }
 
 

@@ -543,6 +543,16 @@ if (['Germans', 'Russians', 'Japanese', 'British', 'Americans'].every((p) => pus
   bankSource = 'board incomes (the XML has no complete resourceInitialize; seat 3 = UK 31 + US 42)';
 }
 
+// Victory-city targets (1942 2e standard victory, rulebook p.6), per seat:
+// each seat's starting victory-city count + 3. The book states side totals
+// (Axis 9 / Allies 10); the free-for-all deals the same +3 out per seat.
+const vcStart = [0, 0, 0, 0];
+for (const h of holdings) {
+  if (meta[h.territory]?.victoryCity !== undefined) vcStart[h.owner] += 1;
+}
+assert(vcStart.reduce((a, b) => a + b, 0) === 13, 'starting victory cities !== 13');
+const victoryCitiesToWin = vcStart.map((n) => n + 3);
+
 const scenarioOut = {
   players: 4,
   // One entry per seat; seat 3 rules two powers, so its entry is the pair
@@ -552,6 +562,7 @@ const scenarioOut = {
   // a majority of all five board capitals (capitalsToWin: 3).
   capitals: ['germany', 'russia', 'japan', ['united_kingdom', 'eastern_united_states']],
   capitalsToWin: 3,
+  victoryCitiesToWin,
   // Seat identity: the scenario names its seats (the powers) and plays in
   // the fixed 1942 2e power order - Germany, USSR, Japan, then the merged
   // UK + US seat. createGame uses turnOrder verbatim (no shuffle) and
@@ -570,7 +581,12 @@ const scenarioOut = {
     `capitals in the engine. Banks: ${bankSource}. ` +
     'Sea-zone holdings carry the naval starting units from the XML; land holdings cover every ' +
     'power-owned territory. The 16 neutral territories are impassable (1942 2e): they hold no ' +
-    'garrison and can never be entered, overflown, or captured.',
+    'garrison and can never be entered, overflown, or captured. ' +
+    'Victory cities: the scenario also plays the 1942 2e standard victory (rulebook p.6) in ' +
+    'per-seat form - at the end of a complete round, a seat holding 3 more victory cities than ' +
+    `it started with wins (victoryCitiesToWin per seat: Germany ${victoryCitiesToWin[0]}, ` +
+    `USSR ${victoryCitiesToWin[1]}, Japan ${victoryCitiesToWin[2]}, UK + US ${victoryCitiesToWin[3]}; ` +
+    "the book's side totals are Axis 9 / Allies 10).",
 };
 
 // --- scenario validation + totals ---

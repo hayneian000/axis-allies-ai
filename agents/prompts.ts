@@ -12,6 +12,7 @@ import {
   isSea,
   neighborsOf,
   scenarioFor,
+  victoryCityTargets,
 } from '../data/data';
 import type { PhaseGroup } from './tools';
 
@@ -72,6 +73,11 @@ function world1942Digest(): string {
     .find((s) => s.caps.length > 1);
   const impassable = MAP.territories.filter((t) => t.neutral).map((t) => t.id);
   const canals = canalList();
+  const vcTargets = victoryCityTargets(scenario, scenario.players);
+  const vcCities = MAP.territories.filter((t) => t.victoryCity);
+  const vcLine = vcTargets
+    ? `VICTORY CITIES: The board has ${vcCities.length} victory cities (${vcCities.map((t) => t.victoryCity).join(', ')}). At the END of a complete round (after the last seat's turn), a seat holding at least its victory-city target wins the game: ${names.map((n, i) => `${n} ${vcTargets[i]}`).join(', ')}. Only the round-end count matters - reaching your target mid-round and then losing a city before the round ends does not win.`
+    : null;
   const parts = [
     `You play a simplified free-for-all Axis & Allies (based on 1942 2e) on the 1942 world map: ${MAP.territories.length} territories (${land.length} land territories + ${sea.length} sea zones) on the original board artwork, with land, air, and naval forces.`,
     `OBJECTIVE: Win by holding a majority of capitals simultaneously (${toWin} of ${capitalsTotal} on this map). If 20 rounds pass with no winner, the highest-income player wins. Capturing a capital steals the victim's entire saved IPC bank.`,
@@ -91,6 +97,9 @@ function world1942Digest(): string {
       0,
       `TWO-CAPITAL SEAT: ${multi.name} rules two powers and holds two capitals (${multi.caps.join(' and ')}). Capturing either one steals that seat's entire bank, but the seat is blocked from buying and collecting income only while it holds NEITHER capital. Every other seat holds one capital.`,
     );
+  }
+  if (vcLine) {
+    parts.splice(3, 0, vcLine);
   }
   if (canals.length > 0) {
     const text = canals

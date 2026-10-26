@@ -4,7 +4,7 @@ import type { GameState, UnitCounts } from '../../engine/types';
 import { freshGame, gotoCombatMove } from '../helpers';
 
 /**
- * Phase 2: Combat Movement — 1942 2e rulebook p.12-15.
+ * Phase 2: Combat Movement - 1942 2e rulebook p.12-15.
  *
  * Rigging convention: board state is rigged BEFORE gotoCombatMove so that
  * ownedAtTurnStart (used for air landing checks) reflects the rigged board.
@@ -16,7 +16,7 @@ function setUnits(s: GameState, tid: string, units: Partial<UnitCounts>): void {
   s.territories[tid].units = { ...emptyUnits(), ...units };
 }
 
-describe('combat movement — land units (1942 2e p.12)', () => {
+describe('combat movement - land units (1942 2e p.12)', () => {
   it('infantry moves 1 territory into friendly ground', () => {
     // 1942 2e p.12: land units move 1 space during combat movement.
     const s = freshGame(2, 101);
@@ -62,7 +62,7 @@ describe('combat movement — land units (1942 2e p.12)', () => {
     // 1942 2e Noncombat Move, "Where Units Can Move": "Note, this is the
     // only phase in which antiaircraft artillery units can move."
     // Correction (Oct 4 2026): an earlier note claimed p.13 permits AA
-    // repositioning in combat movement — wrong. The rulebook explicitly
+    // repositioning in combat movement - wrong. The rulebook explicitly
     // bars AA movement outside noncombat. Engine behavior is correct.
     const s = freshGame(2, 104);
     const pid = s.currentPlayer;
@@ -76,7 +76,7 @@ describe('combat movement — land units (1942 2e p.12)', () => {
   });
 });
 
-describe('combat movement — tanks and blitz (1942 2e p.13-14)', () => {
+describe('combat movement - tanks and blitz (1942 2e p.13-14)', () => {
   it('tank moves 2 territories through friendly ground', () => {
     // 1942 2e p.13: tanks move 2 spaces.
     const s = freshGame(2, 105);
@@ -139,7 +139,7 @@ describe('combat movement — tanks and blitz (1942 2e p.13-14)', () => {
   });
 
   it('tank cannot blitz through a neutral garrison', () => {
-    // FFA decision (Ian, Oct 2026): neutrals hold 2-infantry garrisons, so they
+    // FFA decision (project decision, Oct 2026): neutrals hold 2-infantry garrisons, so they
     // are occupied and block blitzing; the garrison must be defeated first.
     const s = freshGame(2, 109);
     const pid = s.currentPlayer;
@@ -157,7 +157,7 @@ describe('combat movement — tanks and blitz (1942 2e p.13-14)', () => {
   });
 });
 
-describe('combat movement — air units (1942 2e p.13)', () => {
+describe('combat movement - air units (1942 2e p.13)', () => {
   it('fighter attacks within range 4 with a legal landing spot', () => {
     // 1942 2e p.13: fighters move 4; air units must be able to land safely.
     const s = freshGame(2, 110);
@@ -227,7 +227,7 @@ describe('combat movement — air units (1942 2e p.13)', () => {
   });
 });
 
-describe('combat movement — declaring combat (1942 2e p.14-15)', () => {
+describe('combat movement - declaring combat (1942 2e p.14-15)', () => {
   it('entering hostile or neutral ground opens battles', () => {
     // 1942 2e p.14: moving units into a hostile space is an attack.
     // FFA decision: neutrals hold 2-inf garrisons and must be fought.

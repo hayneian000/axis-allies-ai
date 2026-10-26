@@ -1,4 +1,4 @@
-# Comprehensive Rules Test Plan — Axis & Allies AI
+# Comprehensive Rules Test Plan - Axis & Allies AI
 
 **Source:** Axis & Allies 1942 Second Edition Rulebook + FAQ/Errata  
 **Scope:** Project-adapted rules (land/air only, FFA, US map)  
@@ -12,27 +12,27 @@ Game logic lives in `engine/` (pure functions, no DOM). UI lives in `ui/` (rende
 
 ```
 engine/
-  engine.ts    — All game logic, pure functions
-  types.ts     — GameState, UnitCounts, ActionResult, etc.
-  RULES.md     — Canonical sources (already exists)
+  engine.ts    - All game logic, pure functions
+  types.ts     - GameState, UnitCounts, ActionResult, etc.
+  RULES.md     - Canonical sources (already exists)
 
 tests/
-  rules/                    — NEW: rulebook-driven tests
-    setup.test.ts           — Game creation, initial state
-    purchase.test.ts        — Phase 1 (consolidate existing)
-    combat-move.test.ts     — Phase 2 movement validation
-    combat.test.ts          — Phase 3 resolution (consolidate existing)
-    noncombat.test.ts       — Phase 4
-    mobilize.test.ts        — Phase 5
-    income.test.ts          — Phase 6
-    victory.test.ts         — Win conditions
+  rules/                    - NEW: rulebook-driven tests
+    setup.test.ts           - Game creation, initial state
+    purchase.test.ts        - Phase 1 (consolidate existing)
+    combat-move.test.ts     - Phase 2 movement validation
+    combat.test.ts          - Phase 3 resolution (consolidate existing)
+    noncombat.test.ts       - Phase 4
+    mobilize.test.ts        - Phase 5
+    income.test.ts          - Phase 6
+    victory.test.ts         - Win conditions
     units/
-      infantry.test.ts      — Unit-specific rules
-      artillery.test.ts     — Support, pairing
-      tank.test.ts          — Blitz, movement
-      fighter.test.ts       — Air movement, landing
-      bomber.test.ts        — Air movement, landing, SBR (N/A)
-      aa.test.ts            — AA fire timing, limits
+      infantry.test.ts      - Unit-specific rules
+      artillery.test.ts     - Support, pairing
+      tank.test.ts          - Blitz, movement
+      fighter.test.ts       - Air movement, landing
+      bomber.test.ts        - Air movement, landing, SBR (N/A)
+      aa.test.ts            - AA fire timing, limits
 ```
 
 Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into this structure with rulebook citations added.
@@ -49,7 +49,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 | Tank | 6 | 3 | 3 | 2 |
 | Fighter | 10 | 3 | 4 | 4 |
 | Bomber | 12 | 4 | 1 | 6 |
-| AA Gun | 5 | — | — | 1 |
+| AA Gun | 5 | - | - | 1 |
 
 ### Tests
 - [ ] Each unit costs correct IPCs (all 6 types)
@@ -78,7 +78,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - Fighter: 4 territories
 - Bomber: 6 territories
 
-### Tests — Land Units
+### Tests - Land Units
 - [ ] Infantry moves 1 into friendly territory
 - [ ] Infantry moves 1 into hostile territory (combat)
 - [ ] Infantry cannot move 2
@@ -90,10 +90,10 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] Tank blitz: first territory must be unoccupied (no combat)
 - [ ] Tank cannot blitz through occupied hostile territory
 - [ ] Tank cannot blitz through friendly-neutral? (define: unowned = hostile for FFA)
-- [ ] Units cannot move through impassable (none on US map, but test the check)
+- [x] Units cannot move through impassable (1942 map's 16 impassable neutrals; tests/impassable.test.ts)
 - [ ] Cannot move out of territory after combat declared there? (units committed)
 
-### Tests — Air Units
+### Tests - Air Units
 - [ ] Fighter moves up to 4
 - [ ] Bomber moves up to 6
 - [ ] Fighter cannot move 5
@@ -101,24 +101,24 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] Legal landing: friendly territory (not newly captured this turn)
 - [ ] Illegal: no landing spot → move rejected
 - [ ] Air can fly over hostile territories (no AA fire during movement, only in combat)
-- [ ] Air can participate in multiple? No — one combat per turn
+- [ ] Air can participate in multiple? No - one combat per turn
 - [ ] Fighter with 1 move left must be able to land
 
-### Tests — Combat Declaration
+### Tests - Combat Declaration
 - [ ] Moving into hostile territory declares combat (adds to openBattles)
 - [ ] Moving into friendly territory does not declare combat
 - [ ] Moving into neutral territory declares combat vs 2-inf garrison
 - [ ] Neutral garrison must be fully defeated before capture
-- [ ] Tank cannot blitz through neutral (garrison blocks — occupied)
+- [ ] Tank cannot blitz through neutral (garrison blocks - occupied)
 - [ ] Multiple attackers to same territory (combined combat)
 - [ ] Attacker can choose order of combat resolution
 - [ ] Cannot combat move after combat phase begins (phase enforcement)
 
 ### Edge Cases
-- [ ] Tank blitz into territory with only AA (AA doesn't block blitz? — lone AA removed)
+- [ ] Tank blitz into territory with only AA (AA doesn't block blitz? - lone AA removed)
 - [ ] Air unit with exactly enough movement to reach and land (boundary)
 - [ ] Air unit one short of landing (rejected)
-- [ ] Circular movement (A→B→A) — allowed? (should be, if movement permits)
+- [ ] Circular movement (A→B→A) - allowed? (should be, if movement permits)
 - [ ] Moving all units out of capital (legal, but risky)
 - [ ] Combat move from multiple origins to single target
 
@@ -136,7 +136,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 7. Attacker may retreat (to adjacent friendly territory)
 8. Repeat until one side eliminated or attacker retreats
 
-### Tests — AA Fire
+### Tests - AA Fire
 - [ ] AA fires only if attacker has air units
 - [ ] AA fires only in first round of combat
 - [ ] Each AA fires up to 3 shots (one per attacking air unit, max 3)
@@ -147,7 +147,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] AA with no air attacker: does not fire
 - [ ] Lone AA (no other defending units): removed without combat if territory attacked
 
-### Tests — Hit Profiles
+### Tests - Hit Profiles
 - [ ] Infantry attacks on 1, defends on 2
 - [ ] Artillery attacks on 2, defends on 2
 - [ ] Tank attacks on 3, defends on 3
@@ -158,24 +158,24 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] Two artillery, one infantry: infantry boosted (excess artillery attacks normally)
 - [ ] Artillery with no infantry: attacks at 2 (no penalty)
 
-### Tests — Casualty Selection
+### Tests - Casualty Selection
 - [ ] Attacker chooses own casualties (via chooseCasualties)
 - [ ] Defender chooses own casualties
 - [ ] Cannot select more casualties than hits
 - [ ] Cannot select units not present
 - [ ] AA can be taken as casualty (defender's choice, but usually last)
-- [ ] autoCasualties follows sensible priority (cheapest first? — document the policy)
+- [ ] autoCasualties follows sensible priority (cheapest first? - document the policy)
 
-### Tests — Retreat
+### Tests - Retreat
 - [ ] Attacker may retreat after any full combat round
 - [ ] Attacker cannot retreat before first round completes
 - [ ] Retreat to adjacent friendly territory (not hostile, not newly captured)
-- [ ] All attacking units retreat together (or can split? — 1942 2e: all retreat to same territory)
-- [ ] Cannot retreat from amphibious assault (seaborne units cannot retreat — RULES.md)
+- [ ] All attacking units retreat together (or can split? - 1942 2e: all retreat to same territory)
+- [ ] Cannot retreat from amphibious assault (seaborne units cannot retreat - RULES.md)
 - [ ] Defender cannot retreat
 - [ ] Retreat with air units: air can retreat to different landing spot?
 
-### Tests — Combat Resolution
+### Tests - Combat Resolution
 - [ ] Attacker wins: territory captured, surviving units remain
 - [ ] Defender wins: territory held, attacker eliminated or retreated
 - [ ] Mutual annihilation: territory becomes unowned? (or defender holds with 0 units?)
@@ -189,8 +189,8 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] All air attack vs AA + ground
 - [ ] Bomber alone vs infantry (bomber defends at 1)
 - [ ] Fighter defends at 4 (best defender)
-- [ ] Zero-round combat (attacker retreats immediately? — not allowed, must complete round 1)
-- [ ] Combat with 0 attacking units (should not happen — validation)
+- [ ] Zero-round combat (attacker retreats immediately? - not allowed, must complete round 1)
+- [ ] Combat with 0 attacking units (should not happen - validation)
 
 ---
 
@@ -203,13 +203,13 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] Air units must land (if not already)
 - [ ] Air units can move full allowance in noncombat
 - [ ] AA can move in noncombat
-- [ ] Units that fought cannot move (already used movement? — 1942 2e: units that moved in combat cannot move again)
+- [ ] Units that fought cannot move (already used movement? - 1942 2e: units that moved in combat cannot move again)
 - [ ] Units that did not move in combat can move now
 
 ### Edge Cases
 - [ ] Stranded air: fighter that cannot reach friendly territory → destroyed
 - [ ] Bomber with no landing → destroyed
-- [ ] Air unit lands in territory that was captured this turn? (1942 2e: NO — must be friendly at turn start)
+- [ ] Air unit lands in territory that was captured this turn? (1942 2e: NO - must be friendly at turn start)
 - [ ] Moving into territory vacated by combat move
 
 ---
@@ -224,7 +224,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] Can place at original factory (capital)
 - [ ] Can split placement across multiple factories
 - [ ] AA can be placed at factory
-- [ ] Unplaced units: lost? (1942 2e: must place or lose — test the rule)
+- [ ] Unplaced units: lost? (1942 2e: must place or lose - test the rule)
 
 ### Edge Cases
 - [ ] Factory territory with IPC 1: only 1 unit per turn
@@ -241,7 +241,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - [ ] IPCs added to player's total
 - [ ] Saved IPCs carry over
 - [ ] Capturing capital: steal ALL enemy IPCs (full steal per 1942 2e)
-- [ ] Losing capital: cannot collect income? (1942 2e: still collect, but can't purchase? — verify)
+- [ ] Losing capital: cannot collect income? (1942 2e: still collect, but can't purchase? - verify)
 - [ ] Liberating capital: restore?
 
 ### Victory Check
@@ -276,7 +276,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 
 ---
 
-## FFA-Specific Rules (Project Decisions — Locked Oct 3 2026)
+## FFA-Specific Rules (Project Decisions - Locked Oct 3 2026)
 
 - **No teams:** Every other player is hostile.
 - **Neutral garrisons:** Each neutral territory defends with 2 infantry. Must be
@@ -284,7 +284,7 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 - **Capital IPC theft:** Full steal (1942 2e). Attacker takes all saved IPCs.
 - **Victory:** Majority of capitals held simultaneously (3/4 on current map).
   Map-specific victory conditions going forward.
-- **AA movement:** Per 1942 2e — can reposition in combat phase, never fires offensively.
+- **AA movement:** Per 1942 2e - can reposition in combat phase, never fires offensively.
 - **Turn order:** Fixed rotation, no bidding.
 - **Diplomacy/chat** has no mechanical effect (Phase 2 requirement).
 
@@ -316,10 +316,10 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
 
 ---
 
-## Open Questions — RESOLVED (Ian, Oct 3 2026)
+## Open Questions - RESOLVED (project decisions, Oct 3 2026)
 
 1. **Neutral garrisons**: ~~Do neutral territories defend? If so, with what?~~  
-   **Decision:** Yes — neutrals are well defended. Each neutral territory has a
+   **Decision:** Yes - neutrals are well defended. Each neutral territory has a
    2-infantry garrison that must be defeated in combat before capture.
    Blitzing through neutrals is not allowed (they are occupied).
 
@@ -333,9 +333,9 @@ Existing tests (`combat.test.ts`, `economy.test.ts`, etc.) get **migrated** into
    map-specific going forward.
 
 4. **AA movement**: ~~Can AA move in combat phase? (1942 2e: yes, but cannot fire offensively)~~  
-   **Decision:** Follow real rules — AA can reposition during combat movement
+   **Decision:** Follow real rules - AA can reposition during combat movement
    but never fires offensively.
 
 5. **Tank blitz through neutrals**: ~~Allowed if unoccupied?~~  
-   **Decision:** Moot — neutrals have garrisons (see #1), so they are occupied
+   **Decision:** Moot - neutrals have garrisons (see #1), so they are occupied
    and block blitzing. Tanks must defeat the garrison first.

@@ -1056,7 +1056,7 @@ export function resolveCapture(
 
 
 function checkWinByCapitals(state: GameState): void {
-  // FFA Decision (Ian, Oct 3 2026): Majority of capitals held simultaneously wins.
+  // FFA project decision (Oct 3 2026): Majority of capitals held simultaneously wins.
   // For 4 players: 3 of 4. Scenario/map may override via capitalsToWin.
   // The count runs over the union of all seats' capitals — on the 1942
   // board that is five capitals (seat 3 owns two of them), so a majority

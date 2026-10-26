@@ -9,7 +9,7 @@ import {
 import { freshGame } from '../helpers';
 
 /**
- * FFA Decisions (Ian, Oct 3-4 2026):
+ * FFA Decisions (project decisions, Oct 3-4 2026):
  * - Neutral territories have 3-infantry garrisons by default (map-configurable
  *   via scenario neutralGarrison / per-territory neutrals); must be defeated
  * - Full IPC steal on capital capture (1942 2e)
@@ -35,7 +35,7 @@ describe('neutral territories', () => {
       ([, t]) => t.owner === null,
     )?.[0]!;
     
-    // Try to move in — should declare combat, not auto-capture
+    // Try to move in - should declare combat, not auto-capture
     const myTerr = Object.entries(s.territories).find(
       ([, t]) => t.owner === pid && t.units.infantry > 0,
     )?.[0];

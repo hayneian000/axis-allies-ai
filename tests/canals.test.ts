@@ -206,12 +206,17 @@ describe('canals do not affect land or air movement', () => {
   });
 
   it('land attacks beside the canal are unaffected', () => {
+    // Target East Mexico, Central America's other land neighbor
+    // (Colombia-Ecuador is impassable in 1942 2e, so it can never be a
+    // land target — see tests/impassable.test.ts).
     s.territories.central_america.units.infantry = 2;
+    s.territories.east_mexico.owner = 0;
+    s.territories.east_mexico.units.infantry = 1;
     turn(3, 'combatMove');
     const r = combatMove(s, 3, [
-      { from: 'central_america', to: 'colombia_ecuador', units: { infantry: 1 } },
+      { from: 'central_america', to: 'east_mexico', units: { infantry: 1 } },
     ]);
     expect(r.ok, r.error).toBe(true);
-    expect(s.battles.some((b) => b.territoryId === 'colombia_ecuador' && !b.over)).toBe(true);
+    expect(s.battles.some((b) => b.territoryId === 'east_mexico' && !b.over)).toBe(true);
   });
 });

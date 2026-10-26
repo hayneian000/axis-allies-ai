@@ -4,7 +4,7 @@
 import { CARGO_TYPES, addUnits, countAir, countLand, countSea, countUnits, describeUnits, emptyUnits, hasEnough, subUnits, undamagedBB, validCounts } from './units';
 import { capitalsOf, fail, log, logEvent, requireCurrentAlive, requirePhase, rollDie, rollHits, usedKey, victoryCitiesHeld } from './core';
 import { CARRIER_FIGHTERS, addPlayerSeaUnits, cargoOf, carrierSpare, carryCargoAlong, disembarkUnits, normalizeSeaZone, sinkTransportCargo } from './naval';
-import { NAVAL_UNIT_TYPES, UNITS, isLand, isSea, landTerritoryIds, neighborsOf } from '../data/data';
+import { NAVAL_UNIT_TYPES, UNITS, ipcOf, isLand, isSea, landTerritoryIds, neighborsOf } from '../data/data';
 import type { UnitType } from '../data/data';
 import type { ActionResult, Battle, CombatRoundResult, GameState, UnitCounts } from './types';
 
@@ -310,14 +310,22 @@ export function resolveCombatRound(
         rolls.push(d);
         damage += d;
       }
-      const victim = b.defenderId;
-      if (victim !== null) {
-        state.players[victim].ipcs = Math.max(0, state.players[victim].ipcs - damage);
-      }
+      // 1942 2e p.14: the rolled total becomes damage markers on the
+      // target's industrial complex, NOT IPCs from the victim's bank. A
+      // complex cannot carry more total damage than twice the IPC value
+      // of its territory; any excess damage is not applied. Each marker
+      // cuts the complex's mobilization capacity by one (p.21) until the
+      // owner repairs it during a Purchase phase (p.10).
+      const terr = state.territories[territoryId];
+      const cap = 2 * ipcOf(territoryId);
+      const before = terr.factoryDamage ?? 0;
+      const applied = Math.min(damage, Math.max(0, cap - before));
+      terr.factoryDamage = before + applied;
       b.sbrStruck = true;
       b.over = true;
       b.result = 'sbr_done';
-      logEvent(state, 'sbr', `${state.players[playerId].name} bombs ${territoryId} for ${damage} IPC damage (${rolls.join(',')}).`, {
+      const truncated = applied < damage ? ` (${damage - applied} excess lost at the damage cap)` : '';
+      logEvent(state, 'sbr', `${state.players[playerId].name} bombs ${territoryId} for ${damage} damage (${rolls.join(',')}): factory damage now ${terr.factoryDamage} of cap ${cap}${truncated}.`, {
         side: 'attack',
         dice: rolls,
         hits: damage,

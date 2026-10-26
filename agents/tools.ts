@@ -11,6 +11,7 @@ import {
   mobilize,
   nonCombatMove,
   purchase,
+  repair,
   resolveCombatRound,
   retreat,
   sendMessage,
@@ -69,13 +70,32 @@ export const TOOLS: Record<string, ToolDefinition> = {
     },
   },
 
+  repair: {
+    name: 'repair',
+    description:
+      'Remove damage markers from one of YOUR factory territories during your purchase phase, ' +
+      'paying 1 IPC per marker (partial repairs allowed). Damage comes from enemy bombing raids: ' +
+      'each marker cuts that factory\'s mobilization capacity by one (damage never reduces income). ' +
+      'Call this at most once per damaged factory per turn - points beyond the remaining damage are rejected.',
+    parameters: {
+      type: 'object',
+      properties: {
+        territory_id: { type: 'string', description: 'Your factory territory to repair.' },
+        points: { type: 'integer', minimum: 1, description: 'Damage markers to remove (1 IPC each).' },
+      },
+      required: ['territory_id', 'points'],
+      additionalProperties: false,
+    },
+  },
+
   combat_move: {
     name: 'combat_move',
     description:
       'Move units into hostile or neutral territories to start battles (and blitz through ' +
       'empty enemy territories with tanks). Each move: from/to territory, units to send. ' +
       'Tanks may pass through one extra territory via `via`. Bombers may instead run a ' +
-      'strategic bombing raid on a factory territory with `sbr: true` (AA fires first, 1d6 IPC damage).',
+      'strategic bombing raid on a factory territory with `sbr: true` (AA fires first; each ' +
+      'surviving bomber rolls 1d6 damage markers onto the factory, capping its production).',
     parameters: {
       type: 'object',
       properties: {
@@ -184,7 +204,8 @@ export const TOOLS: Record<string, ToolDefinition> = {
     name: 'mobilize',
     description:
       'Place units purchased this turn at your factories (capacity per factory = its ' +
-      'territory IPC value; factories built or captured this turn produce from next turn). ' +
+      'territory IPC value minus any damage markers on it; factories built or captured ' +
+      'this turn produce from next turn). ' +
       'Optionally build a purchased factory in an owned territory with IPC 2+ and no factory.',
     parameters: {
       type: 'object',
@@ -284,6 +305,8 @@ export function phaseForTool(name: string): Phase | null {
   switch (name) {
     case 'purchase':
       return 'purchase';
+    case 'repair':
+      return 'purchase';
     case 'combat_move':
       return 'combatMove';
     case 'non_combat_move':
@@ -315,7 +338,7 @@ export function toolsForPhase(phase: Phase): ToolDefinition[] {
   const pick = (names: string[]): ToolDefinition[] => names.map((n) => TOOLS[n]);
   switch (phase) {
     case 'purchase':
-      return pick(['purchase', 'end_phase']);
+      return pick(['purchase', 'repair', 'end_phase']);
     case 'combatMove':
       return pick(['combat_move', 'end_phase']);
     case 'combat':
@@ -381,6 +404,11 @@ export function dispatchTool(
       const items = coercePurchaseItems(args.items);
       if (items === null) return badArgs('purchase.items must be an array of {type, count}');
       return purchase(state, playerId, items);
+    }
+    case 'repair': {
+      if (!isStr(args.territory_id)) return badArgs('repair.territory_id must be a string');
+      if (typeof args.points !== 'number') return badArgs('repair.points must be a number');
+      return repair(state, playerId, args.territory_id, args.points);
     }
     case 'combat_move': {
       const moves = coerceMoves<CombatMove>(args.moves, (m) => ({

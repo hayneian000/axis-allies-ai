@@ -89,7 +89,7 @@ describe('agent prompt isolation', () => {
     expect(text1).toContain('PRIVATE-FOR-PLAYER-1-ONLY');
 
     // Phase-appropriate tools were offered.
-    expect(mock0.received[0].tools.map((t) => t.name)).toEqual(['purchase', 'end_phase']);
+    expect(mock0.received[0].tools.map((t) => t.name)).toEqual(['purchase', 'repair', 'end_phase']);
   });
 
   it('histories are not reference-shared between agents', async () => {

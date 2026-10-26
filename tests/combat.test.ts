@@ -10,6 +10,7 @@ import {
   retreat,
   serialize,
 } from '../engine/engine';
+import { ipcOf } from '../data/data';
 import { freshGame, gotoCombat, gotoCombatMove, resolveAllAuto, resolveBattleAuto } from './helpers';
 
 describe('combat rounds', () => {
@@ -206,7 +207,7 @@ describe('combat rounds', () => {
     }
   });
 
-  it('runs a strategic bombing raid: AA first, then 1d6 bank damage', () => {
+  it('runs a strategic bombing raid: AA first, then damage markers on the factory', () => {
     const s = freshGame(2, 59);
     gotoCombatMove(s);
     const pid = s.currentPlayer;
@@ -242,7 +243,13 @@ describe('combat rounds', () => {
     expect(last.combat!.result).toBe('sbr_done');
     const victim = s.territories[target].owner;
     if (victim !== null && last.combat!.sbrDamage !== undefined) {
-      expect(s.players[victim].ipcs).toBe(Math.max(0, bankBefore - last.combat!.sbrDamage));
+      // Factory damage (1942 2e p.14): the rolled damage lands on the
+      // target factory as damage markers (total capped at twice the
+      // territory's IPC value); the victim's bank is NOT touched.
+      expect(s.players[victim].ipcs).toBe(bankBefore);
+      expect(s.territories[target].factoryDamage).toBe(
+        Math.min(last.combat!.sbrDamage, 2 * ipcOf(target)),
+      );
     }
     void foeCap;
   });

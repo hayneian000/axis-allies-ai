@@ -84,11 +84,21 @@ function cheapestUnitCost(): number {
 /**
  * Purchase: the only legal non-empty purchase needs the capital held and a
  * bank that covers the cheapest unit. (Engine: `no_capital` / `funds`.)
+ * Repair is also a purchase-phase action: 1 IPC removes one damage marker
+ * from your own factory, and unlike unit purchases it stays legal while
+ * your capital is enemy-held, so a damaged factory plus 1 IPC in the bank
+ * is always "has actions".
  */
 export function purchaseAffordance(state: GameState, pid: number): Affordance {
   if (!alive(state, pid)) return no('player not alive');
-  if (!ownsCapital(state, pid)) return no('capital enemy-held: the engine rejects any purchase');
   const bank = state.players[pid].ipcs;
+  const hasDamagedFactory = Object.values(state.territories).some(
+    (t) => t.owner === pid && t.factory && (t.factoryDamage ?? 0) > 0,
+  );
+  if (hasDamagedFactory && bank >= 1) {
+    return yes('damaged factory can be repaired (1 IPC per damage marker)');
+  }
+  if (!ownsCapital(state, pid)) return no('capital enemy-held: the engine rejects any purchase');
   const cheapest = cheapestUnitCost();
   if (bank < cheapest) return no(`bank ${bank} IPCs < cheapest unit (${cheapest})`);
   return yes();

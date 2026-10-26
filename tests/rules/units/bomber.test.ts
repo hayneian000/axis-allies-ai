@@ -7,7 +7,7 @@ import {
   resolveCombatRound,
   openBattles,
 } from '../../../engine/engine';
-import { UNITS, airDistance, neighborsOf } from '../../../data/data';
+import { UNITS, airDistance, ipcOf, neighborsOf } from '../../../data/data';
 import { freshGame, gotoCombat, gotoCombatMove } from '../../helpers';
 
 /**
@@ -176,8 +176,9 @@ describe('strategic bombing raids (1942 2e p.16-17)', () => {
     expect(r.code).toBe('sbr_no_factory');
   });
 
-  it('SBR deals 1d6 damage to the victim bank (1942 2e p.17)', () => {
-    // 1942 2e p.17: each bomber rolls one die; the victim loses that many IPCs.
+  it('SBR places 1d6 damage markers on the factory, bank untouched (1942 2e p.14)', () => {
+    // 1942 2e p.14: each surviving bomber rolls one die; the total becomes
+    // damage markers on the industrial complex. No IPCs leave the bank.
     const s = freshGame(2, 50);
     gotoCombatMove(s);
     const pid = s.currentPlayer;
@@ -211,10 +212,14 @@ describe('strategic bombing raids (1942 2e p.16-17)', () => {
     expect(last.combat!.over).toBe(true);
     expect(last.combat!.result).toBe('sbr_done');
     if (last.combat!.sbrDamage !== undefined) {
-      // Damage is 1d6, bank floored at 0.
+      // Rolled damage is 1d6; it lands on the factory as markers (capped
+      // at twice the territory's IPC value) and the bank is untouched.
       expect(last.combat!.sbrDamage).toBeGreaterThanOrEqual(1);
       expect(last.combat!.sbrDamage).toBeLessThanOrEqual(6);
-      expect(s.players[victim].ipcs).toBe(Math.max(0, bankBefore - last.combat!.sbrDamage));
+      expect(s.players[victim].ipcs).toBe(bankBefore);
+      expect(s.territories[target].factoryDamage).toBe(
+        Math.min(last.combat!.sbrDamage, 2 * ipcOf(target)),
+      );
     }
   });
 

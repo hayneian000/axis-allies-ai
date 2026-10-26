@@ -6,7 +6,7 @@ import type { Phase } from '../../engine/types';
 import { dispatchTool, TOOL_NAMES, TOOLS, toolsForPhase } from '../../agents/tools';
 
 const EXPECTED: Record<Phase, string[]> = {
-  purchase: ['purchase', 'end_phase'],
+  purchase: ['purchase', 'repair', 'end_phase'],
   combatMove: ['combat_move', 'end_phase'],
   combat: ['resolve_combat_round', 'auto_casualties', 'retreat', 'end_phase'],
   nonCombat: ['non_combat_move', 'end_phase'],
@@ -15,10 +15,11 @@ const EXPECTED: Record<Phase, string[]> = {
 };
 
 describe('TOOLS definitions', () => {
-  it('has all ten canonical tool names', () => {
+  it('has all eleven canonical tool names', () => {
     expect(TOOL_NAMES.sort()).toEqual(
       [
         'purchase',
+        'repair',
         'combat_move',
         'resolve_combat_round',
         'auto_casualties',

@@ -24,6 +24,7 @@ import {
   ownsCapital,
   PLAYER_COLORS,
   purchase,
+  repair,
   resolveCombatRound,
   retreat,
   sendMessage,
@@ -1701,6 +1702,15 @@ function renderInspector(s: GameState): void {
     ? 'Impassable (1942 2e): no units may enter, land here, or fly over.'
     : `Units here: ${describeUnits(t.units)}`;
   el.appendChild(units);
+  if (t.factory && (t.factoryDamage ?? 0) > 0) {
+    const dmgLine = document.createElement('div');
+    dmgLine.className = 'insp-units';
+    dmgLine.textContent =
+      `Factory damaged: ${t.factoryDamage} (mobilization capacity ` +
+      `${Math.max(0, ipcOf(sel) - t.factoryDamage)} of ${ipcOf(sel)}). ` +
+      `Repair costs 1 IPC per damage point during the owner's Purchase step.`;
+    el.appendChild(dmgLine);
+  }
   const cargo = cargoSummary(s, sel);
   if (cargo) {
     const c = document.createElement('div');
@@ -2105,11 +2115,21 @@ function mobilizeInspector(s: GameState, el: HTMLElement, tid: string): void {
     return;
   }
   if (usable) {
-    // Cap steppers by pool and by remaining capacity after staged placements.
+    // Cap steppers by pool and by remaining capacity after staged
+    // placements. Capacity is effective capacity: territory IPC minus
+    // factory damage markers (1942 2e p.21).
     const staged = draftMob
       .filter((d) => d.territory === tid)
       .reduce((sum, d) => sum + countUnits({ ...emptyUnits(), ...d.units }), 0);
-    const capLeft = Math.max(0, ipcOf(tid) - staged);
+    const effCapTotal = Math.max(0, ipcOf(tid) - (t.factoryDamage ?? 0));
+    const capLeft = Math.max(0, effCapTotal - staged);
+    if ((t.factoryDamage ?? 0) > 0) {
+      const dmgNote = document.createElement('p');
+      dmgNote.textContent =
+        `Factory damaged: ${t.factoryDamage} (mobilization capacity ` +
+        `${effCapTotal} of ${ipcOf(tid)}).`;
+      el.appendChild(dmgNote);
+    }
     const grid = document.createElement('div');
     grid.className = 'stepgrid';
     for (const u of UNIT_ORDER) {
@@ -2228,6 +2248,45 @@ function purchasePanel(s: GameState, el: HTMLElement): void {
   const pool = document.createElement('p');
   pool.textContent = `To deploy: ${entries.map(([t, n]) => `${n}x${t}`).join(', ') || 'nothing yet'}.`;
   el.appendChild(pool);
+  // Factory repair (1942 2e p.10): during this phase the owner may remove
+  // damage markers from their own factories at 1 IPC per marker. Offered
+  // even while the capital is enemy-held - the engine allows repairs then.
+  const damaged = Object.keys(s.territories).filter(
+    (tid) =>
+      s.territories[tid].owner === pid &&
+      s.territories[tid].factory &&
+      (s.territories[tid].factoryDamage ?? 0) > 0,
+  );
+  for (const tid of damaged) {
+    const dt = s.territories[tid];
+    const dmg = dt.factoryDamage;
+    const effCap = Math.max(0, ipcOf(tid) - dmg);
+    const info = document.createElement('p');
+    info.textContent =
+      `${DISPLAY_NAME[tid] ?? tid} factory damaged: ${dmg} ` +
+      `(mobilization capacity ${effCap} of ${ipcOf(tid)}).`;
+    el.appendChild(info);
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.min = '1';
+    inp.max = String(Math.min(dmg, bank));
+    inp.value = String(Math.min(dmg, Math.max(bank, 1)));
+    inp.id = `repair-${tid}`;
+    inp.className = 'tinynum';
+    const btn = document.createElement('button');
+    btn.textContent = 'Repair damage (1 IPC each)';
+    btn.disabled = bank < 1;
+    btn.addEventListener('click', () => {
+      const points = parseInt(inp.value, 10) || 0;
+      const r = repair(S!, pid, tid, points);
+      if (!r.ok) showError(`${r.code}: ${r.error}`);
+      else showError('');
+      render();
+    });
+    const wrap = document.createElement('div');
+    wrap.append(inp, btn);
+    el.appendChild(wrap);
+  }
   if (!ownsCapital(s, pid)) {
     const p = document.createElement('p');
     p.textContent = 'Your capital is enemy-held: no purchases, no income. End the phase.';
@@ -2597,7 +2656,10 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
     if (c.sbrDamage !== undefined) {
       const p = document.createElement('div');
       p.className = 'sbrhit';
-      p.textContent = `💥 Bombing raid: ${c.sbrDamage} IPC damage`;
+      const dmgNow = s.territories[tid].factoryDamage ?? 0;
+      p.textContent =
+        `💥 Bombing raid: ${c.sbrDamage} damage rolled - factory damage ` +
+        `now ${dmgNow} (capacity ${Math.max(0, ipcOf(tid) - dmgNow)} of ${ipcOf(tid)})`;
       dice.appendChild(p);
     } else {
       show('Attack', c.attackRolls, c.attackHits);

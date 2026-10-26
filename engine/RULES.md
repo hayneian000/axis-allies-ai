@@ -43,7 +43,7 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 | IPC income from territories | Same, GDP-weighted (61 total) |
 | Victory: 9/10 victory cities | Two win paths on the 1942 board: majority of capitals held simultaneously (immediate, scenario-overridable via capitalsToWin), or the book's victory cities in per-seat form (starting count + 3, checked at the end of a complete round, via victoryCitiesToWin). America map: capitals only. Either board: highest income at 20-round cap |
 | Research & technology | Omitted (not in 1942 2e base rules either) |
-| Strategic bombing raids | Included: bombers may raid factory territories, AA fires first, 1d6 IPC damage |
+| Strategic bombing raids | Included, book behavior: bombers raid factory territories, AA fires first, each surviving bomber rolls 1d6 and the total becomes damage markers on the factory (cap: twice the territory IPC value; each marker cuts mobilization capacity by one; the owner repairs at 1 IPC per marker during their Purchase phase). No IPCs are taken from the victim's bank |
 
 ### Rules We Follow Exactly
 - **Turn sequence**: Purchase → Combat Move → Combat → Noncombat Move → Mobilize → Income
@@ -53,7 +53,7 @@ This is a **simplified, free-for-all** adaptation, not a full 1942 2e simulation
 - **AA movement**: AA guns move ONLY in the noncombat phase (1942 2e p.30: "this is the only phase in which antiaircraft artillery units can move")
 - **Artillery support**: Boosts paired infantry attack
 - **Factory placement**: New units placed at owned factories, limited by territory IPC value
-- **Strategic bombing raids**: Bombers may raid factory territories; AA fires first; 1d6 IPC damage to victim bank
+- **Strategic bombing raids**: Bombers may raid factory territories; AA fires first; each surviving bomber rolls one die and the total is placed on the industrial complex as damage markers (1942 2e p.14). A complex cannot carry more total damage than twice the IPC value of its territory; excess damage is not applied. Each marker means one less unit can be mobilized at that complex (capacity = territory IPC value minus damage, minimum 0; p.21) - damage never reduces income. The controlling player may remove markers during their Purchase Units phase at 1 IPC per marker, partial repairs allowed, effective immediately (p.10). Damage markers stay on a complex when its territory is captured (p.18); the new owner can use the complex from their next turn and repair it during their own Purchase phases. Newly built factories start undamaged
 - **Naval warfare (phase 1)**: Sea zones, transports/cargo, amphibious assaults, surface sea combat, battleship 2-hit tracking — see Naval appendix below
 
 ### FFA Adaptations (project decisions)

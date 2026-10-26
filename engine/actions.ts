@@ -5,7 +5,7 @@ import { AIR_UNIT_TYPES, CARGO_TYPES, LAND_UNIT_TYPES, addUnits, countAir, count
 import { DEFAULT_TURN_CAP, PLAYER_COLORS, fail, incomeOf, log, openBattles, ownedTerritories, ownsCapital, requireCurrentAlive, requirePhase, shuffle, usedKey } from './core';
 import { CARRIER_FIGHTERS, addPlayerSeaUnits, arriveSeaZone, canalBlockFailure, canalEdgeOpen, cargoOf, carrierSpare, carryCargoAlong, consolidateDefender, destroyCargo, disembarkUnits, embarkUnits, findDestroyerIntercept, hasHostileDestroyer, hasSurfaceWarships, landingOptions, movePower, normalizeSeaZone, playerCarrierForce, playerSeaForce, removeSeaUnits, seaZoneForces, seaZoneHostileTo } from './naval';
 import { resolveCapture } from './combat';
-import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, NATION_COLORS_1942, SEAT_NATION_1942, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
+import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, NATION_COLORS_1942, SEAT_NATION_1942, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isImpassable, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef } from '../data/data';
 import type { UnitType } from '../data/data';
 import type { ActionResult, CombatMove, GameState, MobilizePlacement, NonCombatMove, PurchaseItem, TerritoryState, UnitCounts } from './types';
 
@@ -122,14 +122,17 @@ export function createGame(opts: CreateGameOptions): GameState {
     };
     covered.add(h.territory);
   }
-  // Neutral garrison default (Ian, Oct 4 2026): 3 infantry unless the
-  // scenario specifies otherwise, per-territory or via neutralGarrison.
+  // Neutral garrison default (project decision, Oct 4 2026): 3 infantry
+  // unless the scenario specifies otherwise, per-territory or via
+  // neutralGarrison. Impassable territories (the 1942 map's flagged
+  // neutrals) are skipped: they are never garrisoned (1942 2e).
   const defaultGarrison: Partial<Record<UnitType, number>> =
     scenario.neutralGarrison ?? { infantry: 3 };
   for (const [tid, units] of Object.entries(scenario.neutrals)) {
     const def = territoryDef(tid);
     if (!def) throw new Error(`Scenario references unknown territory "${tid}".`);
     if (def.domain === 'sea') throw new Error(`Scenario neutral "${tid}" is a sea zone.`);
+    if (isImpassable(tid)) continue;
     const u = emptyUnits();
     const garrison = units ?? defaultGarrison;
     for (const [type, n] of Object.entries(garrison)) {
@@ -139,6 +142,14 @@ export function createGame(opts: CreateGameOptions): GameState {
       u[type as UnitType] = n as number;
     }
     state.territories[tid] = { owner: null, units: u, factory: false, factoryFresh: false, cargo: [] };
+    covered.add(tid);
+  }
+  // Impassable territories (1942 map only): never owned, never garrisoned,
+  // never entered. They still get a state entry (owner null, no units) so
+  // rendering, income, and coverage treat every land territory uniformly.
+  for (const tid of landTerritoryIds()) {
+    if (!isImpassable(tid) || covered.has(tid)) continue;
+    state.territories[tid] = { owner: null, units: emptyUnits(), factory: false, factoryFresh: false, cargo: [] };
     covered.add(tid);
   }
   // Sea zones are never owned via land holdings, never garrisoned, and
@@ -591,6 +602,11 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
     if (countUnits({ ...emptyUnits(), ...move.units }) === 0) {
       return fail('empty_move', 'Each move must move at least one unit.');
     }
+    // Impassable territory (1942 2e): no entering, no attacking, no
+    // amphibious offload — for any leg, land, air, or sea.
+    if (isImpassable(move.to)) {
+      return fail('impassable', `${move.to} is impassable: no unit may enter, land in, or attack it (1942 2e).`);
+    }
 
     // Any leg at sea takes the naval path (fleet movement, sea attack, embark/disembark).
     if (isSea(move.from) || isSea(move.to)) {
@@ -691,6 +707,9 @@ export function combatMove(state: GameState, playerId: number, moves: CombatMove
         const [mid] = via;
         if (!areAdjacent(move.from, mid) || !areAdjacent(mid, move.to)) {
           return fail('blitz_path', 'The via territory must connect origin to target.');
+        }
+        if (isImpassable(mid)) {
+          return fail('impassable', `Tanks cannot blitz through impassable ${mid} (1942 2e).`);
         }
         const midOwner = work[mid].owner;
         if (midOwner !== playerId) {
@@ -1128,6 +1147,11 @@ export function nonCombatMove(state: GameState, playerId: number, moves: NonComb
     if (countUnits({ ...emptyUnits(), ...move.units }) === 0) {
       return fail('empty_move', 'Each move must move at least one unit.');
     }
+    // Impassable territory (1942 2e): non-combat movement may not enter
+    // or land in it either — it is closed to all movement.
+    if (isImpassable(move.to)) {
+      return fail('impassable', `${move.to} is impassable: no unit may enter or land in it (1942 2e).`);
+    }
     // Naval legs (any side at sea) take the naval path — except aircraft
     // landing from a sea battle, which use the normal air rules below.
     const fromSea = isSea(move.from);
@@ -1253,6 +1277,9 @@ export function mobilize(state: GameState, playerId: number, placements: Mobiliz
 
   for (const p of placements) {
     if (!territoryDef(p.territory)) return fail('unknown_territory', `Unknown territory "${p.territory}".`);
+    if (isImpassable(p.territory)) {
+      return fail('impassable', `${p.territory} is impassable: nothing can be mobilized there (1942 2e).`);
+    }
     if (state.territories[p.territory].owner !== playerId) {
       return fail('not_owner', `You do not hold ${p.territory}.`);
     }

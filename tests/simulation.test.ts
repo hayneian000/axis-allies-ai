@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { UNITS, airDistance, ipcOf, isSea, neighborsOf, setActiveMap } from '../data/data';
+import { UNITS, airDistance, ipcOf, isImpassable, isSea, neighborsOf, setActiveMap } from '../data/data';
 import {
   autoCasualties,
+  carrierSpare,
   combatMove,
   countLand,
   countUnits,
@@ -63,6 +64,7 @@ function landTarget(s: GameState, pid: number, from: string): string | null {
   let bestScore = Infinity;
   for (const n of neighborsOf(from)) {
     if (isSea(n)) continue; // phase-1 bot runs no naval operations
+    if (isImpassable(n)) continue; // impassable ground can never be attacked
     const t = s.territories[n];
     if (t.owner === pid) continue;
     const score = countUnits(t.units) * 10 - ipcOf(n);
@@ -133,6 +135,7 @@ function botCombatMove(s: GameState, pid: number, rng: () => number, stats: BotS
       const maxDist = Math.floor(UNITS[air].move / 2);
       const targets = neighborsOf(from)
         .filter((t) => !isSea(t)) // phase-1 bot runs no naval operations
+        .filter((t) => !isImpassable(t))
         .filter((t) => s.territories[t].owner !== pid)
         .filter((t) => airDistance(from, t) <= maxDist)
         .filter((t) => landing.some((l) => airDistance(t, l) <= UNITS[air].move - airDistance(from, t)));
@@ -188,10 +191,15 @@ function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
   // Land every aircraft on the nearest legal landing spot.
   const landing = s.ownedAtTurnStart.filter((t) => s.territories[t]?.owner === pid);
   const moves: Array<{ from: string; to: string; units: Partial<UnitCounts> }> = [];
-  const nearest = (from: string): string | null => {
+  // Nearest LEGAL landing spot (mirrors the engine's landingOptions):
+  // land held since turn start — plus, for fighters only, a sea zone with
+  // spare carrier capacity. Bombers can never land at sea, and a sea zone
+  // without a carrier is not a landing spot at all.
+  const nearest = (from: string, air: 'fighter' | 'bomber'): string | null => {
     let best: string | null = null;
     let bestD = Infinity;
     for (const l of landing) {
+      if (isSea(l) && (air === 'bomber' || carrierSpare(s.territories, l, pid) <= 0)) continue;
       const d = airDistance(from, l);
       if (d < bestD) {
         bestD = d;
@@ -204,7 +212,7 @@ function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
   for (const b of s.battles) {
     for (const air of ['fighter', 'bomber'] as const) {
       if (b.attack[air] > 0) {
-        const dest = nearest(b.territoryId);
+        const dest = nearest(b.territoryId, air);
         if (dest && airDistance(b.territoryId, dest) <= UNITS[air].move) {
           moves.push({ from: b.territoryId, to: dest, units: { [air]: b.attack[air] } as Partial<UnitCounts> });
         } else {
@@ -219,7 +227,7 @@ function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
     for (const air of ['fighter', 'bomber'] as const) {
       const n = s.territories[t].units[air];
       if (n > 0) {
-        const dest = nearest(t);
+        const dest = nearest(t, air);
         if (dest && airDistance(t, dest) <= UNITS[air].move) {
           moves.push({ from: t, to: dest, units: { [air]: n } as Partial<UnitCounts> });
         } else {

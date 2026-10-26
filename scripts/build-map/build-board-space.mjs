@@ -517,11 +517,14 @@ for (const id of metaIds) {
   }
 }
 
-const neutrals = {};
-for (const id of metaIds) {
-  if (meta[id].domain === 'land' && xmlOwnerById.get(id) === 'Neutral') neutrals[id] = null;
-}
-assert(Object.keys(neutrals).length === 16, `scenario neutrals ${Object.keys(neutrals).length} !== 16`);
+// The board's 16 neutrals are IMPASSABLE in 1942 2e: they are not
+// garrisoned neutrals, so the scenario's `neutrals` dict stays empty.
+// The engine reads their `neutral: true` flag in map-1942.json and keeps
+// them empty, unowned, and closed to all movement (see isImpassable).
+const impassableIds = metaIds.filter(
+  (id) => meta[id].domain === 'land' && xmlOwnerById.get(id) === 'Neutral',
+);
+assert(impassableIds.length === 16, `impassable neutrals ${impassableIds.length} !== 16`);
 
 // Banks: XML resourceInitialize starting PUs when present (seat 3 combines
 // British + Americans), else board incomes.
@@ -551,8 +554,7 @@ const scenarioOut = {
   capitalsToWin: 3,
   banks,
   holdings,
-  neutrals,
-  neutralGarrison: { infantry: 3 },
+  neutrals: {},
   note:
     'Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. ' +
     'The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, ' +
@@ -561,7 +563,8 @@ const scenarioOut = {
     'its capitals, united_kingdom (primary) and eastern_united_states, and both are registered seat ' +
     `capitals in the engine. Banks: ${bankSource}. ` +
     'Sea-zone holdings carry the naval starting units from the XML; land holdings cover every ' +
-    'power-owned territory. Neutral territories use the default 3-infantry garrison.',
+    'power-owned territory. The 16 neutral territories are impassable (1942 2e): they hold no ' +
+    'garrison and can never be entered, overflown, or captured.',
 };
 
 // --- scenario validation + totals ---
@@ -589,7 +592,7 @@ console.log(
 console.log(`  OVERRIDES used: ${overridesUsed.size > 0 ? [...overridesUsed].map((n) => `"${n}" -> ${OVERRIDES[n]}`).join(', ') : '(none)'}`);
 console.log(`  map: 96 land + 65 sea, IPC ussr 24 / germany 41 / uk 31 / japan 30 / us 42, 5 capitals, 13 VCs, 16 neutrals`);
 console.log(`  wrap pairs (${wrapPairs.length}): ${wrapPairs.map((p) => p.join(' <-> ')).join('; ')}`);
-console.log(`  scenario: ${holdings.length} holdings (${landHoldings} land + ${seaHoldings.length} sea), 16 neutrals (null = default garrison)`);
+console.log(`  scenario: ${holdings.length} holdings (${landHoldings} land + ${seaHoldings.length} sea), 16 impassable neutrals (no garrison, scenario neutrals empty)`);
 console.log(`  units per seat: [${unitsPerSeat.join(', ')}], factories per seat: [${factoriesPerSeat.join(', ')}]`);
 console.log(`  banks: [${banks.join(', ')}] from ${bankSource}`);
 console.log(`  oddities: ${oddities.length > 0 ? oddities.join(' | ') : '(none)'}`);

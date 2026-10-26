@@ -8,6 +8,7 @@ import {
   createGame,
   emptyUnits,
   endPhase,
+  landingOptions,
   mobilize,
   nonCombatMove,
   openBattles,
@@ -185,13 +186,19 @@ function botCombat(s: GameState, pid: number): void {
 }
 
 function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
-  // Land every aircraft on the nearest legal landing spot.
-  const landing = s.ownedAtTurnStart.filter((t) => s.territories[t]?.owner === pid);
+  // Land every aircraft on the nearest legal landing spot. Legal spots are
+  // the engine's own landingOptions (turn-start owned land, plus sea zones
+  // with spare friendly carrier capacity for fighters); bombers can only
+  // use the land spots - the raw ownedAtTurnStart list also names sea
+  // zones, and sending a bomber to one is an engine rejection.
+  const fighterSpots = landingOptions(s, pid);
+  const landSpots = fighterSpots.filter((t) => !isSea(t));
   const moves: Array<{ from: string; to: string; units: Partial<UnitCounts> }> = [];
-  const nearest = (from: string): string | null => {
+  const nearest = (from: string, air: 'fighter' | 'bomber'): string | null => {
+    const spots = air === 'bomber' ? landSpots : fighterSpots;
     let best: string | null = null;
     let bestD = Infinity;
-    for (const l of landing) {
+    for (const l of spots) {
       const d = airDistance(from, l);
       if (d < bestD) {
         bestD = d;
@@ -204,7 +211,7 @@ function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
   for (const b of s.battles) {
     for (const air of ['fighter', 'bomber'] as const) {
       if (b.attack[air] > 0) {
-        const dest = nearest(b.territoryId);
+        const dest = nearest(b.territoryId, air);
         if (dest && airDistance(b.territoryId, dest) <= UNITS[air].move) {
           moves.push({ from: b.territoryId, to: dest, units: { [air]: b.attack[air] } as Partial<UnitCounts> });
         } else {
@@ -215,11 +222,11 @@ function botNonCombat(s: GameState, pid: number, stats: BotStats): void {
   }
   // Air sitting on newly captured (non-landing) ground.
   for (const t of ownedTerritories(s, pid)) {
-    if (landing.includes(t)) continue;
+    if (landSpots.includes(t)) continue;
     for (const air of ['fighter', 'bomber'] as const) {
       const n = s.territories[t].units[air];
       if (n > 0) {
-        const dest = nearest(t);
+        const dest = nearest(t, air);
         if (dest && airDistance(t, dest) <= UNITS[air].move) {
           moves.push({ from: t, to: dest, units: { [air]: n } as Partial<UnitCounts> });
         } else {

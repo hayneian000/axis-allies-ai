@@ -38,6 +38,18 @@ describe('save/load map restore', () => {
     expect(serialize(restored)).toBe(json);
   });
 
+  it('round-trips 1942 power names and the fixed turn order', () => {
+    setActiveMap('world1942');
+    const s = createGame({ numPlayers: 4, seed: 7 });
+    const json = serialize(s);
+    setActiveMap('america');
+    const restored = deserialize(json);
+    expect(restored.players.map((p) => p.name)).toEqual(['Germany', 'USSR', 'Japan', 'UK + US']);
+    expect(restored.turnOrder).toEqual([0, 1, 2, 3]);
+    expect(restored.currentPlayer).toBe(0);
+    expect(serialize(restored)).toBe(json);
+  });
+
   it('infers the map for a legacy save without a mapId field', () => {
     setActiveMap('world1942');
     const data = JSON.parse(serialize(createGame({ numPlayers: 4, seed: 7 })));

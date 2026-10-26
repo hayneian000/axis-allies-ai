@@ -552,6 +552,12 @@ const scenarioOut = {
   // a majority of all five board capitals (capitalsToWin: 3).
   capitals: ['germany', 'russia', 'japan', ['united_kingdom', 'eastern_united_states']],
   capitalsToWin: 3,
+  // Seat identity: the scenario names its seats (the powers) and plays in
+  // the fixed 1942 2e power order - Germany, USSR, Japan, then the merged
+  // UK + US seat. createGame uses turnOrder verbatim (no shuffle) and
+  // seatNames as the default player names.
+  seatNames: ['Germany', 'USSR', 'Japan', 'UK + US'],
+  turnOrder: [0, 1, 2, 3],
   banks,
   holdings,
   neutrals: {},

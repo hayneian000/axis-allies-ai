@@ -6,6 +6,7 @@ import { buildSeats, validateSeats, type LobbySeatInput } from '../agents/lobby'
 import { PROVIDERS, listModels, defaultModel } from '../agents/providers/index';
 import { keyStore } from '../agents/keys';
 import type { ProviderId } from '../agents/types';
+import { seatNamesForMap, type MapId } from '../data/data';
 import { startAiGame } from './aiGame';
 
 export type AiMode = 'hotseat' | 'vsai' | 'aivai';
@@ -28,6 +29,32 @@ const DEFAULT_NAMES: Record<ProviderId, string> = {
 
 let seats: SeatUiState[] = [];
 
+/** Map chosen on the setup screen (tracked here because setActiveMap only
+ *  happens at Commence; the lobby needs it earlier for seat defaults). */
+let lobbyMap: MapId = 'america';
+
+/** The default display name for a seat. A scenario that names its seats
+ *  (1942: the powers) wins over the generic defaults, so an untouched
+ *  lobby starts a 1942 game with Germany / USSR / Japan / UK + US at the
+ *  table. Anything the user types replaces the default and sticks. */
+function defaultName(i: number, kind: 'human' | 'ai', provider?: ProviderId): string {
+  const named = seatNamesForMap(lobbyMap)?.[i];
+  if (named) return named;
+  if (kind === 'ai') return DEFAULT_NAMES[provider ?? 'anthropic'];
+  return `Player ${i + 1}`;
+}
+
+/** True while a seat still carries any default name (generic, provider, or
+ *  scenario power name) - i.e. the user has not renamed it. Only such
+ *  seats are renamed by provider or map switches. */
+function isDefaultName(name: string, i: number): boolean {
+  return (
+    name === `Player ${i + 1}` ||
+    Object.values(DEFAULT_NAMES).includes(name) ||
+    (seatNamesForMap('world1942')?.includes(name) ?? false)
+  );
+}
+
 function el(tag: string, cls = '', text = ''): HTMLElement {
   const d = document.createElement(tag);
   if (cls) d.className = cls;
@@ -42,13 +69,13 @@ function activePlayerCount(): number {
 
 function defaultSeat(i: number, n: number): SeatUiState {
   const aiDefault = mode === 'aivai' || (mode === 'vsai' && i > 0);
-  if (!aiDefault) return { kind: 'human', name: `Player ${i + 1}` };
+  if (!aiDefault) return { kind: 'human', name: defaultName(i, 'human') };
   const provider: ProviderId = 'anthropic';
   return {
     kind: 'ai',
     provider,
     model: defaultModel(provider),
-    name: DEFAULT_NAMES[provider],
+    name: defaultName(i, 'ai', provider),
   };
 }
 
@@ -75,10 +102,12 @@ function refreshModels(card: HTMLElement, seat: SeatUiState): void {
   }
   seat.model = defaultModel(seat.provider);
   modelSel.value = seat.model;
-  // A provider switch renames the seat only while it still has the old default.
-  const prevDefault = Object.values(DEFAULT_NAMES).includes(seat.name);
-  if (prevDefault) {
-    seat.name = DEFAULT_NAMES[seat.provider];
+  // A provider switch renames the seat only while it still has a default
+  // name (on the 1942 map the default is the power name, which the switch
+  // therefore leaves alone).
+  const i = seats.indexOf(seat);
+  if (i >= 0 && isDefaultName(seat.name, i)) {
+    seat.name = defaultName(i, 'ai', seat.provider);
     const nameInput = card.querySelector<HTMLInputElement>('.seat-name');
     if (nameInput) nameInput.value = seat.name;
   }
@@ -109,7 +138,7 @@ function seatCard(i: number, seat: SeatUiState): HTMLElement {
   nameInput.maxLength = 24;
   nameInput.setAttribute('aria-label', `Seat ${i + 1} name`);
   nameInput.addEventListener('input', () => {
-    seat.name = nameInput.value.trim() || `Player ${i + 1}`;
+    seat.name = nameInput.value.trim() || defaultName(i, seat.kind, seat.provider);
   });
   const kindToggle = el('div', 'kind-toggle');
   const humanBtn = document.createElement('button');
@@ -129,7 +158,7 @@ function seatCard(i: number, seat: SeatUiState): HTMLElement {
     if (kind === 'ai' && !seat.provider) {
       seat.provider = 'anthropic';
       seat.model = defaultModel(seat.provider);
-      seat.name = DEFAULT_NAMES[seat.provider];
+      seat.name = defaultName(i, 'ai', seat.provider);
       nameInput.value = seat.name;
       refreshModels(card, seat);
     }
@@ -323,6 +352,18 @@ export function initAiLobby(): void {
   });
   document.querySelectorAll<HTMLButtonElement>('.dogtag').forEach((t) => {
     t.addEventListener('click', () => renderSeatCards());
+  });
+  // Map folios: seat defaults follow the chosen map (1942 names its seats
+  // for the powers). Seats the user renamed keep their names.
+  document.querySelectorAll<HTMLButtonElement>('.map-folio[data-map]').forEach((f) => {
+    f.addEventListener('click', () => {
+      if (f.disabled) return;
+      lobbyMap = (f.dataset.map as MapId | undefined) ?? 'america';
+      seats.forEach((seat, i) => {
+        if (isDefaultName(seat.name, i)) seat.name = defaultName(i, seat.kind, seat.provider);
+      });
+      renderSeatCards();
+    });
   });
   syncLobbyVisibility();
 }

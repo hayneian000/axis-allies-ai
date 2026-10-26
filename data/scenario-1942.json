@@ -10,6 +10,18 @@
     ]
   ],
   "capitalsToWin": 3,
+  "seatNames": [
+    "Germany",
+    "USSR",
+    "Japan",
+    "UK + US"
+  ],
+  "turnOrder": [
+    0,
+    1,
+    2,
+    3
+  ],
   "banks": [
     41,
     24,

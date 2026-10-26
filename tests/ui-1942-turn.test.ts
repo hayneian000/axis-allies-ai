@@ -2,9 +2,11 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import indexHtml from '../ui/index.html?raw';
 
-// Full-turn UI replay on the 1942 board-space map (seed 7, Japan first),
-// mirroring the real-browser click-through. Regression coverage for two
-// playability fixes:
+// Full-turn UI replay on the 1942 board-space map (seed 7), mirroring the
+// real-browser click-through. The 1942 scenario plays in the fixed 1942 2e
+// power order, so Germany and the USSR move before Japan: the replay
+// passes both seats (no purchases or moves) and then plays Japan's full
+// turn exactly as before. Regression coverage for two playability fixes:
 //  - aircraft left aloft over a finished LAND battle can be landed from
 //    that territory's move dialog (previously no stepper existed, so the
 //    phase panel's "land this air" instruction could not be followed);
@@ -39,6 +41,13 @@ function clickButtonContaining(substr: string, root: ParentNode = document): voi
 
 function banner(): string {
   return el('banner').textContent ?? '';
+}
+
+/** End every phase of the current seat's turn without acting: purchase,
+ * combatMove, combat, nonCombat, mobilize - the fifth click collects
+ * income and hands over to the next seat's purchase. */
+function passTurn(): void {
+  for (let k = 0; k < 5; k++) el('endPhaseBtn').click();
 }
 
 function clickTerr(tid: string): void {
@@ -95,10 +104,21 @@ beforeAll(async () => {
   el<HTMLButtonElement>('startBtn').click();
 });
 
-describe('1942 UI full turn (seed 7, Japan)', () => {
+describe('1942 UI full turn (seed 7, fixed order: Germany, USSR, Japan)', () => {
   it('purchases, attacks on land and sea, and resolves both battles', () => {
     expect(el('game').hidden).toBe(false);
-    expect(banner()).toContain('Player 3');
+    // Fixed order: Germany opens, named for its power, bank = 1942 setup.
+    expect(banner()).toContain('Germany');
+    expect(banner()).toContain('phase: purchase');
+    expect(banner()).toContain('bank 41 IPCs');
+    expect(el('log').textContent).toContain('Turn order: Germany, USSR, Japan, UK + US');
+
+    // Pass Germany and the USSR through their turns untouched.
+    passTurn();
+    expect(banner()).toContain('USSR');
+    expect(banner()).toContain('bank 24 IPCs');
+    passTurn();
+    expect(banner()).toContain('Japan');
     expect(banner()).toContain('phase: purchase');
     expect(banner()).toContain('bank 30 IPCs');
 
@@ -133,8 +153,8 @@ describe('1942 UI full turn (seed 7, Japan)', () => {
     expect(el('modal').hidden).toBe(false); // battle dialog auto-opens
     resolveBattles();
     expect(el('error').textContent).toBe('');
-    // Anhwei captured from Player 4 (log line), sz53 held.
-    expect(el('log').textContent).toContain('Player 3 captures anhwei');
+    // Anhwei captured from UK + US (log line), sz53 held.
+    expect(el('log').textContent).toContain('Japan captures anhwei');
     el('modal-close').click();
   });
 
@@ -182,9 +202,10 @@ describe('1942 UI full turn (seed 7, Japan)', () => {
     expect(sz62Title).toContain('1dd');
 
     el('endPhaseBtn').click();
-    expect(banner()).toContain('Player 2');
+    // Fixed order: after Japan comes the merged UK + US seat (bank 73).
+    expect(banner()).toContain('UK + US');
     expect(banner()).toContain('phase: purchase');
-    expect(banner()).toContain('bank 24 IPCs');
-    expect(el('log').textContent).toContain('Player 3 collects 31 IPCs');
+    expect(banner()).toContain('bank 73 IPCs');
+    expect(el('log').textContent).toContain('Japan collects 31 IPCs');
   });
 });

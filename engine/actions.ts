@@ -43,6 +43,7 @@ export function createGame(opts: CreateGameOptions): GameState {
     ownedAtTurnStart: [],
     turnStartFactories: [],
     used: {},
+    mobilizedThisPhase: {},
     battles: [],
     nextBattleId: 1,
     turnCap: DEFAULT_TURN_CAP,
@@ -1409,8 +1410,13 @@ export function mobilize(state: GameState, playerId: number, placements: Mobiliz
       // occupants become coexisting foreigners.
     }
   }
+  // Capacity is cumulative across the whole mobilize phase: units placed
+  // by earlier mobilize calls this phase (state.mobilizedThisPhase) count
+  // against the same per-turn limit, so splitting placements into several
+  // calls cannot exceed a complex's capacity (1942 2e p.21).
   for (const [terr, n] of Object.entries(need)) {
-    if (n > (caps[terr] ?? 0)) {
+    const alreadyPlaced = state.mobilizedThisPhase?.[terr] ?? 0;
+    if (n + alreadyPlaced > (caps[terr] ?? 0)) {
       const dmg = state.territories[terr].factoryDamage ?? 0;
       if (dmg > 0) {
         return fail(
@@ -1458,6 +1464,14 @@ export function mobilize(state: GameState, playerId: number, placements: Mobiliz
     state.territories[terr].factoryFresh = true;
   }
   state.purchased = pool;
+  // Commit point passed: record this call's placements against the
+  // phase's running totals (rejected calls above never reach here, so a
+  // failed mobilize leaves the tracker untouched).
+  const phaseTotals: Record<string, number> = { ...(state.mobilizedThisPhase ?? {}) };
+  for (const [terr, n] of Object.entries(need)) {
+    phaseTotals[terr] = (phaseTotals[terr] ?? 0) + n;
+  }
+  state.mobilizedThisPhase = phaseTotals;
   const placedDesc = placements
     .map((p) => `${describeUnits({ ...emptyUnits(), ...p.units })}${p.buildFactory ? '+factory' : ''} @${p.territory}`)
     .join(', ');
@@ -1556,6 +1570,9 @@ export function endPhase(state: GameState, playerId: number): ActionResult {
       }
       state.battles = [];
       if (lost > 0) log(state, 'stranded', `${lost} aircraft had no legal landing and are lost.`);
+      // Entering a fresh mobilize phase: no placements recorded yet, so
+      // each complex's full per-turn capacity is available again.
+      state.mobilizedThisPhase = {};
       state.phase = 'mobilize';
       log(state, 'phase', `${me.name} ends non-combat movement. Mobilize purchased units.`);
       return { ok: true };

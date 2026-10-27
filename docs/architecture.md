@@ -23,7 +23,10 @@ replays a game exactly. `events` is append-only (every action and dice roll);
 Key per-turn bookkeeping: `ownedAtTurnStart` (aircraft landing rule),
 `turnStartFactories` (mobilize capacity = territory IPC, new/captured factories
 excluded), `used` (units that moved/attacked and may not move again, except
-landing aircraft), `battles` (open + finished this turn).
+landing aircraft), `mobilizedThisPhase` (units already placed this mobilize
+phase per factory, so the per-turn cap holds across split mobilize calls;
+reset when the mobilize phase is entered), `battles` (open + finished this
+turn).
 
 ## Action API (also the Phase 2 tool set)
 
@@ -37,7 +40,7 @@ landing aircraft), `battles` (open + finished this turn).
 | `autoCasualties(tid, side)` | combat | Policy: infantry → artillery → tank → fighter → bomber. Phase 2 uses this to skip choice. |
 | `retreat(tid, toId)` | combat | Attacker only, after ≥1 round, land to one origin. Air stays to land later. |
 | `nonCombatMove(moves)` | nonCombat | Friendly ground only; air must end on turn-start ground. |
-| `mobilize(placements)` | mobilize | Per-factory caps = territory IPC minus factory damage markers (SBR, 1942 2e p.14/p.21); new factories need IPC ≥ 2 ground. Unplaced purchases are forfeited. |
+| `mobilize(placements)` | mobilize | Per-factory caps = territory IPC minus factory damage markers (SBR, 1942 2e p.14/p.21), enforced cumulatively across all calls in the phase (`mobilizedThisPhase`); new factories need IPC ≥ 2 ground. Unplaced purchases are forfeited. |
 | `endPhase()` | any | purchase → combatMove → combat → nonCombat (stranded air destroyed) → mobilize → income + next player (or turn-cap ending). |
 | `sendMessage(from, to, text)` | any | Appends to `chatLog` + event. |
 | `summarizeState(pid)` | — | <800-word board brief for LLM prompts. |

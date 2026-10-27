@@ -177,6 +177,14 @@ export function deserialize(json: string): GameState {
   if (data.victoryCitiesToWin === undefined) {
     data.victoryCitiesToWin = victoryCityTargets(scenarioFor(data.numPlayers), data.numPlayers);
   }
+  // Saves from before cumulative mobilize-capacity tracking lack the
+  // per-phase placement counts; start clean. A legacy save made
+  // mid-mobilize-phase therefore treats units already placed this phase
+  // as unplaced - the same accepted migration edge as the backfills
+  // above (their units are on the board; only the count is forgotten).
+  if (typeof data.mobilizedThisPhase !== 'object' || data.mobilizedThisPhase === null) {
+    data.mobilizedThisPhase = {};
+  }
   // Saves from before navy phase 1 lack the naval battle fields.
   for (const b of data.battles) {
     if (b.bombardDone === undefined) b.bombardDone = false;

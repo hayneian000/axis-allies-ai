@@ -243,6 +243,15 @@ export interface GameState {
    *  complete round; absent in saves from before this win path existed
    *  (deserialize restores it from the scenario). */
   victoryCitiesToWin?: number[] | null;
+  /** Units already mobilized this mobilize phase, keyed by the producing
+   *  factory territory (sea-zone placements count against their factory,
+   *  via the same attribution as mobilize's capacity check). Production
+   *  capacity is enforced against this running total, so split mobilize
+   *  calls within one phase cannot exceed a complex's per-turn limit
+   *  (1942 2e p.21). Reset when a turn's mobilize phase is entered.
+   *  Absent in saves from before cumulative tracking (deserialize
+   *  restores {}). */
+  mobilizedThisPhase?: Record<string, number>;
   winner: number | null;
   winReason: string | null;
   events: GameEvent[];

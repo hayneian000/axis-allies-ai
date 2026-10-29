@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { UNITS, airDistance, ipcOf, isImpassable, isSea, neighborsOf, setActiveMap } from '../data/data';
+import { beforeAll,  describe, expect, it  } from 'vitest';
+import { UNITS, airDistance, ipcOf, isImpassable, isSea, neighborsOf, ensureMapLoaded, setActiveMap } from '../data/data';
 import {
   autoCasualties,
   carrierSpare,
@@ -341,6 +341,12 @@ export function playBotGame(seed: number, numPlayers: number, maxRounds = 60): {
   }
   return { state, stats };
 }
+
+// Code-split data: the 1942 map loads on demand, so preload it once
+// per file; the sync setActiveMap calls below then work as before.
+beforeAll(async () => {
+  await ensureMapLoaded('world1942');
+});
 
 describe('headless simulation on the 1942 board-space map', () => {
   it('plays at least 3 full rounds with all 4 seats (seed 7)', () => {

@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it } from 'vitest';
+import { beforeAll,  afterEach, describe, expect, it  } from 'vitest';
 import { countUnits, createGame, playerSeaForce, seaZoneForces } from '../engine/engine';
-import { scenarioFor, seaZoneIds, setActiveMap } from '../data/data';
+import { scenarioFor, seaZoneIds, ensureMapLoaded, setActiveMap } from '../data/data';
 
 /**
  * Sea-zone starting holdings (1942 scenario): createGame must place the
@@ -13,6 +13,12 @@ import { scenarioFor, seaZoneIds, setActiveMap } from '../data/data';
 
 afterEach(() => {
   setActiveMap('america');
+});
+
+// Code-split data: the 1942 map loads on demand, so preload it once
+// per file; the sync setActiveMap calls below then work as before.
+beforeAll(async () => {
+  await ensureMapLoaded('world1942');
 });
 
 describe('createGame with the world1942 map active', () => {

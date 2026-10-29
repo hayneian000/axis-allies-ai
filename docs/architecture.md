@@ -20,6 +20,44 @@ version-checked). Seeded RNG lives in `state.rngState` (mulberry32), so a seed
 replays a game exactly. `events` is append-only (every action and dice roll);
 `chatLog` carries `{ sender, recipients, text, round }` for Phase 2.
 
+## Saves and autosave
+
+Save format is version 3 and unchanged by this feature: `serialize` is
+`JSON.stringify(state)`, and `deserialize` backfills fields older saves
+lack (cargo, factory damage, victory-city targets, mobilize counts) and
+normalizes a missing or malformed `aiSeats` field to undefined (all-human)
+instead of failing the load. `GameState.aiSeats` is the full seat table
+(human seats as kind 'human' entries, AI seats as kind 'ai' with provider
+and model), recorded by `createGame` when the caller passes seats; it is
+what makes a loaded AI game resume as an AI game. Seat configs carry no
+key material - keys live only in `agents/keys.ts` - so no serialized save
+(manual or autosave) can contain an API key, and `deserialize` rebuilds
+seat entries through a pick list that drops any other field.
+
+`ui/autosave.ts` stores `{ savedAt, save }` under `aaa.autosave`, where
+`save` is `serialize(state)` output (no second save format). The hook is
+`recordGameState(state)`: it writes after every successful state-mutating
+action (hot-seat handlers in `ui/main.ts`, driver `onPhase` /
+successful `onToolCall` / diplomacy events in `ui/aiGame.ts`) and clears
+on `gameover`; a finished game has nothing to resume. The setup screen
+reads it through `peekAutosave()` (round + map for the Resume label) and
+offers Resume/Discard; a corrupt record returns null, hides the buttons,
+and is cleared, never a crash.
+
+Resume semantics (`ui/aiGame.ts resumeAiGame`, `agents/driver.ts`
+`opts.resume`): the saved state drives the game directly - no intro, no
+`createGame`. `deriveRuntimeSeats` (pure, in `agents/lobby.ts`) turns the
+saved table into session seats, downgrading AI seats with an unknown
+provider or no saved key to human for this session only; the downgrade is
+never written back, and a visible notice goes to the activity feed, the
+spectator header, the error bar, and a persistent panel banner. The
+driver runs the current turn phase-aware (it skips, never re-ends, the
+phases already passed) and skips the current round's diplomacy window,
+which already ran before the save. Not persisted: AI conversation history
+(a resumed seat starts fresh and sees the full board brief) and diplomacy
+token budgets (the driver-side ledger restarts for the current round).
+Undo/redo is out of scope.
+
 Key per-turn bookkeeping: `ownedAtTurnStart` (aircraft landing rule),
 `turnStartFactories` (mobilize capacity = territory IPC, new/captured factories
 excluded), `used` (units that moved/attacked and may not move again, except

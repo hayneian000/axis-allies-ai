@@ -245,6 +245,14 @@ function skipReason(state: GameState, pid: number, phase: TurnPhase): string {
  * Execute one phase group (assault or consolidate) for an AI seat.
  * `live` is the subset of the group's phases with legal actions; the rest
  * are ended directly with an onPhaseSkipped event and no LLM call.
+ *
+ * `startFrom` resumes a group mid-flight: phases before it are neither
+ * executed nor ended (they already happened before the save) and emit no
+ * events. Without it, entering a group at combatMove would endPhase the
+ * already-passed purchase phase - which the engine reads as ending the
+ * live combatMove phase instead. A finished game (phase 'gameover', e.g.
+ * a capital win during combat) also stops the group instead of throwing
+ * on an endPhase of a finished game.
  */
 async function runPhaseGroup(
   state: GameState,
@@ -255,19 +263,24 @@ async function runPhaseGroup(
   events: DriverEvents,
   maxRetries: number,
   errors: ErrorCounter,
+  startFrom?: TurnPhase,
 ): Promise<void> {
   // PHASE_GROUP_ORDER is typed as Phase[]; the groups only ever contain the
   // four LLM-driven turn phases.
   const order = PHASE_GROUP_ORDER[group] as TurnPhase[];
+  const startIdx = startFrom ? order.indexOf(startFrom) : 0;
+  const liveFromStart = live.filter((p) => order.indexOf(p) >= startIdx);
   let buckets =
-    live.length > 0
-      ? await planGroup(state, agent, pid, group, live, maxRetries, errors)
+    liveFromStart.length > 0
+      ? await planGroup(state, agent, pid, group, liveFromStart, maxRetries, errors)
       : new Map<TurnPhase, ToolCall[]>();
   const retries = new Map<TurnPhase, number>();
-  let remaining = [...live];
-  for (const phase of order) {
+  let remaining = [...liveFromStart];
+  for (const [idx, phase] of order.entries()) {
+    if (idx < startIdx) continue;
+    if (state.phase === 'gameover') return;
     events.onPhase?.(state, pid, phase);
-    if (!live.includes(phase)) {
+    if (!liveFromStart.includes(phase)) {
       events.onPhaseSkipped?.(state, pid, phase, skipReason(state, pid, phase));
       endPhaseOrThrow(state, pid, phase);
       continue;
@@ -308,6 +321,16 @@ async function runPhaseGroup(
  * LLM; group B (consolidate) plans non-combat + mobilize from the
  * post-combat state. Phases with no legal actions are skipped without a
  * call (see agents/affordance.ts).
+ *
+ * Phase-aware (resume-safe): the turn may start mid-turn, in which case
+ * the steps already passed are skipped, never re-run or re-ended:
+ * purchase starts the full turn; combatMove runs the assault group from
+ * combatMove only; combat skips assault and auto-resolves the open
+ * battles; nonCombat runs the consolidate group from nonCombat;
+ * mobilize runs it from mobilize. A game that ends mid-turn (a capital
+ * win during auto-resolve, or the turn cap at mobilize) returns instead
+ * of throwing on an endPhase of a finished game: the runGame loop exits
+ * on phase 'gameover'.
  */
 async function runAiTurn(
   state: GameState,
@@ -318,20 +341,53 @@ async function runAiTurn(
   const agent = seat.agent;
   if (!agent) throw new Error(`AI seat ${seat.seat.seatIndex} has no agent.`);
   const pid = seat.seat.playerId;
+  const startPhase = state.phase;
+  if (startPhase === 'gameover') return;
 
-  const liveA = (['purchase', 'combatMove'] as TurnPhase[]).filter(
-    (p) => phaseHasActions(state, pid, p).has,
-  );
-  await runPhaseGroup(state, agent, pid, 'assault', liveA, events, DEFAULT_MAX_RETRIES, errors);
+  if (startPhase === 'purchase' || startPhase === 'combatMove') {
+    const startFrom = startPhase === 'combatMove' ? 'combatMove' : undefined;
+    const liveA = (['purchase', 'combatMove'] as TurnPhase[]).filter(
+      (p) => phaseHasActions(state, pid, p).has,
+    );
+    await runPhaseGroup(
+      state,
+      agent,
+      pid,
+      'assault',
+      liveA,
+      events,
+      DEFAULT_MAX_RETRIES,
+      errors,
+      startFrom,
+    );
+    if (state.phase === 'gameover') return;
+  }
 
-  events.onPhase?.(state, pid, 'combat');
-  autoResolveCombat(state, pid);
-  endPhaseOrThrow(state, pid, 'combat');
+  if (startPhase === 'purchase' || startPhase === 'combatMove' || startPhase === 'combat') {
+    events.onPhase?.(state, pid, 'combat');
+    autoResolveCombat(state, pid);
+    // A capital win during auto-resolve ends the game right here; ending
+    // the combat phase of a finished game would throw, so stop instead.
+    if (state.phase === 'gameover') return;
+    endPhaseOrThrow(state, pid, 'combat');
+  }
 
+  if (state.phase === 'gameover') return;
+  const startFrom = startPhase === 'mobilize' ? 'mobilize' : undefined;
   const liveB: TurnPhase[] = [];
   if (phaseHasActions(state, pid, 'nonCombat').has) liveB.push('nonCombat');
   if (phaseHasActions(state, pid, 'mobilize').has) liveB.push('mobilize');
-  await runPhaseGroup(state, agent, pid, 'consolidate', liveB, events, DEFAULT_MAX_RETRIES, errors);
+  await runPhaseGroup(
+    state,
+    agent,
+    pid,
+    'consolidate',
+    liveB,
+    events,
+    DEFAULT_MAX_RETRIES,
+    errors,
+    startFrom,
+  );
 }
 /**
  * One-line human summary of a successful tool call, recorded into the
@@ -426,7 +482,7 @@ export async function runGame(
   state: GameState,
   seats: SeatRuntime[],
   events: DriverEvents = {},
-  opts: { maxRounds?: number; diplomacy?: DiplomacyOptions } = {},
+  opts: { maxRounds?: number; diplomacy?: DiplomacyOptions; resume?: boolean } = {},
 ): Promise<GameResult> {
   if (seats.length !== state.numPlayers) {
     throw new Error(
@@ -454,7 +510,12 @@ export async function runGame(
   // engine validation, then falls back.
   const maxRounds = opts.maxRounds ?? Math.max(state.turnCap + 5, 60);
   const errorsByPlayer = new Map<number, number>();
-  let lastDiplomacyRound = 0;
+  // On resume, the current round's diplomacy window has already run (any
+  // save of round N postdates round N's window), so it must not run
+  // again: re-running would double-spend budgets and repeat diplomacy.
+  // Seeding lastDiplomacyRound to the current round skips exactly that
+  // one window; later rounds run normally.
+  let lastDiplomacyRound = opts.resume ? state.round : 0;
 
   while (state.phase !== 'gameover') {
     if (state.round > maxRounds) throw new MaxRoundsExceeded(state.round, maxRounds);

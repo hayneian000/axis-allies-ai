@@ -23,6 +23,10 @@ import {
 } from '../agents/diplomacy';
 import { getProvider } from '../agents/providers/index';
 import { keyStore } from '../agents/keys';
+import { deriveRuntimeSeats } from '../agents/lobby';
+import { clearAutosave, recordGameState } from './autosave';
+
+export { deriveRuntimeSeats };
 import { MissingKeyError, classifyProviderError } from '../agents/errors';
 import { emptyUsage } from '../agents/types';
 import type { SeatConfig, PlayerUsage, ToolCall } from '../agents/types';
@@ -34,6 +38,10 @@ export interface AiGameConfig {
   seats: SeatConfig[];
   playerNames: string[];
   seed: number;
+  /** Seat indices downgraded to human for this session (resume only). */
+  downgraded?: number[];
+  /** True when resuming a saved game (skips the current round's diplomacy window). */
+  resume?: boolean;
 }
 
 class StoppedError extends Error {
@@ -511,6 +519,7 @@ function sendHumanDipMessage(): void {
     feed(`<span class="bad">Message rejected [${escapeHtml(r.code ?? 'error')}]</span>`);
     return;
   }
+  recordGameState(dipState);
   const m = dipState.chatLog[dipState.chatLog.length - 1];
   dipLedger?.recordMessage({
     round: dipState.round,
@@ -656,11 +665,46 @@ export function startAiGame(config: AiGameConfig): void {
     numPlayers: config.seats.length,
     seed: config.seed,
     playerNames: config.playerNames,
+    seats: config.seats,
   });
   ui.setGameState(state);
+  // The fresh game is protected before the intro even plays.
+  recordGameState(state);
   ui.enterGame(() => {
     ui.showGame();
     void runAiGame(state, config);
+  });
+}
+
+/**
+ * Resume a saved AI game: same driver run as a fresh game, but no intro
+ * cinematic and no createGame - the saved state is the game. AI seats
+ * without a saved key (or with an unknown provider) run as human for
+ * this session only; the save itself keeps its AI seats. The downgrade
+ * notice is written to the activity feed, the spectator header, and the
+ * error bar (see runAiGame), plus a banner that stays in the panel.
+ */
+export function resumeAiGame(
+  state: GameState,
+  savedSeats: SeatConfig[],
+  playerNames: string[],
+): void {
+  const ui = bridge.ui;
+  if (!ui) throw new Error('Driver UI hooks not registered (main.ts boot incomplete).');
+  const { seats, downgraded } = deriveRuntimeSeats(savedSeats, (p) => keyStore.hasKey(p));
+  // Defensive: a seat table that does not match the game cannot drive it.
+  const runtimeSeats =
+    seats.length === state.numPlayers
+      ? seats
+      : state.players.map((p) => ({ seatIndex: p.id, playerId: p.id, kind: 'human' as const }));
+  ui.setGameState(state);
+  ui.showGame();
+  void runAiGame(state, {
+    seats: runtimeSeats,
+    playerNames,
+    seed: state.seed,
+    downgraded: runtimeSeats === seats ? downgraded : [],
+    resume: true,
   });
 }
 
@@ -689,6 +733,28 @@ async function runAiGame(state: GameState, config: AiGameConfig): Promise<void> 
   dipNames = config.playerNames;
   buildDiplomacyPanel();
   renderDiplomacy();
+
+  // Resume downgrade notice: visible in the feed, the spectator header,
+  // and the error bar, plus a banner that stays in the panel for the
+  // whole session (the header itself is overwritten by live phase status
+  // as play proceeds). The saved seats are unchanged - these seats are
+  // human for this session only.
+  if (config.downgraded && config.downgraded.length > 0) {
+    const names = config.downgraded
+      .map((i) => config.playerNames[i] ?? `Player ${i + 1}`)
+      .join(', ');
+    const notice =
+      `Resumed game: ${names} ${config.downgraded.length === 1 ? 'plays' : 'play'} as human this session ` +
+      `(no API key saved for ${config.downgraded.length === 1 ? 'that seat' : 'those seats'}). Saved seats are unchanged.`;
+    feed(escapeHtml(notice));
+    if (aiHeaderStatus) aiHeaderStatus.textContent = notice;
+    ui.showError(notice);
+    const host = document.getElementById('ai');
+    if (host) {
+      const banner = el('div', 'ai-resume-notice panel', notice);
+      host.prepend(banner);
+    }
+  }
 
   const seatUi: SeatUiEvents = {
     onThought: (pid, phase, text, toolCalls, usage) => {
@@ -762,6 +828,9 @@ async function runAiGame(state: GameState, config: AiGameConfig): Promise<void> 
         aiHeaderStatus.textContent =
           s.phase === 'gameover' ? 'Game over.' : `Round ${s.round} — ${name} — ${phase}`;
       }
+      // Phase transitions are the driver's autosave heartbeat (a skipped
+      // phase ends it, so onPhase also covers skips).
+      recordGameState(s);
       ui.refresh();
     },
     onToolCall: (pid, name, ok, code) => {
@@ -771,6 +840,8 @@ async function runAiGame(state: GameState, config: AiGameConfig): Promise<void> 
         `<span class="pdot" style="background:${color}"></span><b>${escapeHtml(seatName)}</b> ` +
           `${escapeHtml(name)} ${ok ? '<span class="ok">✓</span>' : `<span class="bad">✗ [${escapeHtml(code ?? 'error')}]</span>`}`,
       );
+      // Only successful tool calls mutate state; failures record nothing.
+      if (ok) recordGameState(state);
     },
     onPhaseSkipped: (s, pid, phase, reason) => {
       const seatName = config.playerNames[pid] ?? `Player ${pid + 1}`;
@@ -795,6 +866,8 @@ async function runAiGame(state: GameState, config: AiGameConfig): Promise<void> 
     },
     onHumanDiplomacy: (s, pid) => onHumanDiplomacyTurn(s, pid),
     onDiplomacyMessage: () => {
+      // An accepted diplomacy message mutated chatLog.
+      recordGameState(state);
       renderDiplomacy();
     },
     onDiplomacyWindow: (s, round, open) => {
@@ -812,12 +885,17 @@ async function runAiGame(state: GameState, config: AiGameConfig): Promise<void> 
         `<span class="pdot" style="background:${color}"></span><b>${escapeHtml(seatName)}</b> ` +
           `diplomacy ${escapeHtml(name)} ${ok ? '<span class="ok">✓</span>' : `<span class="bad">✗ [${escapeHtml(code ?? 'error')}]</span>`}`,
       );
+      // Only an accepted send_message mutates state (chatLog).
+      if (ok) recordGameState(state);
       renderDiplomacy();
     },
   };
 
   try {
-    const result = await runGame(state, runtimes, events, { diplomacy: { ledger: dipLedger } });
+    const result = await runGame(state, runtimes, events, {
+      diplomacy: { ledger: dipLedger },
+      resume: config.resume ?? false,
+    });
     finishGame(result.state, result.rounds, runtimes, null, result.diplomacy);
   } catch (e) {
     if (e instanceof StoppedError) {
@@ -853,6 +931,9 @@ function finishGame(
   note: string | null,
   ledger: DiplomacyLedger | null,
 ): void {
+  // Belt and braces alongside recordGameState's gameover check: a finished
+  // game has nothing to resume.
+  clearAutosave();
   document.body.classList.remove('ai-thinking');
   const winner = state.winner !== null ? state.players[state.winner].name : '—';
   if (aiHeaderStatus) {

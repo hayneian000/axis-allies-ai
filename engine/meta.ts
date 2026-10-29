@@ -185,6 +185,41 @@ export function deserialize(json: string): GameState {
   if (typeof data.mobilizedThisPhase !== 'object' || data.mobilizedThisPhase === null) {
     data.mobilizedThisPhase = {};
   }
+  // Saves from before AI-aware saves lack the seat table: leave it
+  // undefined (all-human). A present-but-malformed table (wrong length,
+  // bad kinds, misaligned seat indices) is normalized to undefined, never
+  // a load failure - a corrupt seats field must not break loading an
+  // otherwise valid game. Valid tables are rebuilt through a pick list,
+  // so no field outside SeatConfig (and in particular no key material a
+  // hand-edited save might smuggle in) survives into the live state.
+  if (data.aiSeats !== undefined) {
+    const seats = data.aiSeats as unknown;
+    const valid =
+      Array.isArray(seats) &&
+      seats.length === data.numPlayers &&
+      seats.every(
+        (s, i) =>
+          !!s &&
+          typeof s === 'object' &&
+          (s.kind === 'human' || s.kind === 'ai') &&
+          s.seatIndex === i &&
+          s.playerId === i,
+      );
+    if (!valid) {
+      data.aiSeats = undefined;
+    } else {
+      data.aiSeats = (seats as Array<Record<string, unknown>>).map((s) => ({
+        seatIndex: s.seatIndex as number,
+        playerId: s.playerId as number,
+        kind: s.kind as 'human' | 'ai',
+        ...(typeof s.provider === 'string'
+          ? { provider: s.provider as import('../agents/types').ProviderId }
+          : {}),
+        ...(typeof s.model === 'string' ? { model: s.model } : {}),
+        ...(typeof s.keySlot === 'string' ? { keySlot: s.keySlot } : {}),
+      }));
+    }
+  }
   // Saves from before navy phase 1 lack the naval battle fields.
   for (const b of data.battles) {
     if (b.bombardDone === undefined) b.bombardDone = false;

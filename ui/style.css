@@ -1476,6 +1476,7 @@ input::placeholder { color: var(--faint); }
 .ai-feed .ok { color: #7fae6e; }
 .ai-feed .bad { color: var(--signal); }
 .ai-fatal { padding: 12px 16px; margin-bottom: 4px; }
+.ai-resume-notice { padding: 10px 14px; margin-bottom: 8px; border: 1px solid #c9a227; }
 .ai-fatal p { font-family: var(--font-text); color: var(--ink); }
 
 /* ---- Seat error overlay ---- */

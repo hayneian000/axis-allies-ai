@@ -1,5 +1,6 @@
 // Seat configuration builder + validation for Phase 2 BYOK games.
 
+import { PROVIDERS } from './providers/index';
 import type { ProviderId, SeatConfig } from './types';
 
 export interface LobbySeatInput {
@@ -48,4 +49,41 @@ export function validateSeats(seats: SeatConfig[]): string[] {
     }
   }
   return errors;
+}
+
+export interface DerivedRuntimeSeats {
+  /** Seats to actually run this session (copies; the input is untouched). */
+  seats: SeatConfig[];
+  /** Seat indices that were AI in the save but run as human this session. */
+  downgraded: number[];
+}
+
+/**
+ * Turn a saved seat table into the seats for this session. Pure and
+ * side-effect free: an AI seat whose provider is unknown to the registry
+ * or has no saved key becomes a human seat for this session only. The
+ * input array and its entries are never mutated, and the downgrade is
+ * never written back into state.aiSeats - the save keeps its AI seats,
+ * so a later session with the key present resumes them as AI.
+ */
+export function deriveRuntimeSeats(
+  savedSeats: SeatConfig[],
+  hasKey: (provider: ProviderId) => boolean,
+): DerivedRuntimeSeats {
+  const seats: SeatConfig[] = [];
+  const downgraded: number[] = [];
+  for (const saved of savedSeats) {
+    if (saved.kind !== 'ai') {
+      seats.push({ ...saved });
+      continue;
+    }
+    const known = !!saved.provider && saved.provider in PROVIDERS;
+    if (!known || !hasKey(saved.provider!)) {
+      downgraded.push(saved.seatIndex);
+      seats.push({ seatIndex: saved.seatIndex, playerId: saved.playerId, kind: 'human' });
+      continue;
+    }
+    seats.push({ ...saved });
+  }
+  return { seats, downgraded };
 }

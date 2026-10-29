@@ -90,6 +90,15 @@ only while it holds neither, and capturing either one transfers its bank.
 
 Click any territory to inspect it: owner, IPC value, units, factory status.
 
+**Saves and autosave:** Save downloads a JSON file for the current game;
+saves remember the AI seat table, so loading an AI game resumes it as an
+AI game instead of silently becoming hot-seat. The game also autosaves to
+this browser as it progresses, and the setup screen offers Resume (plus
+Discard) for the autosaved game - closing the tab no longer loses it. A
+resumed AI seat starts with fresh conversation history and sees the full
+current board brief; diplomacy token budgets restart for the current
+round. Saves never contain API keys.
+
 ## AI players
 
 Each AI seat is an LLM agent that reasons once per phase (batched into two

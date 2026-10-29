@@ -36,6 +36,8 @@ import {
 import type { CombatMove, GameState, NonCombatMove, TerritoryState, UnitCounts } from '../engine/types';
 import { bridge } from './driverBridge';
 import { initAiLobby, getAiMode, startAiGameFromLobby } from './aiLobby';
+import { resumeAiGame } from './aiGame';
+import { clearAutosave, loadAutosave, peekAutosave, recordGameState } from './autosave';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const UNIT_ORDER: UnitType[] = [
@@ -140,6 +142,71 @@ function resetTransientUi(): void {
   showError('');
 }
 
+// ------------------------------------------------------- save/resume ---
+
+/** Map ids as the Resume button labels them. */
+function mapDisplayName(mapId: string | undefined): string {
+  if (mapId === 'world1942') return '1942 World';
+  if (mapId === 'america') return 'America';
+  return mapId ?? 'Unknown map';
+}
+
+function hideResumeButtons(): void {
+  $('resumeBtn').hidden = true;
+  $('discardBtn').hidden = true;
+}
+
+/**
+ * Show Resume/Discard when a valid autosave exists; a corrupt or missing
+ * record hides them and clears the stored record (never a crash).
+ */
+function refreshResumeButtons(): void {
+  const peek = peekAutosave();
+  if (!peek) {
+    clearAutosave();
+    hideResumeButtons();
+    return;
+  }
+  const btn = $('resumeBtn');
+  btn.textContent = `Resume last game - Round ${peek.round}, ${mapDisplayName(peek.mapId)}`;
+  btn.hidden = false;
+  $('discardBtn').hidden = false;
+}
+
+/**
+ * Shared load path for manual file loads and autosave Resume: a saved AI
+ * game resumes as an AI game (driver starts, downgrading keyless seats to
+ * human for the session); an all-human or legacy save loads as hot-seat
+ * exactly as before. Returns false when the text does not deserialize.
+ * A successful load is recorded to autosave immediately, so a loaded
+ * game is protected even before its next action.
+ */
+function loadGameFromText(text: string): boolean {
+  let state: GameState;
+  try {
+    state = deserialize(text);
+  } catch (err) {
+    showError(`Load failed: ${(err as Error).message}`);
+    return false;
+  }
+  const seats = state.aiSeats;
+  const hasAi = Array.isArray(seats) && seats.some((s) => s.kind === 'ai');
+  resetTransientUi();
+  syncFromMap();
+  $('setup').hidden = true;
+  hideResumeButtons();
+  if (hasAi) {
+    resumeAiGame(state, seats!, state.players.map((p) => p.name));
+  } else {
+    S = state;
+    $('game').hidden = false;
+    showError('');
+    render();
+  }
+  if (S) recordGameState(S);
+  return true;
+}
+
 function boot(): void {
   // Dog-tag player count selection
   let numPlayers = 4;
@@ -192,7 +259,16 @@ function boot(): void {
       return;
     }
     const seed = parseInt(($('seed') as HTMLInputElement).value, 10) || 1;
-    S = createGame({ numPlayers, seed });
+    S = createGame({
+      numPlayers,
+      seed,
+      seats: Array.from({ length: numPlayers }, (_, i) => ({
+        seatIndex: i,
+        playerId: i,
+        kind: 'human' as const,
+      })),
+    });
+    recordGameState(S);
     syncFromMap();
     resetTransientUi();
     // A previous AI game may have revealed the AI tab; hot-seat hides it.
@@ -208,8 +284,10 @@ function boot(): void {
     // Abort a Phase 2 driver run before tearing down the screens.
     if (bridge.driverActive) bridge.stopDriver?.();
     S = null;
+    clearAutosave();
     $('game').hidden = true;
     $('setup').hidden = false;
+    refreshResumeButtons();
   });
   $('endPhaseBtn').addEventListener('click', () => {
     if (!S) return;
@@ -224,6 +302,7 @@ function boot(): void {
     if (!r.ok) showError(`${r.code}: ${r.error}`);
     else {
       showError('');
+      recordGameState(S);
       selectedBattle = null;
       lastCombat = null;
       lastLaunchMsg = null;
@@ -253,23 +332,25 @@ function boot(): void {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
     file.text().then((text) => {
-      try {
-        S = deserialize(text);
-        sel = null;
-        draftMoves = [];
-        draftNonCombat = [];
-        draftMob = [];
-        selectedBattle = null;
-        lastCombat = null;
-        $('setup').hidden = true;
-        $('game').hidden = false;
-        showError('');
-        syncFromMap();
-        render();
-      } catch (err) {
-        showError(`Load failed: ${(err as Error).message}`);
-      }
+      loadGameFromText(text);
     });
+  });
+  $('resumeBtn').addEventListener('click', () => {
+    const rec = loadAutosave();
+    if (!rec) {
+      refreshResumeButtons();
+      return;
+    }
+    // A stored record that no longer deserializes is corrupt: drop it
+    // and hide the buttons instead of stranding the player.
+    if (!loadGameFromText(rec.save)) {
+      clearAutosave();
+      hideResumeButtons();
+    }
+  });
+  $('discardBtn').addEventListener('click', () => {
+    clearAutosave();
+    hideResumeButtons();
   });
   $('chatSend').addEventListener('click', () => {
     if (!S) return;
@@ -279,6 +360,7 @@ function boot(): void {
     else {
       input.value = '';
       showError('');
+      recordGameState(S);
     }
     render();
   });
@@ -400,6 +482,7 @@ function boot(): void {
     showError: (m) => showError(m),
   };
   initAiLobby();
+  refreshResumeButtons();
 }
 
 function ownerColor(state: GameState, owner: number | null): string {
@@ -2281,6 +2364,7 @@ function purchasePanel(s: GameState, el: HTMLElement): void {
       const r = repair(S!, pid, tid, points);
       if (!r.ok) showError(`${r.code}: ${r.error}`);
       else showError('');
+      if (r.ok) recordGameState(S!);
       render();
     });
     const wrap = document.createElement('div');
@@ -2415,6 +2499,7 @@ function purchaseShopBody(s: GameState, el: HTMLElement): void {
     const r = purchase(S!, pid, items);
     if (!r.ok) showError(`${r.code}: ${r.error}`);
     else showError('');
+    if (r.ok) recordGameState(S!);
     render();
   });
   el.appendChild(btn);
@@ -2464,6 +2549,7 @@ function combatMovePanel(s: GameState, el: HTMLElement): void {
       showError('');
       draftMoves = [];
       sel = null;
+      recordGameState(S!);
     }
     render();
   });
@@ -2474,6 +2560,7 @@ function combatMovePanel(s: GameState, el: HTMLElement): void {
     const r = combatMove(S!, pid, []);
     if (!r.ok) showError(`${r.code}: ${r.error}`);
     else showError('');
+    if (r.ok) recordGameState(S!);
     render();
   });
   el.appendChild(none);
@@ -2577,6 +2664,7 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
       const r = submergeSubs(S!, decider, tid, due, count);
       if (!r.ok) showError(`${r.code}: ${r.error}`);
       else showError('');
+      if (r.ok) recordGameState(S!);
       render();
     });
     subP.append(input, btn);
@@ -2612,6 +2700,7 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
     else {
       showError('');
       lastCombat = r.combat!;
+      recordGameState(S!);
     }
     render();
   });
@@ -2700,6 +2789,7 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
       const r = chooseCasualties(S!, pid, tid, side, readUnits(`cas-${side}`));
       if (!r.ok) showError(`${r.code}: ${r.error}`);
       else showError('');
+      if (r.ok) recordGameState(S!);
       render();
     });
     const auto = document.createElement('button');
@@ -2708,6 +2798,7 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
       const r = autoCasualties(S!, pid, tid, side);
       if (!r.ok) showError(`${r.code}: ${r.error}`);
       else showError('');
+      if (r.ok) recordGameState(S!);
       render();
     });
     box.append(apply, auto);
@@ -2743,6 +2834,7 @@ function battleModalBody(s: GameState, el: HTMLElement): void {
       const r = retreat(S!, pid, tid, (document.getElementById('retreat-to') as HTMLSelectElement).value);
       if (!r.ok) showError(`${r.code}: ${r.error}`);
       else showError('');
+      if (r.ok) recordGameState(S!);
       render();
     });
     box.append(select, go);
@@ -2783,6 +2875,7 @@ function nonCombatPanel(s: GameState, el: HTMLElement): void {
       showError('');
       draftNonCombat = [];
       sel = null;
+      recordGameState(S!);
     }
     render();
   });
@@ -2835,6 +2928,7 @@ function mobilizePanel(s: GameState, el: HTMLElement): void {
     else {
       showError('');
       draftMob = [];
+      recordGameState(S!);
     }
     render();
   });

@@ -338,8 +338,14 @@ export function startAiGameFromLobby(): void {
   startAiGame({ seats: cfgs, playerNames: names, seed });
 }
 
-/** Wire the setup screen. Called once from ui/main.ts boot(). */
-export function initAiLobby(): void {
+/**
+ * Wire the setup screen. Called once from ui/main.ts, after the AI chunk
+ * loads. The initial mode is the plaque the user already clicked: the
+ * lobby's own plaque handler only exists after this call, so without
+ * the argument that first click would be lost.
+ */
+export function initAiLobby(initialMode: AiMode = 'hotseat'): void {
+  mode = initialMode;
   document.querySelectorAll<HTMLButtonElement>('.mode-plaque').forEach((btn) => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.mode-plaque').forEach((b) => b.classList.remove('active'));

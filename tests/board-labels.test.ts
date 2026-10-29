@@ -2,6 +2,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import indexHtml from '../ui/index.html?raw';
 import map1942 from '../data/map-1942.json';
+import { ensureMapLoaded } from '../data/data';
 
 function el<T extends HTMLElement = HTMLElement>(id: string): T {
   const e = document.getElementById(id);
@@ -29,6 +30,10 @@ beforeAll(async () => {
   await import('../ui/main');
   // Pick the 1942 World folio (forces the 4-seat scenario) and commence.
   document.querySelector<HTMLButtonElement>('.map-folio[data-map="world1942"]')!.click();
+  // The folio click preloads the 1942 data; await it so Commence takes
+  // the already-loaded synchronous path, as a real user would after the
+  // chunk arrives.
+  await ensureMapLoaded('world1942');
   el<HTMLInputElement>('seed').value = '7';
   el<HTMLButtonElement>('startBtn').click();
 });

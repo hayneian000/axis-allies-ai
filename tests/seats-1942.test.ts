@@ -1,11 +1,17 @@
 // 1942 seat identity: the scenario names its seats (the powers) and fixes
 // the turn order (1942 2e power order). America free-for-all games keep
 // generic names and the seeded shuffle.
-import { afterEach, describe, expect, it } from 'vitest';
-import { scenarioFor, setActiveMap } from '../data/data';
+import { beforeAll, afterEach, describe, expect, it  } from 'vitest';
+import { scenarioFor, ensureMapLoaded, setActiveMap } from '../data/data';
 import { createGame } from '../engine/engine';
 
 afterEach(() => setActiveMap('america'));
+
+// Code-split data: the 1942 map loads on demand, so preload it once
+// per file; the sync setActiveMap calls below then work as before.
+beforeAll(async () => {
+  await ensureMapLoaded('world1942');
+});
 
 describe('1942 seats and turn order', () => {
   it('names players from the scenario seat names', () => {

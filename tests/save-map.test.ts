@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { activeMapId, setActiveMap } from '../data/data';
+import { beforeAll,  afterEach, describe, expect, it  } from 'vitest';
+import { activeMapId, ensureMapLoaded, setActiveMap } from '../data/data';
 import { createGame, deserialize, serialize } from '../engine/engine';
 
 // Saves record the map they were made on (GameState.mapId, set by
@@ -7,6 +7,12 @@ import { createGame, deserialize, serialize } from '../engine/engine';
 // 1942 save loads from a fresh page (America active by default) and an
 // America save loads while the 1942 map is active.
 afterEach(() => setActiveMap('america'));
+
+// Code-split data: the 1942 map loads on demand, so preload it once
+// per file; the sync setActiveMap calls below then work as before.
+beforeAll(async () => {
+  await ensureMapLoaded('world1942');
+});
 
 describe('save/load map restore', () => {
   it('records the active map id in new game state', () => {

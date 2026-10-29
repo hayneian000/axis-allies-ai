@@ -5,13 +5,14 @@
 // the 1942 assertions pin the world board (seat names and fixed order,
 // victory count, canals, impassable neutrals).
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   ALL_UNIT_TYPES,
   MAP,
   UNITS,
   canalList,
   scenarioFor,
+  ensureMapLoaded,
   setActiveMap,
 } from '../../data/data';
 import {
@@ -24,6 +25,12 @@ import {
 } from '../../agents/prompts';
 
 afterEach(() => setActiveMap('america'));
+
+// Code-split data: the 1942 map loads on demand, so preload it once per
+// file; the sync setActiveMap calls below then work as before.
+beforeAll(async () => {
+  await ensureMapLoaded('world1942');
+});
 
 function expectUnitCosts(digest: string): void {
   for (const u of ALL_UNIT_TYPES) {

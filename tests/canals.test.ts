@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { setActiveMap } from '../data/data';
+import { beforeAll,  afterEach, beforeEach, describe, expect, it  } from 'vitest';
+import { ensureMapLoaded, setActiveMap } from '../data/data';
 import {
   canalEdgeOpen,
   combatMove,
@@ -37,6 +37,12 @@ beforeEach(() => {
 });
 
 afterEach(() => setActiveMap('america'));
+
+// Code-split data: the 1942 map loads on demand, so preload it once
+// per file; the sync setActiveMap calls below then work as before.
+beforeAll(async () => {
+  await ensureMapLoaded('world1942');
+});
 
 describe('canalEdgeOpen (the rule the engine and the UI dialog share)', () => {
   it('Panama is open to the seat holding Central America, closed to others', () => {

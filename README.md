@@ -90,6 +90,10 @@ only while it holds neither, and capturing either one transfers its bank.
 
 Click any territory to inspect it: owner, IPC value, units, factory status.
 
+**Help:** the Help button in the top bar (or "How to play" on the setup
+screen) opens an in-game guide: the objective for each map, the five turn
+steps, key rules, and a unit table generated from the game's own data.
+
 **Saves and autosave:** Save downloads a JSON file for the current game;
 saves remember the AI seat table, so loading an AI game resumes it as an
 AI game instead of silently becoming hot-seat. The game also autosaves to

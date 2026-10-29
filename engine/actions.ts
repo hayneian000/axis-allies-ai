@@ -7,6 +7,7 @@ import { CARRIER_FIGHTERS, addPlayerSeaUnits, arriveSeaZone, canalBlockFailure, 
 import { checkWinByVictoryCities, resolveCapture } from './combat';
 import { ALL_UNIT_TYPES, NAVAL_UNIT_TYPES, NATION_COLORS_1942, SEAT_NATION_1942, UNITS, activeMapId, airDistance, areAdjacent, ipcOf, isImpassable, isSea, landPaths, landTerritoryIds, scenarioFor, seaReachable, seaZoneIds, territoryDef, victoryCityTargets } from '../data/data';
 import type { UnitType } from '../data/data';
+import type { SeatConfig } from '../agents/types';
 import type { ActionResult, CombatMove, GameState, MobilizePlacement, NonCombatMove, PurchaseItem, TerritoryState, UnitCounts } from './types';
 
 
@@ -16,6 +17,12 @@ export interface CreateGameOptions {
   numPlayers: number;
   playerNames?: string[];
   seed?: number;
+  /**
+   * Full seat table (see GameState.aiSeats). Stored as a copy when
+   * provided; left undefined otherwise (hot-seat callers that do not
+   * pass seats get no field, and legacy saves keep loading as all-human).
+   */
+  seats?: SeatConfig[];
 }
 
 
@@ -44,6 +51,9 @@ export function createGame(opts: CreateGameOptions): GameState {
     turnStartFactories: [],
     used: {},
     mobilizedThisPhase: {},
+    // Copy the seat table so later caller mutation cannot rewrite the
+    // saved game; undefined stays undefined (and JSON drops the field).
+    aiSeats: opts.seats ? opts.seats.map((s) => ({ ...s })) : undefined,
     battles: [],
     nextBattleId: 1,
     turnCap: DEFAULT_TURN_CAP,

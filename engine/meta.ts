@@ -141,13 +141,29 @@ function mapIdOfSave(data: GameState): MapId | null {
   return null;
 }
 
+/** Which map a save belongs to, without validating it. Returns null for
+ *  unparseable text or saves that name no recognizable map; callers use
+ *  this to preload the save's map (data/ensureMapLoaded) before calling
+ *  deserialize, which still restores the map synchronously when loaded. */
+export function saveMapId(json: string): MapId | null {
+  let data: GameState;
+  try {
+    data = JSON.parse(json) as GameState;
+  } catch {
+    return null;
+  }
+  return mapIdOfSave(data);
+}
+
 export function deserialize(json: string): GameState {
   const data = JSON.parse(json) as GameState;
   if (!data || data.version !== 3) throw new Error('Unsupported save version.');
   // Restore the save's own map before validating against it: territory ids
   // differ per map, so validating a 1942 save under the America map (the
-  // default) fails on the first territory. The UI's load path relies on
-  // this — it hands the file straight here.
+  // default) fails on the first territory. The map must already be loaded
+  // (the UI load path preloads it via saveMapId + ensureMapLoaded); a
+  // 1942 save arriving unloaded throws the data layer's not-loaded error
+  // instead of validating against the wrong map.
   const want = mapIdOfSave(data);
   if (want && want !== activeMapId()) setActiveMap(want);
   for (const t of MAP.territories) {

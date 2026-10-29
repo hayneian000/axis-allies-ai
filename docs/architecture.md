@@ -66,6 +66,50 @@ phase per factory, so the per-turn cap holds across split mobilize calls;
 reset when the mobilize phase is entered), `battles` (open + finished this
 turn).
 
+## Bundle and lazy chunks
+
+The production build splits into an initial chunk and on-demand chunks
+(Vite dynamic import, no bundler plugins). Measured on this branch:
+
+- Initial JS (`index-*.js`): 160,406 bytes raw, 47,981 bytes gzip.
+  This is the engine, the America map data, and the hot-seat UI. An
+  America hot-seat load fetches only this chunk plus CSS.
+- 1942 map data (`map-1942-*.js` + `scenario-1942-*.js`): 567,206 +
+  7,504 bytes raw. Fetched only when the 1942 map is first needed.
+- AI surface (`aiLobby-*.js` + `aiGame-*.js`): 6,433 + 66,020 bytes
+  raw, including everything under `agents/` they pull in. Fetched only
+  when the user enters an AI mode or resumes an AI save.
+- The 1942 board artwork (`board-1942-*.jpg`, 1,216,106 bytes) is a
+  separate asset file, not part of any JS chunk. It is only requested
+  when the 1942 board actually renders (the SVG image element is created
+  in board-space render only), so it needed no change.
+
+Async map boundary (`data/data.ts`): only the America map is statically
+imported. `ensureMapLoaded(mapId)` dynamically imports the 1942 JSON
+(the promise is shared across concurrent callers and reset on failure,
+so a failed fetch can be retried); `isMapLoaded(mapId)` reports whether
+a map is in memory. `setActiveMap` stays synchronous and only switches
+to loaded maps, throwing a clear not-loaded error otherwise, so the
+synchronous getters (`MAP`, `neighborsOf`, `scenarioFor`, and friends)
+keep their contract after load. Callers that select the 1942 map await
+`ensureMapLoaded` first: the setup folio preloads it on click, Commence
+awaits it when it is not yet loaded, and the save-load path preloads
+the save's map via `saveMapId` (engine/meta) before `deserialize`,
+which still restores the save's map synchronously when loaded. While a
+lazy chunk fetches, the setup screen shows a short loading line in
+`#setupStatus`; on failure it shows an error with a Retry button, and a
+failed autosave resume keeps the record instead of discarding it.
+
+One deliberate exception: `ui/driverBridge.ts` stays in the initial
+chunk. It is a 1.6 kB shared contract with no agent or provider imports,
+and boot registers `bridge.ui` on it for the AI driver; splitting it
+would save almost nothing and break that registration. The AI code
+itself (`ui/aiLobby.ts`, `ui/aiGame.ts`, `agents/`) is fully split, and
+the AI modules still never import `ui/main.ts`.
+
+The remaining Vite chunk-size warning refers to the lazy 1942 map
+chunk alone, not to the initial load.
+
 ## Action API (also the Phase 2 tool set)
 
 | Function | Phase | Notes |

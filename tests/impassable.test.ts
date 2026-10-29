@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { MAP, airDistance, isImpassable, isSea, neighborsOf, setActiveMap } from '../data/data';
+import { beforeAll,  afterEach, beforeEach, describe, expect, it  } from 'vitest';
+import { MAP, airDistance, isImpassable, isSea, neighborsOf, ensureMapLoaded, setActiveMap } from '../data/data';
 import {
   combatMove,
   countUnits,
@@ -45,6 +45,12 @@ function turn(pid: number, phase: GameState['phase']): void {
   s.currentPlayer = pid;
   s.phase = phase;
 }
+
+// Code-split data: the 1942 map loads on demand, so preload it once
+// per file; the sync setActiveMap calls below then work as before.
+beforeAll(async () => {
+  await ensureMapLoaded('world1942');
+});
 
 describe('impassable neutrals on the 1942 map', () => {
   beforeEach(() => {

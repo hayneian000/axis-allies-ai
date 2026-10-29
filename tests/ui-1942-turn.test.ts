@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it } from 'vitest';
 import indexHtml from '../ui/index.html?raw';
+import { ensureMapLoaded } from '../data/data';
 
 // Full-turn UI replay on the 1942 board-space map (seed 7), mirroring the
 // real-browser click-through. The 1942 scenario plays in the fixed 1942 2e
@@ -100,6 +101,7 @@ beforeAll(async () => {
   (window as unknown as Record<string, unknown>).__SKIP_INTRO__ = true;
   await import('../ui/main');
   document.querySelector<HTMLButtonElement>('.map-folio[data-map="world1942"]')!.click();
+  await ensureMapLoaded('world1942');
   el<HTMLInputElement>('seed').value = '7';
   el<HTMLButtonElement>('startBtn').click();
 });

@@ -1,3 +1,5 @@
+import type { SeatConfig } from '../agents/types';
+
 export interface UnitCounts {
   infantry: number;
   artillery: number;
@@ -252,6 +254,20 @@ export interface GameState {
    *  Absent in saves from before cumulative tracking (deserialize
    *  restores {}). */
   mobilizedThisPhase?: Record<string, number>;
+  /**
+   * The full seat table for this game (one entry per player, in seat
+   * order): human seats as kind 'human' entries, AI seats as kind 'ai'
+   * entries with provider + model. This is what makes a saved AI game
+   * load back as an AI game instead of silently becoming hot-seat.
+   * Representation choice: the whole table, not just the AI seats, so a
+   * load never has to guess which seats were human. SeatConfig carries
+   * no key material (keys live only in agents/keys.ts), so saves and
+   * autosaves never contain secrets. Absent in saves from before this
+   * field existed (deserialize leaves it undefined and every consumer
+   * treats that as all-human); a present-but-malformed field is also
+   * normalized to undefined on load, never a load failure.
+   */
+  aiSeats?: SeatConfig[];
   winner: number | null;
   winReason: string | null;
   events: GameEvent[];

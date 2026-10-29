@@ -1,4 +1,4 @@
-import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, boardTintHex, canalBetween, centroid, ipcOf, isImpassable, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
+import { MAP, NAVAL_UNIT_TYPES, UNITS, activeMapId, airDistance, boardTintHex, canalBetween, centroid, ensureMapLoaded, ipcOf, isImpassable, isMapLoaded, neighborsOf, pointInPolygon, setActiveMap, type MapId, type TerritoryDef, type UnitType } from '../data/data';
 import boardUrl from './board-1942.jpg';
 import { playIntro } from './intro';
 import {
@@ -27,6 +27,7 @@ import {
   repair,
   resolveCombatRound,
   retreat,
+  saveMapId,
   sendMessage,
   serialize,
   submergeSubs,
@@ -35,8 +36,12 @@ import {
 } from '../engine/engine';
 import type { CombatMove, GameState, NonCombatMove, TerritoryState, UnitCounts } from '../engine/types';
 import { bridge } from './driverBridge';
-import { initAiLobby, getAiMode, startAiGameFromLobby } from './aiLobby';
-import { resumeAiGame } from './aiGame';
+// Type-only: the AI lobby/game modules load on demand (see loadAi below),
+// so this import is erased at build time and pulls no AI code into the
+// initial chunk. driverBridge stays static on purpose: it is a 1.6 kB
+// shared contract with no agent or provider imports, and boot registers
+// bridge.ui on it for the AI driver and for UI tests that inject state.
+import type { AiMode } from './aiLobby';
 import { clearAutosave, loadAutosave, peekAutosave, recordGameState } from './autosave';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -110,6 +115,9 @@ const svg = (): SVGSVGElement => $('map') as unknown as SVGSVGElement;
 //   activeMapId(), and scenarioFor() honoring the active map.
 // MAP is read fresh on every render, so a setActiveMap() swap is picked
 // up by all rendering below without any cache invalidation here.
+// The 1942 map is the exception: its data loads on demand, so every
+// path that selects it awaits ensureMapLoaded() first (folio preload,
+// startGame, loadGameFromText) and only then calls setActiveMap().
 
 /** True when the active map is a board-space map (1942: the board JPEG is
  *  the terrain artwork and the polygons are only an interaction layer). */
@@ -127,6 +135,85 @@ function mkButton(label: string, variant: 'brass' | 'steel' = 'steel'): HTMLButt
 
 function showError(msg: string): void {
   $('error').textContent = msg;
+}
+
+// ------------------------------------------------------- lazy chunks --
+// The setup screen owns its own status line (the game error slot lives
+// inside the hidden game screen, so it cannot report setup-time loads).
+function showSetupStatus(msg: string, retry?: () => void): void {
+  const el = $('setupStatus');
+  el.hidden = false;
+  el.textContent = '';
+  el.appendChild(document.createTextNode(msg));
+  if (retry) {
+    el.appendChild(document.createTextNode(' '));
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn btn-steel';
+    b.textContent = 'Retry';
+    b.addEventListener('click', () => {
+      clearSetupStatus();
+      retry();
+    });
+    el.appendChild(b);
+  }
+}
+
+function clearSetupStatus(): void {
+  const el = $('setupStatus');
+  el.hidden = true;
+  el.textContent = '';
+}
+
+/** The AI surface, loaded on demand. Null until the user enters an AI
+ *  mode or resumes an AI save; the hot-seat path never touches it. */
+type AiModules = {
+  startAiGameFromLobby: typeof import('./aiLobby').startAiGameFromLobby;
+  resumeAiGame: typeof import('./aiGame').resumeAiGame;
+};
+
+let aiMode: AiMode = 'hotseat';
+let aiModules: AiModules | null = null;
+let aiPromise: Promise<AiModules> | null = null;
+
+/**
+ * Load the AI chunk (aiLobby + aiGame + everything under agents/) and
+ * wire the lobby. Shared across concurrent callers, reset on failure so
+ * a failed fetch can be retried. If the 1942 map is selected, its data
+ * loads first so the lobby's seat defaults can use the power names.
+ */
+async function loadAi(selectedMap?: MapId): Promise<AiModules> {
+  if (aiModules) return aiModules;
+  if (!aiPromise) {
+    aiPromise = (async () => {
+      const [lobby, game] = await Promise.all([import('./aiLobby'), import('./aiGame')]);
+      if (selectedMap === 'world1942') await ensureMapLoaded('world1942');
+      lobby.initAiLobby(aiMode);
+      const mods: AiModules = {
+        startAiGameFromLobby: lobby.startAiGameFromLobby,
+        resumeAiGame: game.resumeAiGame,
+      };
+      aiModules = mods;
+      return mods;
+    })().catch((err) => {
+      aiPromise = null;
+      throw err;
+    });
+  }
+  return aiPromise;
+}
+
+/** Plaque-click entry point: show loading text, wire the lobby on
+ *  success, or an error with a retry button on failure. */
+function enterAiMode(selectedMap?: MapId): void {
+  showSetupStatus('Loading AI lobby...');
+  loadAi(selectedMap)
+    .then(() => clearSetupStatus())
+    .catch(() => {
+      showSetupStatus('AI lobby failed to load. Check your connection and try again.', () =>
+        enterAiMode(selectedMap),
+      );
+    });
 }
 
 // ------------------------------------------------------------ boot ---
@@ -177,26 +264,55 @@ function refreshResumeButtons(): void {
  * Shared load path for manual file loads and autosave Resume: a saved AI
  * game resumes as an AI game (driver starts, downgrading keyless seats to
  * human for the session); an all-human or legacy save loads as hot-seat
- * exactly as before. Returns false when the text does not deserialize.
- * A successful load is recorded to autosave immediately, so a loaded
+ * exactly as before. 'bad-save' means the text does not deserialize (the
+ * resume caller drops it); 'load-failed' means a lazy chunk failed to
+ * fetch (the save is kept, and the status line offers a retry). A
+ * successful load is recorded to autosave immediately, so a loaded
  * game is protected even before its next action.
  */
-function loadGameFromText(text: string): boolean {
+async function loadGameFromText(text: string): Promise<'ok' | 'bad-save' | 'load-failed'> {
+  // The save's map must be loaded before deserialize validates against
+  // it; a 1942 save on a fresh page (America active) is the common case.
+  const want = saveMapId(text);
+  if (want && !isMapLoaded(want)) {
+    showSetupStatus(want === 'world1942' ? 'Loading 1942 map...' : 'Loading map...');
+    try {
+      await ensureMapLoaded(want);
+    } catch {
+      showSetupStatus('Map failed to load. Check your connection and try again.', () => {
+        void loadGameFromText(text);
+      });
+      return 'load-failed';
+    }
+    clearSetupStatus();
+  }
   let state: GameState;
   try {
     state = deserialize(text);
   } catch (err) {
     showError(`Load failed: ${(err as Error).message}`);
-    return false;
+    return 'bad-save';
   }
   const seats = state.aiSeats;
   const hasAi = Array.isArray(seats) && seats.some((s) => s.kind === 'ai');
+  if (hasAi && !aiModules) {
+    showSetupStatus('Loading AI lobby...');
+    try {
+      await loadAi();
+    } catch {
+      showSetupStatus('AI lobby failed to load. Check your connection and try again.', () => {
+        void loadGameFromText(text);
+      });
+      return 'load-failed';
+    }
+    clearSetupStatus();
+  }
   resetTransientUi();
   syncFromMap();
   $('setup').hidden = true;
   hideResumeButtons();
   if (hasAi) {
-    resumeAiGame(state, seats!, state.players.map((p) => p.name));
+    aiModules!.resumeAiGame(state, seats!, state.players.map((p) => p.name));
   } else {
     S = state;
     $('game').hidden = false;
@@ -204,7 +320,7 @@ function loadGameFromText(text: string): boolean {
     render();
   }
   if (S) recordGameState(S);
-  return true;
+  return 'ok';
 }
 
 function boot(): void {
@@ -240,22 +356,79 @@ function boot(): void {
       selectedMap = (folio.dataset.map as MapId | undefined) ?? 'america';
       // The 1942 scenario is 4-seat only.
       if (selectedMap === 'world1942') forceFourPlayers();
+      // Preload the 1942 data while the user is still on setup, so
+      // Commence usually finds it already loaded. America needs nothing.
+      if (selectedMap === 'world1942' && !isMapLoaded('world1942')) {
+        showSetupStatus('Loading 1942 map...');
+        ensureMapLoaded('world1942')
+          .then(() => clearSetupStatus())
+          .catch(() => {
+            showSetupStatus(
+              '1942 map failed to load. Select the 1942 folio again to retry.',
+              () => folio.click(),
+            );
+          });
+      }
     });
   }
+
+  // Mode plaques: the lobby itself lives in the AI chunk, so main owns
+  // this click until the chunk loads (the lobby's own plaque handler,
+  // registered by loadAi, then takes over for later clicks).
+  document.querySelectorAll<HTMLButtonElement>('.mode-plaque').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-plaque').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      aiMode = (btn.dataset.mode as AiMode) ?? 'hotseat';
+      if (aiMode !== 'hotseat' && !aiModules) enterAiMode(selectedMap);
+    });
+  });
 
   // Viewport starts from whichever map data is active at boot.
   syncFromMap();
 
   $('startBtn').addEventListener('click', () => {
+    void startGame();
+  });
+
+  async function startGame(): Promise<void> {
     // Map choice first — BEFORE any game creation, in every mode: the
     // data layer (MAP / scenarioFor), the viewport, and (for 1942) the
     // player count all follow the selected folio.
     if (selectedMap === 'world1942') forceFourPlayers();
+    // When the map (or AI chunk) is already loaded this path takes no
+    // await and the game starts synchronously on the click, as before.
+    if (!isMapLoaded(selectedMap)) {
+      showSetupStatus('Loading 1942 map...');
+      try {
+        await ensureMapLoaded(selectedMap);
+      } catch {
+        showSetupStatus('Map failed to load. Check your connection and try again.', () =>
+          startGame(),
+        );
+        return;
+      }
+      clearSetupStatus();
+    }
     setActiveMap(selectedMap);
     syncFromMap();
-    // Phase 2: AI modes are owned by the lobby (ui/aiLobby.ts).
-    if (getAiMode() !== 'hotseat') {
-      startAiGameFromLobby();
+    // Phase 2: AI modes are owned by the lobby (ui/aiLobby.ts), loaded
+    // on demand the first time an AI plaque is clicked or Commence is
+    // pressed in an AI mode.
+    if (aiMode !== 'hotseat') {
+      if (!aiModules) {
+        showSetupStatus('Loading AI lobby...');
+        try {
+          await loadAi(selectedMap);
+        } catch {
+          showSetupStatus('AI lobby failed to load. Check your connection and try again.', () =>
+            startGame(),
+          );
+          return;
+        }
+        clearSetupStatus();
+      }
+      aiModules!.startAiGameFromLobby();
       return;
     }
     const seed = parseInt(($('seed') as HTMLInputElement).value, 10) || 1;
@@ -279,7 +452,7 @@ function boot(): void {
       $('game').hidden = false;
       render();
     });
-  });
+  }
   $('newBtn').addEventListener('click', () => {
     // Abort a Phase 2 driver run before tearing down the screens.
     if (bridge.driverActive) bridge.stopDriver?.();
@@ -332,7 +505,7 @@ function boot(): void {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
     file.text().then((text) => {
-      loadGameFromText(text);
+      void loadGameFromText(text);
     });
   });
   $('resumeBtn').addEventListener('click', () => {
@@ -342,11 +515,14 @@ function boot(): void {
       return;
     }
     // A stored record that no longer deserializes is corrupt: drop it
-    // and hide the buttons instead of stranding the player.
-    if (!loadGameFromText(rec.save)) {
-      clearAutosave();
-      hideResumeButtons();
-    }
+    // and hide the buttons instead of stranding the player. A chunk
+    // load failure keeps the record: the status line offers a retry.
+    void loadGameFromText(rec.save).then((result) => {
+      if (result === 'bad-save') {
+        clearAutosave();
+        hideResumeButtons();
+      }
+    });
   });
   $('discardBtn').addEventListener('click', () => {
     clearAutosave();
@@ -481,7 +657,6 @@ function boot(): void {
     },
     showError: (m) => showError(m),
   };
-  initAiLobby();
   refreshResumeButtons();
 }
 

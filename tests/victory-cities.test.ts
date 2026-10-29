@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it } from 'vitest';
-import { scenarioFor, setActiveMap, victoryCityTargets, type ScenarioDef } from '../data/data';
+import { beforeAll,  afterEach, describe, expect, it  } from 'vitest';
+import { scenarioFor, ensureMapLoaded, setActiveMap, victoryCityTargets, type ScenarioDef } from '../data/data';
 import {
   createGame,
   deserialize,
@@ -55,6 +55,12 @@ function endTurn(s: GameState): void {
 function playRound(s: GameState): void {
   for (let i = 0; i < s.numPlayers; i++) endTurn(s);
 }
+
+// Code-split data: the 1942 map loads on demand, so preload it once
+// per file; the sync setActiveMap calls below then work as before.
+beforeAll(async () => {
+  await ensureMapLoaded('world1942');
+});
 
 describe('victory cities: setup', () => {
   it('1942 game carries the per-seat targets; starting counts are 3/2/3/5', () => {

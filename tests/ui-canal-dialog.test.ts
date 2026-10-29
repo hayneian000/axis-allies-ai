@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it } from 'vitest';
 import indexHtml from '../ui/index.html?raw';
-import { setActiveMap } from '../data/data';
+import { ensureMapLoaded, setActiveMap } from '../data/data';
 import { createGame } from '../engine/engine';
 import type { GameState } from '../engine/types';
 import { bridge } from '../ui/driverBridge';
@@ -47,6 +47,7 @@ beforeAll(async () => {
   (window as unknown as Record<string, unknown>).__SKIP_INTRO__ = true;
   await import('../ui/main');
   expect(bridge.ui).not.toBeNull();
+  await ensureMapLoaded('world1942');
 });
 
 describe('sea move dialog canal filtering (1942)', () => {

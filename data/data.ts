@@ -1,10 +1,8 @@
 import mapJson from './map.json';
-import map1942Json from './map-1942.json';
 import unitsJson from './units.json';
 import scenario2p from './scenario-2p.json';
 import scenario3p from './scenario-3p.json';
 import scenario4p from './scenario-4p.json';
-import scenario1942Json from './scenario-1942.json';
 
 export interface TerritoryDef {
   id: string;
@@ -253,16 +251,59 @@ export function boardTintHex(def: TerritoryDef, ownerSeat: number | null): strin
 // ------------------------------------------------------------- map registry --
 export type MapId = 'america' | 'world1942';
 
-const MAPS: Record<MapId, MapData> = {
-  america: mapJson as unknown as MapData,
-  world1942: map1942Json as unknown as MapData,
-};
+// Bundle boundary: only the America map ships in the initial chunk. The
+// 1942 map JSON (about 1.6 MB) and its scenario load on demand through
+// ensureMapLoaded, so an America-first visit never downloads them. The
+// dynamic import below is what makes Vite emit them as a separate chunk.
+const AMERICA_MAP: MapData = mapJson as unknown as MapData;
 
-const SCENARIO_1942: ScenarioDef = scenario1942Json as unknown as ScenarioDef;
+let world1942Map: MapData | null = null;
+let world1942Scenario: ScenarioDef | null = null;
+let world1942Promise: Promise<void> | null = null;
+
+/** True when a map's data is already in memory. America is always loaded;
+ *  the 1942 map is loaded only after ensureMapLoaded resolves. */
+export function isMapLoaded(id: MapId): boolean {
+  return id === 'america' || world1942Map !== null;
+}
+
+/**
+ * Load a map's data if it is not already loaded. America is a no-op.
+ * The promise is shared across concurrent callers and reset on failure,
+ * so a failed fetch can be retried. Loaded data is byte-identical to
+ * the old static import: the same JSON files, imported dynamically.
+ */
+export async function ensureMapLoaded(id: MapId): Promise<void> {
+  if (id === 'america' || world1942Map !== null) return;
+  if (!world1942Promise) {
+    world1942Promise = (async () => {
+      const [mapMod, scenarioMod] = await Promise.all([
+        import('./map-1942.json'),
+        import('./scenario-1942.json'),
+      ]);
+      world1942Map = (mapMod.default ?? mapMod) as unknown as MapData;
+      world1942Scenario = (scenarioMod.default ?? scenarioMod) as unknown as ScenarioDef;
+    })().catch((err) => {
+      world1942Promise = null;
+      throw err;
+    });
+  }
+  return world1942Promise;
+}
+
+/** Resolve a map id to loaded data, or throw a clear error when the
+ *  1942 data has not been loaded yet (call ensureMapLoaded first). */
+function mapFor(id: MapId): MapData {
+  if (id === 'america') return AMERICA_MAP;
+  if (world1942Map !== null) return world1942Map;
+  throw new Error(
+    'The 1942 map data is not loaded yet. Call ensureMapLoaded("world1942") first.',
+  );
+}
 
 /** The active map. A live binding: `setActiveMap` swaps it (and rebuilds the
  *  territory index) for every importer. Default is 'america'. */
-export let MAP: MapData = MAPS.america;
+export let MAP: MapData = AMERICA_MAP;
 
 let activeId: MapId = 'america';
 
@@ -276,9 +317,15 @@ export function activeMapId(): MapId {
   return activeId;
 }
 
+/**
+ * Switch the active map. Synchronous, as before, but only for maps whose
+ * data is already loaded: America always, the 1942 map only after
+ * ensureMapLoaded resolves. Callers that switch to the 1942 map await
+ * ensureMapLoaded first, so the synchronous getters below stay valid
+ * after load with no other change to their contract.
+ */
 export function setActiveMap(id: MapId): void {
-  const next = MAPS[id];
-  if (!next) throw new Error(`Unknown map "${id}".`);
+  const next = mapFor(id);
   activeId = id;
   MAP = next;
   byId = buildById(MAP);
@@ -295,7 +342,9 @@ const SCENARIOS: Record<number, ScenarioDef> = {
  *  that runs before setActiveMap. Undefined for maps whose scenarios do
  *  not name their seats. */
 export function seatNamesForMap(id: MapId): string[] | undefined {
-  if (id === 'world1942') return SCENARIO_1942.seatNames;
+  // Undefined while the 1942 data is still loading; callers already treat
+  // undefined as "no scenario seat names" and fall back to generic names.
+  if (id === 'world1942') return world1942Scenario?.seatNames;
   return undefined;
 }
 
@@ -306,7 +355,12 @@ export function scenarioFor(playerCount: number): ScenarioDef {
         `The 1942 world map scenario requires exactly 4 players (got ${playerCount}).`,
       );
     }
-    return SCENARIO_1942;
+    if (!world1942Scenario) {
+      throw new Error(
+        'The 1942 map data is not loaded yet. Call ensureMapLoaded("world1942") first.',
+      );
+    }
+    return world1942Scenario;
   }
   const s = SCENARIOS[playerCount];
   if (!s) throw new Error(`No scenario for ${playerCount} players.`);

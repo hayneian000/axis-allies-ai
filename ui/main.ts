@@ -43,6 +43,12 @@ import { bridge } from './driverBridge';
 // bridge.ui on it for the AI driver and for UI tests that inject state.
 import type { AiMode } from './aiLobby';
 import { clearAutosave, loadAutosave, peekAutosave, recordGameState } from './autosave';
+import {
+  helpInputForSetup,
+  helpInputForState,
+  renderHelpInto,
+  type HelpContentInput,
+} from './help';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 const UNIT_ORDER: UnitType[] = [
@@ -103,7 +109,7 @@ let draftNonCombat: NonCombatMove[] = [];
 let draftMob: Array<{ territory: string; units: Partial<UnitCounts>; buildFactory?: boolean; seaZone?: string }> = [];
 let selectedBattle: string | null = null;
 let lastCombat: import('../engine/types').CombatRoundResult | null = null;
-let modal: 'shop' | 'battle' | 'move' | null = null;
+let modal: 'shop' | 'battle' | 'move' | 'help' | null = null;
 let lastLaunchMsg: string | null = null;
 
 const $ = (id: string): HTMLElement => document.getElementById(id)!;
@@ -227,6 +233,40 @@ function resetTransientUi(): void {
   sel = null;
   modal = null;
   showError('');
+}
+
+// ------------------------------------------------------------- help ---
+// The help panel shares the one modal overlay. In game, renderModal
+// owns it (kind 'help'); on the setup screen no render loop runs, so
+// showHelpOverlay drives the same overlay directly. Opening or closing
+// help is a pure UI act: no engine action, no autosave write. Content
+// and the victory-number builders live in ui/help.ts.
+
+/** Open the help panel over the setup screen (no game render loop). */
+function showHelpOverlay(input: HelpContentInput): void {
+  $('modal-title').textContent = 'How to play';
+  $('modal-box').classList.add('wide');
+  renderHelpInto($('modal-body'), input);
+  $('modal').hidden = false;
+}
+
+/** Tear the shared overlay down without a render pass (screen exits). */
+function hideModalOverlay(): void {
+  modal = null;
+  $('modal').hidden = true;
+  $('modal-body').innerHTML = '';
+  $('modal-box').classList.remove('wide');
+}
+
+/** Close whatever dialog is open. In game the render loop owns the
+ *  overlay; on the setup screen it is hidden directly. */
+function closeModal(): void {
+  if (S) {
+    modal = null;
+    render();
+  } else {
+    hideModalOverlay();
+  }
 }
 
 // ------------------------------------------------------- save/resume ---
@@ -457,6 +497,7 @@ function boot(): void {
     // Abort a Phase 2 driver run before tearing down the screens.
     if (bridge.driverActive) bridge.stopDriver?.();
     S = null;
+    hideModalOverlay();
     clearAutosave();
     $('game').hidden = true;
     $('setup').hidden = false;
@@ -501,6 +542,13 @@ function boot(): void {
     a.click();
     URL.revokeObjectURL(a.href);
   });
+  $('helpBtn').addEventListener('click', () => {
+    // Pure UI: no engine action, no autosave write. The render loop
+    // picks the dialog up from here; an AI driver keeps playing
+    // behind it.
+    modal = 'help';
+    render();
+  });
   ($('setupLoadInput') as HTMLInputElement).addEventListener('change', (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -527,6 +575,23 @@ function boot(): void {
   $('discardBtn').addEventListener('click', () => {
     clearAutosave();
     hideResumeButtons();
+  });
+  $('setupHelpBtn').addEventListener('click', () => {
+    void (async () => {
+      // If the selected 1942 data is still loading, wait for it so the
+      // objective shows the real numbers; on failure the panel opens
+      // with qualitative wording instead of numbers.
+      if (selectedMap === 'world1942' && !isMapLoaded('world1942')) {
+        showSetupStatus('Loading 1942 map...');
+        try {
+          await ensureMapLoaded('world1942');
+        } catch {
+          // Fall through: the objective builder degrades gracefully.
+        }
+        clearSetupStatus();
+      }
+      showHelpOverlay(helpInputForSetup(selectedMap, numPlayers));
+    })();
   });
   $('chatSend').addEventListener('click', () => {
     if (!S) return;
@@ -557,14 +622,15 @@ function boot(): void {
     $('chatwrap').hidden = false;
   });
   $('modal-close').addEventListener('click', () => {
-    modal = null;
-    render();
+    closeModal();
   });
   $('modal').addEventListener('click', (e) => {
     if (e.target === $('modal')) {
-      modal = null;
-      render();
+      closeModal();
     }
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('modal').hidden) closeModal();
   });
   // Map pan/zoom. View state lives in `view` and survives re-renders.
   const map = svg();
@@ -652,6 +718,7 @@ function boot(): void {
       $('game').hidden = false;
     },
     showSetup: () => {
+      hideModalOverlay();
       $('game').hidden = true;
       $('setup').hidden = false;
     },
@@ -705,9 +772,25 @@ function renderModal(s: GameState): void {
   }
   const root = $('modal');
   const body = $('modal-body');
+  $('modal-box').classList.toggle('wide', modal === 'help');
   if (!modal) {
     root.hidden = true;
     body.innerHTML = '';
+    return;
+  }
+  if (modal === 'help') {
+    $('modal-title').textContent = 'How to play';
+    // Help content is static for the current game: build it once per
+    // open, so re-renders behind it (an AI driver mid-turn) do not
+    // reset the panel's scroll position. No stale-dialog rule above
+    // closes help on a phase change; and because `modal` holds one
+    // dialog at a time, anything that opens another dialog (battles
+    // force theirs open on combat entry) simply replaces it.
+    if (!body.querySelector('.help-root')) {
+      body.oninput = null;
+      renderHelpInto(body, helpInputForState(s));
+    }
+    root.hidden = false;
     return;
   }
   // Preserve in-progress dialog inputs across re-renders.

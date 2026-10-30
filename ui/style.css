@@ -1015,6 +1015,45 @@ input::placeholder { color: var(--faint); }
 #modal-body { padding: 14px 18px 18px; overflow-y: auto; }
 #modal-body p { margin: 8px 0; }
 #modal-body button { margin: 4px 6px 4px 0; }
+#modal-box.wide { width: min(760px, 96vw); }
+
+/* help panel (ui/help.ts) */
+.help-root h3 {
+  font-family: var(--font-display);
+  font-size: 1em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 18px 0 6px;
+}
+.help-root h3:first-child { margin-top: 0; }
+.help-root h4 {
+  font-size: 0.95em;
+  margin: 12px 0 2px;
+  color: var(--text);
+}
+.help-root ol.help-steps, .help-root ul.help-rules {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+.help-root li { margin: 5px 0; line-height: 1.45; }
+.help-root table.help-units { border-collapse: collapse; width: 100%; }
+.help-root table.help-units th, .help-root table.help-units td {
+  padding: 6px 8px;
+  font-size: 0.92em;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.help-root table.help-units th {
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.help-root table.help-units td:nth-child(2),
+.help-root table.help-units td:nth-child(3),
+.help-root table.help-units td:nth-child(4),
+.help-root table.help-units td:nth-child(5) { text-align: center; white-space: nowrap; }
+.help-root table.help-units td.unote { color: var(--muted); }
 
 /* purchase shop */
 #modal-body table.shop-table { border-collapse: collapse; width: 100%; }

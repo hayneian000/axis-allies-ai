@@ -32,7 +32,8 @@ restructure without updating the test (see [browser-testing](browser-testing.md)
 
 - Element ids: `#map .terr`, `#buy-infantry`, `#buy-remaining`,
   `#mv-infantry`, `#cas-attacker-apply`, `#modal-body`, `#modal-close`,
-  `#endPhaseBtn`, `#newBtn`, `#tab-chat`, `#chatText`, `#chatSend`, …
+  `#endPhaseBtn`, `#newBtn`, `#helpBtn`, `#setupHelpBtn`, `#tab-chat`,
+  `#chatText`, `#chatSend`, …
 - Button labels the test clicks: `Buy units…`, `Buy`, `Launch moves`,
   `No moves`, `Roll one round`, `Auto`.
 - Move-destination buttons carry `data-dest="<territory-id>"`.
@@ -48,7 +49,17 @@ the guards `#game[hidden] { display: none }` / `#chatwrap[hidden]
 The app fills the viewport with no page scroll (laptop → ultrawide): a setup
 screen, then a game shell with topbar (stat chips), phase stepper, roster +
 map + inspector, and a footer with log/chat tabs and End Phase. Modals (shop,
-move planner, battle) are popups over the board.
+move planner, battle, help) are popups over the board.
+
+The help panel (`#helpBtn` in the topbar, `#setupHelpBtn` on the setup
+screen) shares the one modal overlay as a fourth dialog kind. Its content
+lives in `ui/help.ts` and is generated from live data - the unit table from
+`UNITS`, the objective numbers from the scenario or the running game's
+state - so it cannot drift from the game it describes. It is not tied to a
+phase: opening or closing it is a pure UI act (no engine action, no
+autosave write), it stays open across phase changes, and anything that
+opens another dialog replaces it. Covered by `tests/ui-help.test.ts` and
+`tests/help-content.test.ts`.
 
 ## Changing the UI
 

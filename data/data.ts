@@ -348,6 +348,17 @@ export function seatNamesForMap(id: MapId): string[] | undefined {
   return undefined;
 }
 
+/** A map's scenario for a player count, addressed by map id rather than
+ *  by which map is currently active - for setup UI (like seatNamesForMap)
+ *  that describes a map before it becomes active. Undefined when the
+ *  scenario does not exist for that count, or when the 1942 data has not
+ *  been loaded yet (call ensureMapLoaded first). */
+export function scenarioForMap(id: MapId, playerCount: number): ScenarioDef | undefined {
+  if (id === 'america') return SCENARIOS[playerCount];
+  if (playerCount !== 4) return undefined;
+  return world1942Scenario ?? undefined;
+}
+
 export function scenarioFor(playerCount: number): ScenarioDef {
   if (activeId === 'world1942') {
     if (playerCount !== 4) {

@@ -1,4 +1,7 @@
-// Anthropic Messages API adapter. Model IDs verified 2026-10-03 — refresh periodically.
+// Anthropic Messages API adapter. Model IDs verified live 2026-10-31 -
+// refresh periodically. The account models list reports Haiku only as the
+// dated claude-haiku-4-5-20251001; the claude-haiku-4-5 alias below is
+// accepted by /v1/messages and resolves to that snapshot (checked live).
 
 import type {
   CompleteRequest,
@@ -32,9 +35,21 @@ interface AnthropicMessage {
 function toAnthropicMessages(transcript: TranscriptMessage[]): AnthropicMessage[] {
   return transcript.map((m): AnthropicMessage => {
     if (m.role === 'assistant') {
-      const content: ContentBlock[] = [{ type: 'text', text: m.content }];
+      const content: ContentBlock[] = [];
+      // Anthropic rejects empty text blocks ("text content blocks must be
+      // non-empty"), and a tool-only reply is stored with "" as its text -
+      // only send a text block when there is text to send.
+      if (m.content) {
+        content.push({ type: 'text', text: m.content });
+      }
       for (const tc of m.toolCalls ?? []) {
         content.push({ type: 'tool_use', id: tc.id, name: tc.name, input: tc.arguments });
+      }
+      // A reply with neither text nor tool calls would serialize to an
+      // empty content array, which the API also rejects - send a neutral
+      // placeholder so the history entry stays valid.
+      if (content.length === 0) {
+        content.push({ type: 'text', text: '(no text reply)' });
       }
       return { role: 'assistant', content };
     }

@@ -8,6 +8,9 @@ export/import. Human players share the keyboard in hot-seat mode, or AI
 seats can be filled by LLM agents that play through the same action API,
 using your own provider API key (BYOK).
 
+**[Play the live demo](https://hayneian000.github.io/axis-allies-ai/)** in
+your browser - no install needed.
+
 Two maps ship with the game, selectable on the setup screen:
 
 - **America** - a 33-territory map of the continental United States

@@ -136,6 +136,80 @@ describe('anthropic adapter', () => {
     expect(res.stopReason).toBe('tool_use');
   });
 
+  it('omits the empty text block for a tool-only assistant reply', async () => {
+    responder = () => jsonResponse(canned);
+    await anthropicAdapter.complete(
+      makeRequest({
+        transcript: [
+          { role: 'user', content: 'Your move.' },
+          {
+            role: 'assistant',
+            content: '',
+            toolCalls: [
+              { id: 'tc_1', name: 'purchase', arguments: { items: [{ type: 'infantry', count: 3 }] } },
+            ],
+          },
+          { role: 'tool', toolCallId: 'tc_1', content: '{"ok":true}' },
+        ],
+      }),
+    );
+
+    const body = JSON.parse(lastBodyText) as Record<string, unknown>;
+    const messages = body['messages'] as Array<{ role: string; content: unknown }>;
+    // Live-verified 2026-10-31: the API 400s on an empty text block, so a
+    // tool-only reply must serialize to just its tool_use blocks.
+    expect(messages[1]).toEqual({
+      role: 'assistant',
+      content: [
+        {
+          type: 'tool_use',
+          id: 'tc_1',
+          name: 'purchase',
+          input: { items: [{ type: 'infantry', count: 3 }] },
+        },
+      ],
+    });
+    expect(lastBodyText).not.toContain('"text":""');
+  });
+
+  it('keeps the text block first when a reply has both text and tool calls', async () => {
+    responder = () => jsonResponse(canned);
+    await anthropicAdapter.complete(makeRequest());
+
+    const body = JSON.parse(lastBodyText) as Record<string, unknown>;
+    const messages = body['messages'] as Array<{ role: string; content: unknown }>;
+    expect(messages[1]).toEqual({
+      role: 'assistant',
+      content: [
+        { type: 'text', text: 'Let me buy units.' },
+        {
+          type: 'tool_use',
+          id: 'tc_1',
+          name: 'purchase',
+          input: { items: [{ type: 'infantry', count: 3 }] },
+        },
+      ],
+    });
+  });
+
+  it('never serializes an assistant reply to an empty content array', async () => {
+    responder = () => jsonResponse(canned);
+    await anthropicAdapter.complete(
+      makeRequest({
+        transcript: [
+          { role: 'user', content: 'Your move.' },
+          { role: 'assistant', content: '' },
+        ],
+      }),
+    );
+
+    const body = JSON.parse(lastBodyText) as Record<string, unknown>;
+    const messages = body['messages'] as Array<{ role: string; content: unknown }>;
+    const content = messages[1]['content'] as Array<Record<string, unknown>>;
+    expect(content.length).toBeGreaterThan(0);
+    expect(content[0]).toEqual({ type: 'text', text: '(no text reply)' });
+  });
+
   it('throws an error mentioning the status on non-2xx', async () => {
     responder = () => jsonResponse({ type: 'error', error: { message: 'bad key' } }, 401);
     await expect(anthropicAdapter.complete(makeRequest())).rejects.toThrow(/401/);

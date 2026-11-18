@@ -1,8 +1,8 @@
 // Headless end-to-end tests for the agent turn driver (agents/driver.ts).
 
 import { describe, expect, it } from 'vitest';
-import { createGame, endPhase } from '../../engine/engine';
-import type { GameState } from '../../engine/types';
+import { createGame, emptyUnits, endPhase } from '../../engine/engine';
+import type { GameState, UnitCounts } from '../../engine/types';
 import { Agent } from '../../agents/agent';
 import { MaxRoundsExceeded, runGame } from '../../agents/driver';
 import type { SeatRuntime } from '../../agents/driver';
@@ -165,6 +165,75 @@ describe('driver: full games', () => {
     const seats = [aiSeat(0, passBotHandler), aiSeat(1, passBotHandler)];
     await expect(runGame(state, seats, {}, { maxRounds: 1 })).rejects.toThrow(MaxRoundsExceeded);
   });
+});
+
+describe('driver: submerge auto-resolve', () => {
+  it('auto-resolves a sea battle with eligible submarines instead of throwing submerge_pending', async () => {
+    const state = createGame({ numPlayers: 2, seed: 42 });
+    state.turnCap = 3;
+    const pid = state.currentPlayer;
+    const foe = 1 - pid;
+    const setSea = (zid: string, owner: number, units: Partial<UnitCounts>): void => {
+      state.territories[zid].owner = owner;
+      state.territories[zid].units = { ...emptyUnits(), ...units };
+    };
+    // Attacker stages a cruiser + submarine one zone away; the defender
+    // holds a cruiser + submarine. No destroyer on either side, so BOTH
+    // sides have eligible subs and owe a submerge decision before any
+    // dice (1942 2e p.29) - the sz9 shape that killed the Haiku game
+    // g-20261118-007 in round 6.
+    setSea('california_coast', pid, { cruiser: 1, submarine: 1 });
+    setSea('western_gulf', foe, { cruiser: 1, submarine: 1 });
+
+    // Scripted attacker: sortie into western_gulf on its first assault
+    // group, pass everything else. The state check (not a latch) keeps
+    // the attack live across driver retries until it actually applies.
+    const attacker: MockHandler = (req) => {
+      const tools = new Set(req.tools.map((t) => t.name));
+      const staged =
+        state.territories['california_coast'].units.submarine > 0 &&
+        state.currentPlayer === pid;
+      if (
+        staged &&
+        tools.has('combat_move') &&
+        (state.phase === 'purchase' || state.phase === 'combatMove')
+      ) {
+        return mockResponse('sortie', [
+          mockToolCall('combat_move', {
+            moves: [
+              {
+                from: 'california_coast',
+                to: 'western_gulf',
+                units: { cruiser: 1, submarine: 1 },
+              },
+            ],
+          }),
+        ]);
+      }
+      return mockResponse('pass');
+    };
+    const seats: SeatRuntime[] = [];
+    seats[pid] = aiSeat(pid, attacker);
+    seats[foe] = aiSeat(foe, passBotHandler);
+
+    const result = await runGame(state, seats, {}, { diplomacy: { enabled: false } });
+
+    expect(result.state.phase).toBe('gameover');
+    // The battle was fought to a finish by the driver's auto-resolver.
+    expect(
+      result.state.events.some(
+        (e) => e.kind === 'battle_end' && e.detail.includes('western_gulf'),
+      ),
+    ).toBe(true);
+    expect(result.state.battles.every((b) => b.over)).toBe(true);
+    // The never-submerge policy recorded decisions for both sides before
+    // the first dice (attacker first, then defender).
+    const decisions = result.state.events.filter(
+      (e) => e.kind === 'submerge' && e.detail.includes('western_gulf'),
+    );
+    expect(decisions.length).toBeGreaterThanOrEqual(2);
+    assertValidUnits(result.state);
+  }, 30000);
 });
 
 describe('lobby', () => {

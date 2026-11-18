@@ -1,6 +1,13 @@
 // Single-browser turn driver: runs a full game with human and/or AI (LLM) seats.
 
-import { autoCasualties, endPhase, openBattles, resolveCombatRound } from '../engine/engine';
+import {
+  autoCasualties,
+  endPhase,
+  openBattles,
+  resolveCombatRound,
+  submergeSubs,
+  submergeTurn,
+} from '../engine/engine';
 import type { ActionResult, GameState, Phase } from '../engine/types';
 import type { Agent, ToolResultRecord } from './agent';
 import { phaseHasActions } from './affordance';
@@ -436,12 +443,32 @@ function summarizeOk(name: string, args: Record<string, unknown>): string {
  * Resolve every open battle without agent input (MVP): roll rounds, apply the
  * engine's auto-casualty policy to both sides, repeat until the battle ends.
  * Neutral garrisons are auto-resolved by the engine inside resolveCombatRound.
+ *
+ * Submerge policy (1942 2e p.29): the engine refuses to roll a sea-battle
+ * round while a side with eligible submarines (subs present, no enemy
+ * destroyer) has not recorded a submerge decision - it fails with
+ * submerge_pending. The auto-resolver's policy is "never submerge": before
+ * each round it records a 0-submerge decision for whichever side is due
+ * (attacker first), keeping every sub in the fight, consistent with an
+ * auto-resolver that already auto-picks casualties for both sides.
  */
 function autoResolveCombat(state: GameState, pid: number): void {
   for (const b0 of openBattles(state)) {
     for (let round = 0; round < MAX_BATTLE_ROUNDS; round++) {
       const b = state.battles.find((x) => x.id === b0.id && !x.over);
       if (!b) break;
+      for (;;) {
+        const due = submergeTurn(state, b.territoryId);
+        if (!due) break;
+        const decider = due === 'attacker' ? b.attackerId : b.defenderId;
+        if (decider === null) break; // No player to decide; resolveCombatRound reports it.
+        const s = submergeSubs(state, decider, b.territoryId, due, 0);
+        if (!s.ok) {
+          throw new Error(
+            `Auto-resolve: submerge decision failed in ${b.territoryId}: [${s.code}] ${s.error}`,
+          );
+        }
+      }
       const r = resolveCombatRound(state, pid, b.territoryId);
       if (!r.ok) {
         throw new Error(

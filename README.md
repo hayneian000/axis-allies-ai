@@ -127,6 +127,13 @@ per-seat error cards (retry, edit key, skip, or pass).
 See [`docs/phase2-agents.md`](docs/phase2-agents.md) for the agent system and
 [`docs/m3-diplomacy.md`](docs/m3-diplomacy.md) for the diplomacy design.
 
+## How it was built
+
+Most of the code in this repo was written by Muse, an AI coding agent,
+through pull requests that Ian Haynes reviewed and merged. Direction,
+review, and playtesting were human. The LLM players are a separate thing:
+they are the AI seats that play the game, not the tool that wrote the code.
+
 ## Project structure
 
 | Path        | What it is |

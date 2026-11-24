@@ -28,7 +28,7 @@ beforeAll(async () => {
   // Skip the fog-of-war intro cinematic in tests.
   (window as unknown as Record<string, unknown>).__SKIP_INTRO__ = true;
   await import('../ui/main');
-  // Pick the 1942 World folio (forces the 4-seat scenario) and commence.
+  // Pick the 1942 World folio (forces the 5-seat scenario) and commence.
   document.querySelector<HTMLButtonElement>('.map-folio[data-map="world1942"]')!.click();
   // The folio click preloads the 1942 data; await it so Commence takes
   // the already-loaded synchronous path, as a real user would after the
@@ -85,9 +85,10 @@ describe('board-space name labels (1942 map)', () => {
 
   it('roster shows per-seat victory-city counts and targets', () => {
     const roster = el('roster').textContent ?? '';
-    expect(roster).toContain('VC 3/6'); // Germany
-    expect(roster).toContain('VC 2/5'); // USSR
-    expect(roster).toContain('VC 5/8'); // UK + US (Japan is also 3/6)
+    expect(roster).toContain('VC 3/6'); // Germany (Japan and US are also 3/6)
+    expect(roster).toContain('VC 2/5'); // USSR (UK is also 2/5)
+    expect(roster).toContain('UK');
+    expect(roster).toContain('US');
   });
 
   it('inspector calls out a victory city by name', () => {

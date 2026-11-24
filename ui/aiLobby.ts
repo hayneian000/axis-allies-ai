@@ -35,7 +35,7 @@ let lobbyMap: MapId = 'america';
 
 /** The default display name for a seat. A scenario that names its seats
  *  (1942: the powers) wins over the generic defaults, so an untouched
- *  lobby starts a 1942 game with Germany / USSR / Japan / UK + US at the
+ *  lobby starts a 1942 game with Germany / USSR / Japan / UK / US at the
  *  table. Anything the user types replaces the default and sticks. */
 function defaultName(i: number, kind: 'human' | 'ai', provider?: ProviderId): string {
   const named = seatNamesForMap(lobbyMap)?.[i];

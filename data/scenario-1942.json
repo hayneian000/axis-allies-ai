@@ -1,38 +1,40 @@
 {
-  "players": 4,
+  "players": 5,
   "capitals": [
     "germany",
     "russia",
     "japan",
-    [
-      "united_kingdom",
-      "eastern_united_states"
-    ]
+    "united_kingdom",
+    "eastern_united_states"
   ],
   "capitalsToWin": 3,
   "victoryCitiesToWin": [
     6,
     5,
     6,
-    8
+    5,
+    6
   ],
   "seatNames": [
     "Germany",
     "USSR",
     "Japan",
-    "UK + US"
+    "UK",
+    "US"
   ],
   "turnOrder": [
     0,
     1,
     2,
-    3
+    3,
+    4
   ],
   "banks": [
     41,
     24,
     30,
-    73
+    31,
+    42
   ],
   "holdings": [
     {
@@ -72,12 +74,12 @@
     },
     {
       "territory": "sinkiang",
-      "owner": 3,
+      "owner": 4,
       "units": {}
     },
     {
       "territory": "szechwan",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "infantry": 2,
         "fighter": 1
@@ -85,7 +87,7 @@
     },
     {
       "territory": "yunnan",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "infantry": 2
       }
@@ -107,7 +109,7 @@
     },
     {
       "territory": "anhwei",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "infantry": 2
       }
@@ -551,7 +553,7 @@
     },
     {
       "territory": "hawaiian_islands",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "infantry": 1,
         "fighter": 1
@@ -559,21 +561,21 @@
     },
     {
       "territory": "midway",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "infantry": 1
       }
     },
     {
       "territory": "alaska",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "infantry": 1
       }
     },
     {
       "territory": "western_united_states",
-      "owner": 3,
+      "owner": 4,
       "factory": true,
       "units": {
         "aa": 1,
@@ -583,14 +585,14 @@
     },
     {
       "territory": "central_united_states",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "infantry": 1
       }
     },
     {
       "territory": "eastern_united_states",
-      "owner": 3,
+      "owner": 4,
       "factory": true,
       "units": {
         "tank": 1,
@@ -603,32 +605,32 @@
     },
     {
       "territory": "east_mexico",
-      "owner": 3,
+      "owner": 4,
       "units": {}
     },
     {
       "territory": "mexico",
-      "owner": 3,
+      "owner": 4,
       "units": {}
     },
     {
       "territory": "central_america",
-      "owner": 3,
+      "owner": 4,
       "units": {}
     },
     {
       "territory": "west_indies",
-      "owner": 3,
+      "owner": 4,
       "units": {}
     },
     {
       "territory": "greenland",
-      "owner": 3,
+      "owner": 4,
       "units": {}
     },
     {
       "territory": "brazil",
-      "owner": 3,
+      "owner": 4,
       "units": {}
     },
     {
@@ -672,7 +674,7 @@
     },
     {
       "territory": "sz11",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "transport": 2,
         "destroyer": 1
@@ -702,7 +704,7 @@
     },
     {
       "territory": "sz19",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "cruiser": 1
       }
@@ -753,7 +755,7 @@
     },
     {
       "territory": "sz53",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "fighter": 1,
         "carrier": 1,
@@ -763,7 +765,7 @@
     },
     {
       "territory": "sz56",
-      "owner": 3,
+      "owner": 4,
       "units": {
         "battleship": 1,
         "destroyer": 1,
@@ -789,5 +791,5 @@
     }
   ],
   "neutrals": {},
-  "note": "Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, Japanese = seat 2, and British + Americans are combined into seat 3 (both powers' territories and starting units belong to seat 3). capitals has one entry per seat; seat 3's entry lists both of its capitals, united_kingdom (primary) and eastern_united_states, and both are registered seat capitals in the engine. Banks: XML resourceInitialize starting PUs (Germans 41, Russians 24, Japanese 30, British 31 + Americans 42 combined into seat 3). Sea-zone holdings carry the naval starting units from the XML; land holdings cover every power-owned territory. The 16 neutral territories are impassable (1942 2e): they hold no garrison and can never be entered, overflown, or captured. Victory cities: the scenario also plays the 1942 2e standard victory (rulebook p.6) in per-seat form - at the end of a complete round, a seat holding 3 more victory cities than it started with wins (victoryCitiesToWin per seat: Germany 6, USSR 5, Japan 6, UK + US 8; the book's side totals are Axis 9 / Allies 10)."
+  "note": "Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. The board has five powers and this scenario has five seats: Germans = seat 0, Russians = seat 1, Japanese = seat 2, British = seat 3, and Americans = seat 4 (each power's territories and starting units belong to its own seat). capitals has one entry per seat, each seat's single capital. Banks: XML resourceInitialize starting PUs (Germans 41, Russians 24, Japanese 30, British 31, Americans 42). Sea-zone holdings carry the naval starting units from the XML; land holdings cover every power-owned territory. The 16 neutral territories are impassable (1942 2e): they hold no garrison and can never be entered, overflown, or captured. Victory cities: the scenario also plays the 1942 2e standard victory (rulebook p.6) in per-seat form - at the end of a complete round, a seat holding 3 more victory cities than it started with wins (victoryCitiesToWin per seat: Germany 6, USSR 5, Japan 6, UK 5, US 6; the book's side totals are Axis 9 / Allies 10)."
 }

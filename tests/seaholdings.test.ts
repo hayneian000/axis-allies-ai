@@ -24,11 +24,12 @@ beforeAll(async () => {
 describe('createGame with the world1942 map active', () => {
   it('succeeds on scenario-1942 and places all 19 starting fleets', () => {
     setActiveMap('world1942');
-    const s = createGame({ numPlayers: 4, seed: 1 });
+    const s = createGame({ numPlayers: 5, seed: 1 });
 
     expect(Object.keys(s.territories)).toHaveLength(161);
-    expect(s.players).toHaveLength(4);
+    expect(s.players).toHaveLength(5);
     expect(s.players[3].capital).toBe('united_kingdom');
+    expect(s.players[4].capital).toBe('eastern_united_states');
 
     const occupied = seaZoneIds().filter((z) =>
       seaZoneForces(s.territories[z]).some((f) => countUnits(f.units) > 0),
@@ -48,8 +49,8 @@ describe('createGame with the world1942 map active', () => {
     expect(force('sz5', 0)).toMatchObject({ transport: 1, submarine: 2, cruiser: 1 });
     expect(s.territories.sz35.owner).toBe(3);
     expect(force('sz35', 3)).toMatchObject({ carrier: 1, transport: 1, fighter: 1, cruiser: 1 });
-    expect(s.territories.sz56.owner).toBe(3);
-    expect(force('sz56', 3)).toMatchObject({ battleship: 1, destroyer: 1, transport: 1 });
+    expect(s.territories.sz56.owner).toBe(4);
+    expect(force('sz56', 4)).toMatchObject({ battleship: 1, destroyer: 1, transport: 1 });
 
     // Carrier + its fighters, same owner seat (Japan = seat 2).
     expect(s.territories.sz37.owner).toBe(2);
@@ -71,17 +72,17 @@ describe('createGame with the world1942 map active', () => {
 
   it('rejects a land unit in a sea holding', () => {
     setActiveMap('world1942');
-    const scenario = scenarioFor(4);
+    const scenario = scenarioFor(5);
     const sz4 = scenario.holdings.find((h) => h.territory === 'sz4')!;
     const original = sz4.units;
     sz4.units = { ...original, infantry: 1 };
     try {
-      expect(() => createGame({ numPlayers: 4, seed: 1 })).toThrow(/cannot start at sea/);
+      expect(() => createGame({ numPlayers: 5, seed: 1 })).toThrow(/cannot start at sea/);
     } finally {
       sz4.units = original;
     }
     // The unmutated scenario still starts cleanly afterwards.
-    expect(() => createGame({ numPlayers: 4, seed: 1 })).not.toThrow();
+    expect(() => createGame({ numPlayers: 5, seed: 1 })).not.toThrow();
   });
 });
 

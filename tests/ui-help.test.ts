@@ -111,7 +111,8 @@ describe('help panel', () => {
     expect(modalBodyText()).toContain('Germany 6');
     expect(modalBodyText()).toContain('USSR 5');
     expect(modalBodyText()).toContain('Japan 6');
-    expect(modalBodyText()).toContain('UK + US 8');
+    expect(modalBodyText()).toContain('UK 5');
+    expect(modalBodyText()).toContain('US 6');
     expect(modalBodyText()).toContain('end of a complete round');
 
     el('modal-close').click();

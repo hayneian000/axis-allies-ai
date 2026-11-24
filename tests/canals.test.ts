@@ -12,9 +12,9 @@ import type { GameState } from '../engine/types';
 // Canal enforcement (1942 board): the Panama edge sz19<->sz18 requires
 // control of Central America; the Suez edge sz17<->sz34 requires control
 // of BOTH Egypt and Trans-Jordan. Control is evaluated at move time for
-// the moving seat. Starting position: seat 3 (British + Americans) holds
-// Central America, Egypt, and Trans-Jordan; a seat-3 cruiser starts in
-// sz19 and a seat-3 destroyer in sz17.
+// the moving seat. Starting position: seat 4 (US) holds Central America
+// and a seat-4 cruiser starts in sz19; seat 3 (UK) holds Egypt and
+// Trans-Jordan and a seat-3 destroyer starts in sz17.
 
 let s: GameState;
 
@@ -33,7 +33,7 @@ function setFleet(zid: string, owner: number, units: Partial<Record<string, numb
 
 beforeEach(() => {
   setActiveMap('world1942');
-  s = createGame({ numPlayers: 4, seed: 7 });
+  s = createGame({ numPlayers: 5, seed: 7 });
 });
 
 afterEach(() => setActiveMap('america'));
@@ -46,12 +46,12 @@ beforeAll(async () => {
 
 describe('canalEdgeOpen (the rule the engine and the UI dialog share)', () => {
   it('Panama is open to the seat holding Central America, closed to others', () => {
-    expect(s.territories.central_america.owner).toBe(3);
-    expect(canalEdgeOpen(s.territories, 'sz19', 'sz18', 3)).toBe(true);
-    expect(canalEdgeOpen(s.territories, 'sz18', 'sz19', 3)).toBe(true);
+    expect(s.territories.central_america.owner).toBe(4);
+    expect(canalEdgeOpen(s.territories, 'sz19', 'sz18', 4)).toBe(true);
+    expect(canalEdgeOpen(s.territories, 'sz18', 'sz19', 4)).toBe(true);
     expect(canalEdgeOpen(s.territories, 'sz19', 'sz18', 0)).toBe(false);
     s.territories.central_america.owner = 0;
-    expect(canalEdgeOpen(s.territories, 'sz19', 'sz18', 3)).toBe(false);
+    expect(canalEdgeOpen(s.territories, 'sz19', 'sz18', 4)).toBe(false);
     expect(canalEdgeOpen(s.territories, 'sz19', 'sz18', 0)).toBe(true);
   });
 
@@ -72,17 +72,17 @@ describe('canalEdgeOpen (the rule the engine and the UI dialog share)', () => {
 
 describe('Panama in combat movement', () => {
   it('allows the controlling seat through (sz19 cruiser -> sz18)', () => {
-    turn(3, 'combatMove');
-    const r = combatMove(s, 3, [{ from: 'sz19', to: 'sz18', units: { cruiser: 1 } }]);
+    turn(4, 'combatMove');
+    const r = combatMove(s, 4, [{ from: 'sz19', to: 'sz18', units: { cruiser: 1 } }]);
     expect(r.ok, r.error).toBe(true);
-    expect(s.territories.sz18.owner).toBe(3);
+    expect(s.territories.sz18.owner).toBe(4);
     expect(s.territories.sz18.units.cruiser).toBe(1);
   });
 
   it('denies a non-controlling seat with canal_closed', () => {
     s.territories.central_america.owner = 0;
-    turn(3, 'combatMove');
-    const r = combatMove(s, 3, [{ from: 'sz19', to: 'sz18', units: { cruiser: 1 } }]);
+    turn(4, 'combatMove');
+    const r = combatMove(s, 4, [{ from: 'sz19', to: 'sz18', units: { cruiser: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('canal_closed');
     // Nothing moved.
@@ -99,27 +99,27 @@ describe('Panama in combat movement', () => {
   });
 
   it('blocks a two-step route whose second step is the canal (sz20 -> sz18)', () => {
-    setFleet('sz20', 3, { destroyer: 1 });
+    setFleet('sz20', 4, { destroyer: 1 });
     s.territories.central_america.owner = 0;
-    turn(3, 'combatMove');
-    const r = combatMove(s, 3, [{ from: 'sz20', to: 'sz18', units: { destroyer: 1 } }]);
+    turn(4, 'combatMove');
+    const r = combatMove(s, 4, [{ from: 'sz20', to: 'sz18', units: { destroyer: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('canal_closed');
   });
 
   it('allows the same two-step route while the canal is held', () => {
-    setFleet('sz20', 3, { destroyer: 1 });
-    turn(3, 'combatMove');
-    const r = combatMove(s, 3, [{ from: 'sz20', to: 'sz18', units: { destroyer: 1 } }]);
+    setFleet('sz20', 4, { destroyer: 1 });
+    turn(4, 'combatMove');
+    const r = combatMove(s, 4, [{ from: 'sz20', to: 'sz18', units: { destroyer: 1 } }]);
     expect(r.ok, r.error).toBe(true);
     expect(s.territories.sz18.units.destroyer).toBe(1);
   });
 
   it('does not block movement up to the canal mouth (sz20 -> sz19)', () => {
-    setFleet('sz20', 3, { destroyer: 1 });
+    setFleet('sz20', 4, { destroyer: 1 });
     s.territories.central_america.owner = 0;
-    turn(3, 'combatMove');
-    const r = combatMove(s, 3, [{ from: 'sz20', to: 'sz19', units: { destroyer: 1 } }]);
+    turn(4, 'combatMove');
+    const r = combatMove(s, 4, [{ from: 'sz20', to: 'sz19', units: { destroyer: 1 } }]);
     expect(r.ok, r.error).toBe(true);
   });
 
@@ -190,8 +190,8 @@ describe('canals in non-combat movement', () => {
 
   it('denies a closed Panama (sz19 -> sz18)', () => {
     s.territories.central_america.owner = 1;
-    turn(3, 'nonCombat');
-    const r = nonCombatMove(s, 3, [{ from: 'sz19', to: 'sz18', units: { cruiser: 1 } }]);
+    turn(4, 'nonCombat');
+    const r = nonCombatMove(s, 4, [{ from: 'sz19', to: 'sz18', units: { cruiser: 1 } }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('canal_closed');
   });
@@ -218,8 +218,8 @@ describe('canals do not affect land or air movement', () => {
     s.territories.central_america.units.infantry = 2;
     s.territories.east_mexico.owner = 0;
     s.territories.east_mexico.units.infantry = 1;
-    turn(3, 'combatMove');
-    const r = combatMove(s, 3, [
+    turn(4, 'combatMove');
+    const r = combatMove(s, 4, [
       { from: 'central_america', to: 'east_mexico', units: { infantry: 1 } },
     ]);
     expect(r.ok, r.error).toBe(true);

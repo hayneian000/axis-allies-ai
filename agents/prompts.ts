@@ -58,7 +58,7 @@ function americaDigest(): string {
 }
 
 function world1942Digest(): string {
-  const scenario = scenarioFor(4);
+  const scenario = scenarioFor(5);
   const sea = MAP.territories.filter((t) => t.domain === 'sea');
   const land = MAP.territories.filter((t) => t.domain !== 'sea');
   const capitalsTotal = scenario.capitals.reduce(
@@ -66,8 +66,8 @@ function world1942Digest(): string {
     0,
   );
   const toWin = scenario.capitalsToWin ?? Math.floor(capitalsTotal / 2) + 1;
-  const names = scenario.seatNames ?? ['Germany', 'USSR', 'Japan', 'UK + US'];
-  const order = (scenario.turnOrder ?? [0, 1, 2, 3]).map((i) => names[i]).join(', then ');
+  const names = scenario.seatNames ?? ['Germany', 'USSR', 'Japan', 'UK', 'US'];
+  const order = (scenario.turnOrder ?? [0, 1, 2, 3, 4]).map((i) => names[i]).join(', then ');
   const multi = scenario.capitals
     .map((c, i) => ({ caps: Array.isArray(c) ? c : [c], name: names[i] }))
     .find((s) => s.caps.length > 1);
@@ -81,7 +81,7 @@ function world1942Digest(): string {
   const parts = [
     `You play a simplified free-for-all Axis & Allies (based on 1942 2e) on the 1942 world map: ${MAP.territories.length} territories (${land.length} land territories + ${sea.length} sea zones) on the original board artwork, with land, air, and naval forces.`,
     `OBJECTIVE: Win by holding a majority of capitals simultaneously (${toWin} of ${capitalsTotal} on this map). If 20 rounds pass with no winner, the highest-income player wins. Capturing a capital steals the victim's entire saved IPC bank.`,
-    `SEATS AND TURN ORDER: The five powers are merged into four seats, which play in a fixed order every round - ${order}. There is no shuffle.`,
+    `SEATS AND TURN ORDER: The five powers play as five seats, in a fixed order every round - ${order}. There is no shuffle.`,
     DIGEST_TURN_PHASES,
     DIGEST_PURCHASE,
     DIGEST_COMBAT,

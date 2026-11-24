@@ -199,7 +199,7 @@ function helpInput(primary: HelpObjective, playerCount: number): HelpContentInpu
   const other = otherMap(primary.mapId);
   return {
     primary,
-    secondary: objectiveForMap(other, other === 'world1942' ? 4 : playerCount),
+    secondary: objectiveForMap(other, other === 'world1942' ? 5 : playerCount),
   };
 }
 
@@ -211,7 +211,7 @@ export function helpInputForState(s: GameState): HelpContentInput {
 /** Panel content for the setup screen: the selected map first. */
 export function helpInputForSetup(selectedMap: MapId, numPlayers: number): HelpContentInput {
   return helpInput(
-    objectiveForMap(selectedMap, selectedMap === 'world1942' ? 4 : numPlayers),
+    objectiveForMap(selectedMap, selectedMap === 'world1942' ? 5 : numPlayers),
     numPlayers,
   );
 }
@@ -269,7 +269,7 @@ export const TURN_STEPS: Array<{ name: string; text: string }> = [
 
 export const KEY_RULES: string[] = [
   "Capitals: capturing a capital transfers the victim's entire bank to you. While you hold no capital you cannot buy units or collect income.",
-  'UK + US (1942 World) rules two capitals, London and Washington. Losing either one still hands your bank to the captor; you are blocked only while you hold neither.',
+  'Capitals (1942 World): every seat holds exactly one capital, so the rule above applies to all five seats alike.',
   'Aircraft: fighters and bombers must end the Move step on territory you held at the start of your turn, or on a friendly carrier with spare room. Aircraft left with no legal landing spot are lost.',
   "Factories: a factory builds up to its territory's IPC value in units per turn, minus its damage markers. A factory built or captured this turn produces from next turn.",
   'Factory raids: bombers can raid a factory instead of attacking. Each surviving bomber rolls one die; the total becomes damage markers on that factory, never more than twice the territory IPC value. Damage does not reduce income. Repair markers in the Buy step, 1 IPC each.',

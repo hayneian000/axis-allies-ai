@@ -177,16 +177,16 @@ export interface ScenarioDef {
    *  applied to every seat. Absent = no victory-city win path. */
   victoryCitiesToWin?: number | number[];
   /** Display names for the seats, one per seat (1942: the power names -
-   *  "Germany", "USSR", "Japan", "UK + US"). Used as the default player
+   *  "Germany", "USSR", "Japan", "UK", "US"). Used as the default player
    *  names when a game does not supply its own. */
   seatNames?: string[];
   /** Fixed turn order (seat ids, first to last). When present, createGame
    *  uses it verbatim instead of the seeded shuffle - the 1942 scenario
-   *  plays in the 1942 2e power order (Germany, USSR, Japan, UK + US).
+   *  plays in the 1942 2e power order (Germany, USSR, Japan, UK, US).
    *  Free-for-all scenarios without one keep the shuffled order. */
   turnOrder?: number[];
   /** Free-text provenance / conversion notes (e.g. the 1942 scenario's
-   *  five-powers-to-four-seats merge and bank source). Display only. */
+   *  seat layout and bank source). Display only. */
   note?: string;
 }
 
@@ -216,30 +216,27 @@ export const NATION_COLORS_1942: Record<string, string> = {
   neutral: '#d8ba7c',
 };
 
-/** Which seat each 1942 nation belongs to (UK and US share seat 3). */
+/** Which seat each 1942 nation belongs to (one seat per power). */
 export const NATION_SEAT_1942: Record<string, number> = {
   germany: 0,
   ussr: 1,
   japan: 2,
   uk: 3,
-  us: 3,
+  us: 4,
 };
 
 /** Each seat's lead nation: its chrome color, and the tint for territory
- *  the seat captures from another power. Seat 3 leads from the United
- *  Kingdom (its first-listed capital); its American holdings still tint
- *  US olive because they are held by their original nation (see
- *  `boardTintHex`). */
-export const SEAT_NATION_1942: string[] = ['germany', 'ussr', 'japan', 'uk'];
+ *  the seat captures from another power. */
+export const SEAT_NATION_1942: string[] = ['germany', 'ussr', 'japan', 'uk', 'us'];
 
 /**
  * Board-mode tint for a territory held by `ownerSeat` (null = unheld):
  * the color of the nation that holds it. A territory still held by its
- * original power's seat keeps that nation's color — so seat 3's British
- * holdings tint tan and its American holdings tint olive, exactly like
- * the printed board's start position. Territory taken from another power
- * tints with the capturer's lead-nation color. Sea zones (no original
- * nation) tint with the occupying seat's lead nation.
+ * original power's seat keeps that nation's color — British holdings
+ * tint tan and American holdings tint olive, exactly like the printed
+ * board's start position. Territory taken from another power tints with
+ * the capturer's lead-nation color. Sea zones (no original nation) tint
+ * with the occupying seat's lead nation.
  */
 export function boardTintHex(def: TerritoryDef, ownerSeat: number | null): string {
   if (ownerSeat === null) return NATION_COLORS_1942.neutral;
@@ -355,15 +352,15 @@ export function seatNamesForMap(id: MapId): string[] | undefined {
  *  been loaded yet (call ensureMapLoaded first). */
 export function scenarioForMap(id: MapId, playerCount: number): ScenarioDef | undefined {
   if (id === 'america') return SCENARIOS[playerCount];
-  if (playerCount !== 4) return undefined;
+  if (playerCount !== 5) return undefined;
   return world1942Scenario ?? undefined;
 }
 
 export function scenarioFor(playerCount: number): ScenarioDef {
   if (activeId === 'world1942') {
-    if (playerCount !== 4) {
+    if (playerCount !== 5) {
       throw new Error(
-        `The 1942 world map scenario requires exactly 4 players (got ${playerCount}).`,
+        `The 1942 world map scenario requires exactly 5 players (got ${playerCount}).`,
       );
     }
     if (!world1942Scenario) {

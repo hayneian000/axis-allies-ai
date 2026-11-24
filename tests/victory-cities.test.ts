@@ -16,23 +16,23 @@ import type { GameState } from '../engine/types';
 // (rulebook p.6 - control 3 more victory cities than you started with,
 // Axis 9 / Allies 10 as side totals) dealt out per seat for the
 // free-for-all: each seat's target is its starting count + 3 (Germany 6,
-// USSR 5, Japan 6, UK + US 8). Evaluated ONLY at the end of a complete
+// USSR 5, Japan 6, UK 5, US 6). Evaluated ONLY at the end of a complete
 // round. The capitals win stays immediate and unchanged.
 //
 // Territory ids of the board's 13 victory cities, by starting seat:
 //   Germany (0): germany (Berlin), france (Paris), italy (Rome)
 //   USSR (1): russia (Moscow), karelia_ssr (Leningrad)
 //   Japan (2): japan (Tokyo), kiangsu (Shanghai), philippine_islands (Manila)
-//   UK + US (3): united_kingdom (London), india (Calcutta),
-//     eastern_united_states (Washington), western_united_states (San
-//     Francisco), hawaiian_islands (Honolulu)
+//   UK (3): united_kingdom (London), india (Calcutta)
+//   US (4): eastern_united_states (Washington), western_united_states
+//     (San Francisco), hawaiian_islands (Honolulu)
 // Tests flip owners directly (the victory.test.ts style): a flip alone
 // runs no capture logic, so the capitals check stays out of the way and
 // the round-end VC check is what is exercised.
 
 function game1942(seed = 7): GameState {
   setActiveMap('world1942');
-  return createGame({ numPlayers: 4, seed });
+  return createGame({ numPlayers: 5, seed });
 }
 
 afterEach(() => setActiveMap('america'));
@@ -63,10 +63,10 @@ beforeAll(async () => {
 });
 
 describe('victory cities: setup', () => {
-  it('1942 game carries the per-seat targets; starting counts are 3/2/3/5', () => {
+  it('1942 game carries the per-seat targets; starting counts are 3/2/3/2/3', () => {
     const s = game1942();
-    expect(s.victoryCitiesToWin).toEqual([6, 5, 6, 8]);
-    expect(s.players.map((p) => victoryCitiesHeld(s, p.id))).toEqual([3, 2, 3, 5]);
+    expect(s.victoryCitiesToWin).toEqual([6, 5, 6, 5, 6]);
+    expect(s.players.map((p) => victoryCitiesHeld(s, p.id))).toEqual([3, 2, 3, 2, 3]);
   });
 
   it('America games carry no victory-city win path', () => {
@@ -128,7 +128,9 @@ describe('victory cities: round-end check', () => {
     expect(s.winner).toBeNull();
     endTurn(s); // Japan
     expect(s.winner).toBeNull();
-    endTurn(s); // UK + US - the round completes here
+    endTurn(s); // UK
+    expect(s.winner).toBeNull();
+    endTurn(s); // US - the round completes here
     expect(s.phase).toBe('gameover');
     expect(s.winner).toBe(0);
     expect(s.winReason).toBe('victory_cities');
@@ -145,7 +147,8 @@ describe('victory cities: round-end check', () => {
     give(s, 'india', 3);
     expect(victoryCitiesHeld(s, 0)).toBe(5);
     endTurn(s); // Japan
-    endTurn(s); // UK + US - round ends with Germany below target
+    endTurn(s); // UK
+    endTurn(s); // US - round ends with Germany below target
     expect(s.winner).toBeNull();
     expect(s.phase).toBe('purchase');
     expect(s.round).toBe(2);
@@ -211,14 +214,14 @@ describe('victory cities: round-end check', () => {
     expect(victoryCitiesHeld(s, 0)).toBe(6);
     expect(victoryCitiesHeld(s, 2)).toBe(6);
     playRound(s);
-    // Germany sits earlier in the fixed turn order [0, 1, 2, 3].
+    // Germany sits earlier in the fixed turn order [0, 1, 2, 3, 4].
     expect(s.winner).toBe(0);
     expect(s.winReason).toBe('victory_cities');
   });
 
   it('the capitals win still fires immediately, mid-round, on the 1942 board', () => {
     const s = game1942();
-    expect(s.victoryCitiesToWin).toEqual([6, 5, 6, 8]);
+    expect(s.victoryCitiesToWin).toEqual([6, 5, 6, 5, 6]);
     // Germany takes Moscow: 2 of 5 capitals, no win yet.
     s.territories.russia.owner = 0;
     resolveCapture(s, 'russia', 0, 1);
@@ -255,7 +258,8 @@ describe('victory cities: brief and saves', () => {
     expect(brief).toContain('Germany 3/6');
     expect(brief).toContain('USSR 2/5');
     expect(brief).toContain('Japan 3/6');
-    expect(brief).toContain('UK + US 5/8');
+    expect(brief).toContain('UK 2/5');
+    expect(brief).toContain('US 3/6');
     expect(brief).toContain('end of a complete round');
   });
 
@@ -265,7 +269,7 @@ describe('victory cities: brief and saves', () => {
     const json = serialize(s);
     setActiveMap('america');
     const restored = deserialize(json);
-    expect(restored.victoryCitiesToWin).toEqual([6, 5, 6, 8]);
+    expect(restored.victoryCitiesToWin).toEqual([6, 5, 6, 5, 6]);
     expect(victoryCitiesHeld(restored, 0)).toBe(4);
     expect(serialize(restored)).toBe(json);
   });
@@ -276,7 +280,7 @@ describe('victory cities: brief and saves', () => {
     delete data.victoryCitiesToWin;
     setActiveMap('america');
     const restored = deserialize(JSON.stringify(data));
-    expect(restored.victoryCitiesToWin).toEqual([6, 5, 6, 8]);
+    expect(restored.victoryCitiesToWin).toEqual([6, 5, 6, 5, 6]);
 
     setActiveMap('america');
     const a = JSON.parse(serialize(createGame({ numPlayers: 2, seed: 5 })));

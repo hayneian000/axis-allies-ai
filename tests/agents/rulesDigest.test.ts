@@ -85,7 +85,7 @@ describe('rules digest on the 1942 world map', () => {
 
   it('states victory from the scenario capitals data', () => {
     setActiveMap('world1942');
-    const s = scenarioFor(4);
+    const s = scenarioFor(5);
     const total = s.capitals.reduce((n, c) => n + (Array.isArray(c) ? c.length : 1), 0);
     const d = buildRulesDigest();
     expect(d).toContain(`${s.capitalsToWin} of ${total}`);
@@ -94,7 +94,7 @@ describe('rules digest on the 1942 world map', () => {
 
   it('names the seats and states the fixed turn order', () => {
     setActiveMap('world1942');
-    const s = scenarioFor(4);
+    const s = scenarioFor(5);
     const d = buildRulesDigest();
     for (const name of s.seatNames ?? []) expect(d).toContain(name);
     expect(d).toContain('fixed order every round');
@@ -103,7 +103,7 @@ describe('rules digest on the 1942 world map', () => {
 
   it('states the victory-cities win from the scenario data', () => {
     setActiveMap('world1942');
-    const s = scenarioFor(4);
+    const s = scenarioFor(5);
     const targets = s.victoryCitiesToWin as number[];
     const cities = MAP.territories.filter((t) => t.victoryCity);
     const d = buildRulesDigest();
@@ -118,16 +118,16 @@ describe('rules digest on the 1942 world map', () => {
     expect(d).toContain('END of a complete round');
   });
 
-  it('explains the two-capital seat from the scenario data', () => {
+  it('has no two-capital seat: every seat holds exactly one capital', () => {
     setActiveMap('world1942');
-    const s = scenarioFor(4);
-    const multi = s.capitals
-      .map((c, i) => ({ caps: Array.isArray(c) ? c : [c], name: (s.seatNames ?? [])[i] }))
-      .find((x) => x.caps.length > 1)!;
+    const s = scenarioFor(5);
+    // The split scenario gives each of the five seats a single capital,
+    // so the digest carries no two-capital explanation.
+    expect(s.capitals).toHaveLength(5);
+    for (const c of s.capitals) expect(Array.isArray(c)).toBe(false);
     const d = buildRulesDigest();
-    expect(d).toContain(multi.name);
-    for (const cap of multi.caps) expect(d).toContain(cap);
-    expect(d).toContain('NEITHER capital');
+    expect(d).not.toContain('TWO-CAPITAL SEAT');
+    expect(d).not.toContain('NEITHER capital');
   });
 
   it('states neutrals are impassable and lists them from data', () => {

@@ -10,9 +10,12 @@ import { freshGame } from '../helpers';
  * capital assignment, turn order, and scenario validation.
  */
 describe('game setup', () => {
-  it('rejects invalid player counts (1942 2e: 2-5 players, project: 2-4)', () => {
+  it('rejects invalid player counts (America scenarios run 2-4; the engine cap is 5 for the 1942 board)', () => {
     expect(() => createGame({ numPlayers: 1 })).toThrow();
-    expect(() => createGame({ numPlayers: 5 })).toThrow();
+    // 5 is a legal engine count, but the America map has no 5-player
+    // scenario, so it still throws here; 6 exceeds the engine cap.
+    expect(() => createGame({ numPlayers: 5 })).toThrow(/No scenario for 5 players/);
+    expect(() => createGame({ numPlayers: 6 })).toThrow();
     expect(() => createGame({ numPlayers: 0 })).toThrow();
   });
 

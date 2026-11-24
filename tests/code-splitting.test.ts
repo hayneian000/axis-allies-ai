@@ -38,8 +38,8 @@ describe('lazy 1942 map boundary', () => {
     setActiveMap('world1942');
     expect(MAP.territories).toEqual(map1942Json.territories);
     expect(MAP).toEqual(map1942Json);
-    expect(scenarioFor(4).seatNames).toEqual(scenario1942Json.seatNames);
-    expect(scenarioFor(4).victoryCitiesToWin).toEqual(scenario1942Json.victoryCitiesToWin);
+    expect(scenarioFor(5).seatNames).toEqual(scenario1942Json.seatNames);
+    expect(scenarioFor(5).victoryCitiesToWin).toEqual(scenario1942Json.victoryCitiesToWin);
     setActiveMap('america');
     expect(activeMapId()).toBe('america');
   });

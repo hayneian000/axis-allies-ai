@@ -349,12 +349,12 @@ beforeAll(async () => {
 });
 
 describe('headless simulation on the 1942 board-space map', () => {
-  it('plays at least 3 full rounds with all 4 seats (seed 7)', () => {
+  it('plays at least 3 full rounds with all 5 seats (seed 7)', () => {
     setActiveMap('world1942');
     try {
       // maxRounds caps the turn guard; the assertion is on rounds actually
       // completed with every engine call the strict bot makes succeeding.
-      const { state, stats } = playBotGame(7, 4, 6);
+      const { state, stats } = playBotGame(7, 5, 6);
       expect(state.round).toBeGreaterThanOrEqual(4);
       expect(stats.captures).toBeGreaterThan(0);
       assertValidUnits(state);

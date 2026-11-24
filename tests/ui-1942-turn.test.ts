@@ -113,7 +113,7 @@ describe('1942 UI full turn (seed 7, fixed order: Germany, USSR, Japan)', () => 
     expect(banner()).toContain('Germany');
     expect(banner()).toContain('phase: purchase');
     expect(banner()).toContain('bank 41 IPCs');
-    expect(el('log').textContent).toContain('Turn order: Germany, USSR, Japan, UK + US');
+    expect(el('log').textContent).toContain('Turn order: Germany, USSR, Japan, UK, US');
 
     // Pass Germany and the USSR through their turns untouched.
     passTurn();
@@ -155,7 +155,7 @@ describe('1942 UI full turn (seed 7, fixed order: Germany, USSR, Japan)', () => 
     expect(el('modal').hidden).toBe(false); // battle dialog auto-opens
     resolveBattles();
     expect(el('error').textContent).toBe('');
-    // Anhwei captured from UK + US (log line), sz53 held.
+    // Anhwei captured from US (log line), sz53 held.
     expect(el('log').textContent).toContain('Japan captures anhwei');
     el('modal-close').click();
   });
@@ -204,10 +204,10 @@ describe('1942 UI full turn (seed 7, fixed order: Germany, USSR, Japan)', () => 
     expect(sz62Title).toContain('1dd');
 
     el('endPhaseBtn').click();
-    // Fixed order: after Japan comes the merged UK + US seat (bank 73).
-    expect(banner()).toContain('UK + US');
+    // Fixed order: after Japan comes the UK seat (bank 31).
+    expect(banner()).toContain('UK');
     expect(banner()).toContain('phase: purchase');
-    expect(banner()).toContain('bank 73 IPCs');
+    expect(banner()).toContain('bank 31 IPCs');
     expect(el('log').textContent).toContain('Japan collects 31 IPCs');
   });
 });

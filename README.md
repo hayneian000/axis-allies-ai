@@ -16,9 +16,8 @@ Two maps ship with the game, selectable on the setup screen:
 - **America** - a 33-territory map of the continental United States
   (26 land territories + 7 coastal sea zones), 2-4 player free-for-all.
 - **1942 World** - the full 1942 world map: 161 territories on the original
-  board artwork, with the Axis & Allies 1942 Second Edition setup. Four
-  seats (the five powers are merged into four seats: Germany, USSR, Japan,
-  and UK + US combined).
+  board artwork, with the Axis & Allies 1942 Second Edition setup. Five
+  seats, one per power: Germany, USSR, Japan, UK, and US.
 
 > **Unofficial fan project.** This is an unofficial, non-commercial fan
 > project. It is not affiliated with or endorsed by Hasbro or Avalon Hill.
@@ -87,9 +86,8 @@ Trans-Jordan).
 **Winning:** hold a majority of the capitals simultaneously - 3 of 4 on the
 America map, 3 of 5 on the 1942 World map. 20-round cap - then highest
 income wins (tie: bank). Lose your capital and you get no purchases and no
-income until you take it back. On the 1942 board, the combined UK + US seat
-has two capitals (United Kingdom and Eastern United States): it is blocked
-only while it holds neither, and capturing either one transfers its bank.
+income until you take it back. On the 1942 board, each of the five seats
+holds exactly one capital, so the same rule applies to every seat.
 
 Click any territory to inspect it: owner, IPC value, units, factory status.
 
@@ -217,7 +215,7 @@ Allies teams, on both maps.
 - Four Corners point-contacts (CO-AZ, NM-UT) are not adjacency.
 - Turn order on the America map is shuffled at game start (a free-for-all
   adaptation). The 1942 World scenario uses the historical power order -
-  Germany, USSR, Japan, then UK + US - and seats carry their power names.
+  Germany, USSR, Japan, UK, then US - and seats carry their power names.
 
 ## Roadmap
 

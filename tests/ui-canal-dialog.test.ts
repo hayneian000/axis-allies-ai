@@ -10,8 +10,9 @@ import { bridge } from '../ui/driverBridge';
 // destination list is generated with the same canalEdgeOpen rule the
 // engine validates, so a closed canal route is never offered. States are
 // injected through the app's own driver bridge (the AI driver's path),
-// with seat 3 to move in the combat-move phase: its sz17 destroyer sits
-// at the Suez mouth and its sz19 cruiser at the Panama mouth.
+// with the canal-owning seat to move in the combat-move phase: seat 3's
+// sz17 destroyer sits at the Suez mouth and seat 4's sz19 cruiser at the
+// Panama mouth.
 
 function el<T extends HTMLElement = HTMLElement>(id: string): T {
   const e = document.getElementById(id);
@@ -19,10 +20,10 @@ function el<T extends HTMLElement = HTMLElement>(id: string): T {
   return e as T;
 }
 
-function inject(mutate?: (s: GameState) => void): void {
+function inject(player = 3, mutate?: (s: GameState) => void): void {
   setActiveMap('world1942');
-  const s = createGame({ numPlayers: 4, seed: 7 });
-  s.currentPlayer = 3;
+  const s = createGame({ numPlayers: 5, seed: 7 });
+  s.currentPlayer = player;
   s.phase = 'combatMove';
   mutate?.(s);
   bridge.ui!.setGameState(s);
@@ -58,7 +59,7 @@ describe('sea move dialog canal filtering (1942)', () => {
   });
 
   it('omits the Suez route when Trans-Jordan is enemy-held', () => {
-    inject((s) => {
+    inject(3, (s) => {
       s.territories.trans_jordan.owner = 0;
     });
     const dests = destButtons('sz17');
@@ -68,13 +69,13 @@ describe('sea move dialog canal filtering (1942)', () => {
   });
 
   it('offers the Panama route while Central America is held', () => {
-    inject();
+    inject(4);
     const dests = destButtons('sz19');
     expect(dests.some((d) => d.includes('Sea Zone 18'))).toBe(true);
   });
 
   it('omits the Panama route when Central America is enemy-held', () => {
-    inject((s) => {
+    inject(4, (s) => {
       s.territories.central_america.owner = 0;
     });
     const dests = destButtons('sz19');

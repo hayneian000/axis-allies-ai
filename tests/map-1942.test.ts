@@ -272,7 +272,7 @@ describe('map-1942 board space (TripleA 3500x2000)', () => {
   });
 });
 
-describe('scenario-1942 (four-seat merge of the five board powers)', () => {
+describe('scenario-1942 (five seats, one per board power)', () => {
   const holdings = scenario1942.holdings as Array<{
     territory: string;
     owner: number;
@@ -280,17 +280,18 @@ describe('scenario-1942 (four-seat merge of the five board powers)', () => {
     units: Record<string, number>;
   }>;
 
-  it('has 4 players, merged banks, and per-seat capitals covering all 5 board capitals', () => {
-    expect(scenario1942.players).toBe(4);
-    // Germans 41, Russians 24, Japanese 30, British 31 + Americans 42 = 73.
-    expect(scenario1942.banks).toEqual([41, 24, 30, 73]);
-    // One capitals entry per seat; seat 3 (British + Americans) lists both
-    // of its capitals, primary first.
-    expect(scenario1942.capitals).toHaveLength(4);
+  it('has 5 players, per-power banks, and per-seat capitals covering all 5 board capitals', () => {
+    expect(scenario1942.players).toBe(5);
+    // Germans 41, Russians 24, Japanese 30, British 31, Americans 42.
+    expect(scenario1942.banks).toEqual([41, 24, 30, 31, 42]);
+    // One capitals entry per seat, each a single capital: seat 3 is
+    // united_kingdom (UK) and seat 4 is eastern_united_states (US).
+    expect(scenario1942.capitals).toHaveLength(5);
     expect(scenario1942.capitals[0]).toBe('germany');
     expect(scenario1942.capitals[1]).toBe('russia');
     expect(scenario1942.capitals[2]).toBe('japan');
-    expect(scenario1942.capitals[3]).toEqual(['united_kingdom', 'eastern_united_states']);
+    expect(scenario1942.capitals[3]).toBe('united_kingdom');
+    expect(scenario1942.capitals[4]).toBe('eastern_united_states');
     const flat = (scenario1942.capitals as Array<string | string[]>).flatMap((c) =>
       Array.isArray(c) ? c : [c],
     );

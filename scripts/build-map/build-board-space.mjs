@@ -408,8 +408,8 @@ const mapOut = {
 }
 
 // --------------------------------------------------------- scenario-1942.json --
-// Five powers, four seats: UK and US share seat 3.
-const POWER_TO_SEAT = { Germans: 0, Russians: 1, Japanese: 2, British: 3, Americans: 3 };
+// Five powers, five seats: one seat per power.
+const POWER_TO_SEAT = { Germans: 0, Russians: 1, Japanese: 2, British: 3, Americans: 4 };
 const META_OWNER_TO_POWER = {
   ussr: 'Russians',
   germany: 'Germans',
@@ -526,8 +526,8 @@ const impassableIds = metaIds.filter(
 );
 assert(impassableIds.length === 16, `impassable neutrals ${impassableIds.length} !== 16`);
 
-// Banks: XML resourceInitialize starting PUs when present (seat 3 combines
-// British + Americans), else board incomes.
+// Banks: XML resourceInitialize starting PUs when present, else board
+// incomes. One bank per power.
 let banks;
 let bankSource;
 if (['Germans', 'Russians', 'Japanese', 'British', 'Americans'].every((p) => pusByPlayer.has(p))) {
@@ -535,18 +535,19 @@ if (['Germans', 'Russians', 'Japanese', 'British', 'Americans'].every((p) => pus
     pusByPlayer.get('Germans'),
     pusByPlayer.get('Russians'),
     pusByPlayer.get('Japanese'),
-    pusByPlayer.get('British') + pusByPlayer.get('Americans'),
+    pusByPlayer.get('British'),
+    pusByPlayer.get('Americans'),
   ];
-  bankSource = `XML resourceInitialize starting PUs (Germans ${pusByPlayer.get('Germans')}, Russians ${pusByPlayer.get('Russians')}, Japanese ${pusByPlayer.get('Japanese')}, British ${pusByPlayer.get('British')} + Americans ${pusByPlayer.get('Americans')} combined into seat 3)`;
+  bankSource = `XML resourceInitialize starting PUs (Germans ${pusByPlayer.get('Germans')}, Russians ${pusByPlayer.get('Russians')}, Japanese ${pusByPlayer.get('Japanese')}, British ${pusByPlayer.get('British')}, Americans ${pusByPlayer.get('Americans')})`;
 } else {
-  banks = [41, 24, 30, 73];
-  bankSource = 'board incomes (the XML has no complete resourceInitialize; seat 3 = UK 31 + US 42)';
+  banks = [41, 24, 30, 31, 42];
+  bankSource = 'board incomes (the XML has no complete resourceInitialize)';
 }
 
 // Victory-city targets (1942 2e standard victory, rulebook p.6), per seat:
 // each seat's starting victory-city count + 3. The book states side totals
 // (Axis 9 / Allies 10); the free-for-all deals the same +3 out per seat.
-const vcStart = [0, 0, 0, 0];
+const vcStart = [0, 0, 0, 0, 0];
 for (const h of holdings) {
   if (meta[h.territory]?.victoryCity !== undefined) vcStart[h.owner] += 1;
 }
@@ -554,44 +555,42 @@ assert(vcStart.reduce((a, b) => a + b, 0) === 13, 'starting victory cities !== 1
 const victoryCitiesToWin = vcStart.map((n) => n + 3);
 
 const scenarioOut = {
-  players: 4,
-  // One entry per seat; seat 3 rules two powers, so its entry is the pair
-  // of its capitals (primary first). The engine registers BOTH as seat 3
-  // capitals: capturing either steals the seat's bank, the seat is
-  // purchase/income-blocked only while it holds neither, and victory is
-  // a majority of all five board capitals (capitalsToWin: 3).
-  capitals: ['germany', 'russia', 'japan', ['united_kingdom', 'eastern_united_states']],
+  players: 5,
+  // One entry per seat, and each seat rules one power, so each entry is
+  // that power's single capital. Capturing a seat's capital steals its
+  // bank and blocks its purchases and income until it is retaken, and
+  // victory is a majority of all five board capitals (capitalsToWin: 3).
+  capitals: ['germany', 'russia', 'japan', 'united_kingdom', 'eastern_united_states'],
   capitalsToWin: 3,
   victoryCitiesToWin,
   // Seat identity: the scenario names its seats (the powers) and plays in
-  // the fixed 1942 2e power order - Germany, USSR, Japan, then the merged
-  // UK + US seat. createGame uses turnOrder verbatim (no shuffle) and
-  // seatNames as the default player names.
-  seatNames: ['Germany', 'USSR', 'Japan', 'UK + US'],
-  turnOrder: [0, 1, 2, 3],
+  // the fixed 1942 2e power order - Germany, USSR, Japan, UK, then US.
+  // createGame uses turnOrder verbatim (no shuffle) and seatNames as the
+  // default player names.
+  seatNames: ['Germany', 'USSR', 'Japan', 'UK', 'US'],
+  turnOrder: [0, 1, 2, 3, 4],
   banks,
   holdings,
   neutrals: {},
   note:
     'Axis & Allies 1942 Second Edition setup converted from the TripleA WW2v5_1942_2nd.xml. ' +
-    'The board has five powers but this scenario has four seats: Germans = seat 0, Russians = seat 1, ' +
-    'Japanese = seat 2, and British + Americans are combined into seat 3 (both powers\' territories and ' +
-    'starting units belong to seat 3). capitals has one entry per seat; seat 3\'s entry lists both of ' +
-    'its capitals, united_kingdom (primary) and eastern_united_states, and both are registered seat ' +
-    `capitals in the engine. Banks: ${bankSource}. ` +
+    'The board has five powers and this scenario has five seats: Germans = seat 0, Russians = seat 1, ' +
+    'Japanese = seat 2, British = seat 3, and Americans = seat 4 (each power\'s territories and ' +
+    'starting units belong to its own seat). capitals has one entry per seat, each seat\'s single ' +
+    `capital. Banks: ${bankSource}. ` +
     'Sea-zone holdings carry the naval starting units from the XML; land holdings cover every ' +
     'power-owned territory. The 16 neutral territories are impassable (1942 2e): they hold no ' +
     'garrison and can never be entered, overflown, or captured. ' +
     'Victory cities: the scenario also plays the 1942 2e standard victory (rulebook p.6) in ' +
     'per-seat form - at the end of a complete round, a seat holding 3 more victory cities than ' +
     `it started with wins (victoryCitiesToWin per seat: Germany ${victoryCitiesToWin[0]}, ` +
-    `USSR ${victoryCitiesToWin[1]}, Japan ${victoryCitiesToWin[2]}, UK + US ${victoryCitiesToWin[3]}; ` +
-    "the book's side totals are Axis 9 / Allies 10).",
+    `USSR ${victoryCitiesToWin[1]}, Japan ${victoryCitiesToWin[2]}, UK ${victoryCitiesToWin[3]}, ` +
+    `US ${victoryCitiesToWin[4]}; the book's side totals are Axis 9 / Allies 10).`,
 };
 
 // --- scenario validation + totals ---
-const unitsPerSeat = [0, 0, 0, 0];
-const factoriesPerSeat = [0, 0, 0, 0];
+const unitsPerSeat = [0, 0, 0, 0, 0];
+const factoriesPerSeat = [0, 0, 0, 0, 0];
 for (const h of holdings) {
   for (const n of Object.values(h.units)) unitsPerSeat[h.owner] += n;
   if (h.factory) factoriesPerSeat[h.owner] += 1;

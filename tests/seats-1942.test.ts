@@ -16,17 +16,17 @@ beforeAll(async () => {
 describe('1942 seats and turn order', () => {
   it('names players from the scenario seat names', () => {
     setActiveMap('world1942');
-    const s = createGame({ numPlayers: 4, seed: 7 });
-    expect(s.players.map((p) => p.name)).toEqual(scenarioFor(4).seatNames);
-    expect(s.players.map((p) => p.name)).toEqual(['Germany', 'USSR', 'Japan', 'UK + US']);
+    const s = createGame({ numPlayers: 5, seed: 7 });
+    expect(s.players.map((p) => p.name)).toEqual(scenarioFor(5).seatNames);
+    expect(s.players.map((p) => p.name)).toEqual(['Germany', 'USSR', 'Japan', 'UK', 'US']);
   });
 
   it('plays in the fixed scenario order for every seed, Germany first', () => {
     setActiveMap('world1942');
     for (const seed of [1, 7, 42, 99, 123456]) {
-      const s = createGame({ numPlayers: 4, seed });
-      expect(s.turnOrder).toEqual(scenarioFor(4).turnOrder);
-      expect(s.turnOrder).toEqual([0, 1, 2, 3]);
+      const s = createGame({ numPlayers: 5, seed });
+      expect(s.turnOrder).toEqual(scenarioFor(5).turnOrder);
+      expect(s.turnOrder).toEqual([0, 1, 2, 3, 4]);
       expect(s.currentPlayer).toBe(0);
       expect(s.players[s.currentPlayer].name).toBe('Germany');
     }
@@ -34,24 +34,24 @@ describe('1942 seats and turn order', () => {
 
   it('announces the power order in the game-start log', () => {
     setActiveMap('world1942');
-    const s = createGame({ numPlayers: 4, seed: 7 });
+    const s = createGame({ numPlayers: 5, seed: 7 });
     const start = s.events.find((e) => e.kind === 'game_start');
-    expect(start?.detail).toContain('Germany, USSR, Japan, UK + US');
+    expect(start?.detail).toContain('Germany, USSR, Japan, UK, US');
   });
 
   it('caller-supplied names win, per seat, over the scenario names', () => {
     setActiveMap('world1942');
     const full = createGame({
-      numPlayers: 4,
+      numPlayers: 5,
       seed: 7,
-      playerNames: ['Ana', 'Bo', 'Cy', 'Di'],
+      playerNames: ['Ana', 'Bo', 'Cy', 'Di', 'Ed'],
     });
-    expect(full.players.map((p) => p.name)).toEqual(['Ana', 'Bo', 'Cy', 'Di']);
+    expect(full.players.map((p) => p.name)).toEqual(['Ana', 'Bo', 'Cy', 'Di', 'Ed']);
     // The fixed order does not follow the names; it is the seats' order.
-    expect(full.turnOrder).toEqual([0, 1, 2, 3]);
+    expect(full.turnOrder).toEqual([0, 1, 2, 3, 4]);
 
-    const partial = createGame({ numPlayers: 4, seed: 7, playerNames: ['', 'Bo'] });
-    expect(partial.players.map((p) => p.name)).toEqual(['Germany', 'Bo', 'Japan', 'UK + US']);
+    const partial = createGame({ numPlayers: 5, seed: 7, playerNames: ['', 'Bo'] });
+    expect(partial.players.map((p) => p.name)).toEqual(['Germany', 'Bo', 'Japan', 'UK', 'US']);
   });
 });
 

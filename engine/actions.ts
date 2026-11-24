@@ -28,8 +28,8 @@ export interface CreateGameOptions {
 
 export function createGame(opts: CreateGameOptions): GameState {
   const { numPlayers } = opts;
-  if (!Number.isInteger(numPlayers) || numPlayers < 2 || numPlayers > 4) {
-    throw new Error('numPlayers must be 2, 3, or 4');
+  if (!Number.isInteger(numPlayers) || numPlayers < 2 || numPlayers > 5) {
+    throw new Error('numPlayers must be 2, 3, 4, or 5');
   }
   const scenario = scenarioFor(numPlayers);
   const seed = opts.seed ?? Math.floor(Math.random() * 2 ** 31);

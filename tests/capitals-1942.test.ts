@@ -12,17 +12,16 @@ import {
 } from '../engine/engine';
 import type { GameState } from '../engine/types';
 
-// Multi-capital seats (1942 board): the board has five capitals but four
-// seats. Seat 3 (British + Americans) registers BOTH united_kingdom and
-// eastern_united_states as its capitals. Semantics:
-//  - capturing ANY capital of a seat steals that seat's whole bank;
-//  - the seat is purchase/income-blocked only while it holds NONE of its
-//    capitals;
+// Capitals on the 1942 board: five seats, five capitals, one per seat.
+// united_kingdom belongs to seat 3 (UK) and eastern_united_states to
+// seat 4 (US). Semantics, the same as any single-capital seat:
+//  - capturing a seat's capital steals that seat's whole bank;
+//  - the seat is purchase/income-blocked while it holds no capital;
 //  - victory = hold a majority of all five board capitals (3).
 
 function game1942(): GameState {
   setActiveMap('world1942');
-  return createGame({ numPlayers: 4, seed: 7 });
+  return createGame({ numPlayers: 5, seed: 7 });
 }
 
 afterEach(() => setActiveMap('america'));
@@ -34,20 +33,23 @@ beforeAll(async () => {
 });
 
 describe('registration', () => {
-  it('seat 3 registers both capitals; other seats register one', () => {
+  it('each seat registers exactly one capital', () => {
     const s = game1942();
     expect(s.players[0].capitals).toEqual(['germany']);
     expect(s.players[1].capitals).toEqual(['russia']);
     expect(s.players[2].capitals).toEqual(['japan']);
-    expect(s.players[3].capitals).toEqual(['united_kingdom', 'eastern_united_states']);
-    expect(s.players[3].capital).toBe('united_kingdom'); // primary
-    expect(capitalsOf(s, 3)).toEqual(['united_kingdom', 'eastern_united_states']);
+    expect(s.players[3].capitals).toEqual(['united_kingdom']);
+    expect(s.players[4].capitals).toEqual(['eastern_united_states']);
+    expect(s.players[3].capital).toBe('united_kingdom');
+    expect(s.players[4].capital).toBe('eastern_united_states');
+    expect(capitalsOf(s, 3)).toEqual(['united_kingdom']);
+    expect(capitalsOf(s, 4)).toEqual(['eastern_united_states']);
     expect(s.capitalsToWin).toBe(3);
   });
 
   it('seat chrome colors are the official nation colors on the 1942 board', () => {
     const s = game1942();
-    expect(s.players.map((p) => p.color)).toEqual(['#5a5a5a', '#af2828', '#e87112', '#916400']);
+    expect(s.players.map((p) => p.color)).toEqual(['#5a5a5a', '#af2828', '#e87112', '#916400', '#5a5a00']);
   });
 
   it('America games keep single capitals and the classic seat colors', () => {
@@ -61,64 +63,64 @@ describe('registration', () => {
 });
 
 describe('purchase / income blocking', () => {
-  it('losing Washington alone does NOT block seat 3 (London still held)', () => {
+  it('losing Washington blocks seat 4 (it has no second capital)', () => {
     const s = game1942();
     s.territories.eastern_united_states.owner = 0;
-    expect(ownsCapital(s, 3)).toBe(true);
-    s.currentPlayer = 3;
+    expect(ownsCapital(s, 4)).toBe(false);
+    s.currentPlayer = 4;
     expect(s.phase).toBe('purchase');
-    const r = purchase(s, 3, [{ type: 'infantry', count: 1 }]);
-    expect(r.ok, r.error).toBe(true);
+    const r = purchase(s, 4, [{ type: 'infantry', count: 1 }]);
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('no_capital');
   });
 
-  it('losing London alone does NOT block seat 3 either', () => {
+  it('losing London blocks seat 3 the same way', () => {
     const s = game1942();
     s.territories.united_kingdom.owner = 0;
-    expect(ownsCapital(s, 3)).toBe(true);
-  });
-
-  it('losing BOTH capitals blocks purchase and income', () => {
-    const s = game1942();
-    s.territories.united_kingdom.owner = 0;
-    s.territories.eastern_united_states.owner = 0;
     expect(ownsCapital(s, 3)).toBe(false);
     s.currentPlayer = 3;
     const r = purchase(s, 3, [{ type: 'infantry', count: 1 }]);
     expect(r.ok).toBe(false);
     expect(r.code).toBe('no_capital');
-    // Income at end of mobilize is 0 despite holding income-bearing land.
-    const bankBefore = s.players[3].ipcs;
-    expect(incomeOf(s, 3)).toBeGreaterThan(0);
-    s.phase = 'mobilize';
-    const e = endPhase(s, 3);
-    expect(e.ok, e.error).toBe(true);
-    expect(s.players[3].ipcs).toBe(bankBefore);
   });
 
-  it('with one capital held, income is collected normally', () => {
+  it('losing its only capital blocks income too', () => {
     const s = game1942();
     s.territories.eastern_united_states.owner = 0;
-    s.currentPlayer = 3;
+    expect(ownsCapital(s, 4)).toBe(false);
+    // Income at end of mobilize is 0 despite holding income-bearing land.
+    const bankBefore = s.players[4].ipcs;
+    expect(incomeOf(s, 4)).toBeGreaterThan(0);
+    s.currentPlayer = 4;
     s.phase = 'mobilize';
-    const bankBefore = s.players[3].ipcs;
-    const e = endPhase(s, 3);
+    const e = endPhase(s, 4);
     expect(e.ok, e.error).toBe(true);
-    expect(s.players[3].ipcs).toBe(bankBefore + incomeOf(s, 3));
+    expect(s.players[4].ipcs).toBe(bankBefore);
+  });
+
+  it('with its capital held, income is collected normally', () => {
+    const s = game1942();
+    s.currentPlayer = 4;
+    s.phase = 'mobilize';
+    const bankBefore = s.players[4].ipcs;
+    const e = endPhase(s, 4);
+    expect(e.ok, e.error).toBe(true);
+    expect(s.players[4].ipcs).toBe(bankBefore + incomeOf(s, 4));
   });
 });
 
 describe('bank steal', () => {
-  it('capturing Washington steals seat 3\u2019s bank', () => {
+  it('capturing Washington steals seat 4’s bank', () => {
     const s = game1942();
-    s.players[3].ipcs = 50;
+    s.players[4].ipcs = 50;
     s.players[0].ipcs = 41;
-    resolveCapture(s, 'eastern_united_states', 0, 3);
+    resolveCapture(s, 'eastern_united_states', 0, 4);
     expect(s.territories.eastern_united_states.owner).toBe(0);
     expect(s.players[0].ipcs).toBe(91);
-    expect(s.players[3].ipcs).toBe(0);
+    expect(s.players[4].ipcs).toBe(0);
   });
 
-  it('capturing London steals seat 3\u2019s bank too', () => {
+  it('capturing London steals seat 3’s bank too', () => {
     const s = game1942();
     s.players[3].ipcs = 50;
     s.players[2].ipcs = 30;
@@ -151,15 +153,16 @@ describe('victory: majority of the five board capitals', () => {
 
   it('holding 2 of 5 does not win', () => {
     const s = game1942();
-    resolveCapture(s, 'eastern_united_states', 0, 3); // germany + Washington = 2
+    resolveCapture(s, 'eastern_united_states', 0, 4); // germany + Washington = 2
     expect(s.winner).toBeNull();
     expect(s.phase).not.toBe('gameover');
   });
 
-  it('seat 3 holding both of its own plus one more wins', () => {
+  it('seat 4 holding its own capital plus two more wins', () => {
     const s = game1942();
-    s.territories.japan.owner = 3;
-    resolveCapture(s, 'india', 3, 0); // seat 3 captures from seat 0; re-check
-    expect(s.winner).toBe(3);
+    s.territories.japan.owner = 4;
+    s.territories.united_kingdom.owner = 4;
+    resolveCapture(s, 'india', 4, 3); // seat 4 captures from seat 3; re-check
+    expect(s.winner).toBe(4);
   });
 });

@@ -55,7 +55,7 @@ beforeAll(async () => {
 describe('impassable neutrals on the 1942 map', () => {
   beforeEach(() => {
     setActiveMap('world1942');
-    s = createGame({ numPlayers: 4, seed: 7 });
+    s = createGame({ numPlayers: 5, seed: 7 });
   });
 
   afterEach(() => setActiveMap('america'));

@@ -79,23 +79,26 @@ sampled for owner colors):
 | Neutral | `#d8ba7c` | cream (the properties Impassable tan; the board's neutral cream) |
 
 Seat chrome (turn banner, roster dots) uses the same table via the lead
-nation of each seat: Germany, USSR, Japan, United Kingdom. The merged seat
-still tints per original nation on the map — British holdings tan, American
-holdings olive — and captures recolor to the capturer's lead nation.
+nation of each seat: Germany, USSR, Japan, United Kingdom, United States.
+Holdings tint per original nation on the map — British holdings tan,
+American holdings olive — and captures recolor to the capturer's lead
+nation.
 
-## Five powers, four seats
+## Five powers, five seats
 
-The board has five powers; the game has four seats. The scenario merges
-British + Americans into seat 3: both powers' territories, units, and income
-belong to that seat. Banks are `[41, 24, 30, 73]` (Germans 41, Russians 24,
-Japanese 30, British 31 + Americans 42 = 73).
+The board has five powers; the game has five seats, one per power. British
+is seat 3 and Americans is seat 4: each power's territories, units, and
+income belong to its own seat. Banks are `[41, 24, 30, 31, 42]` (Germans
+41, Russians 24, Japanese 30, British 31, Americans 42).
 
-Seat 3 is a **multi-capital seat**: the scenario registers both
-`united_kingdom` (primary) and `eastern_united_states` as its capitals.
-Capturing either one steals seat 3's whole bank (the usual capital rule);
-the seat is purchase- and income-blocked only while it holds **none** of
-its capitals. Victory is a majority of the board's five capitals
-(`capitalsToWin` 3). The America map is unchanged: one capital per seat.
+Each seat holds exactly one capital, so the usual capital rule applies to
+all five seats alike: capturing a seat's capital steals its whole bank,
+and the seat is purchase- and income-blocked while it holds no capital.
+Victory is a majority of the board's five capitals (`capitalsToWin` 3).
+The America map is unchanged: one capital per seat. (An earlier version of
+this scenario merged British + Americans into a single two-capital seat;
+saves from that version still load, since `numPlayers` is stored per
+game.)
 
 ## Canals (enforced)
 

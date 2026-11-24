@@ -50,7 +50,7 @@ describe('help unit table', () => {
 describe('help objective derivation', () => {
   it('degrades gracefully before the 1942 data is loaded', () => {
     // This test must run before any ensureMapLoaded call in this file.
-    const o = objectiveForMap('world1942', 4);
+    const o = objectiveForMap('world1942', 5);
     expect(o.capitals).toBeNull();
     expect(o.victoryCities).toBe('degraded');
     const lines = objectiveLines(o);
@@ -82,29 +82,29 @@ describe('help objective derivation', () => {
 
   it('derives 1942 numbers from the loaded scenario', async () => {
     await ensureMapLoaded('world1942');
-    const o = objectiveForMap('world1942', 4);
+    const o = objectiveForMap('world1942', 5);
     expect(o.capitals).toEqual({ toWin: 3, total: 5 });
     expect(o.victoryCities).toEqual({
-      seats: ['Germany', 'USSR', 'Japan', 'UK + US'],
-      targets: [6, 5, 6, 8],
+      seats: ['Germany', 'USSR', 'Japan', 'UK', 'US'],
+      targets: [6, 5, 6, 5, 6],
     });
     const text = objectiveLines(o).join('\n');
     expect(text).toContain('Hold 3 of the 5 capitals');
-    expect(text).toContain('Germany 6, USSR 5, Japan 6, UK + US 8');
+    expect(text).toContain('Germany 6, USSR 5, Japan 6, UK 5, US 6');
     expect(text).toContain('end of a complete round');
   });
 
   it('derives 1942 numbers from a live game state', async () => {
     await ensureMapLoaded('world1942');
     setActiveMap('world1942');
-    const s = createGame({ numPlayers: 4, seed: 7 });
+    const s = createGame({ numPlayers: 5, seed: 7 });
     const o = objectiveForState(s);
     expect(o.mapId).toBe('world1942');
     expect(o.capitals).toEqual({ toWin: 3, total: 5 });
     const vc = o.victoryCities;
     if (vc === null || vc === 'degraded') throw new Error('expected exact VC data');
-    expect(vc.targets).toEqual([6, 5, 6, 8]);
-    expect(vc.seats).toEqual(['Germany', 'USSR', 'Japan', 'UK + US']);
+    expect(vc.targets).toEqual([6, 5, 6, 5, 6]);
+    expect(vc.seats).toEqual(['Germany', 'USSR', 'Japan', 'UK', 'US']);
     setActiveMap('america');
   });
 

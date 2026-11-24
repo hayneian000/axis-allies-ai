@@ -374,14 +374,16 @@ function boot(): void {
       numPlayers = parseInt(tag.dataset.players ?? '4', 10);
     });
   }
-  const forceFourPlayers = (): void => {
-    numPlayers = 4;
-    const four = dogtags.find((t) => t.dataset.players === '4');
+  const forcePlayerCount = (n: number): void => {
+    numPlayers = n;
+    const tag = dogtags.find((t) => t.dataset.players === String(n));
     // Clicking (not just class-toggling) also fires the AI lobby's own
-    // dogtag listener, so its seat cards rebuild for 4 players.
-    if (four && !four.classList.contains('active')) four.click();
-    else dogtags.forEach((t) => t.classList.toggle('active', t === four));
+    // dogtag listener, so its seat cards rebuild for n players.
+    if (tag && !tag.classList.contains('active')) tag.click();
+    else dogtags.forEach((t) => t.classList.toggle('active', t === tag));
   };
+  // The 1942 scenario is 5-seat only.
+  const forceFivePlayers = (): void => forcePlayerCount(5);
 
   // Map folio selection (the mode plaques have their own handlers in
   // aiLobby.ts; the folios had none). Locked folios are disabled and
@@ -394,8 +396,9 @@ function boot(): void {
       folios.forEach((f) => f.classList.remove('active'));
       folio.classList.add('active');
       selectedMap = (folio.dataset.map as MapId | undefined) ?? 'america';
-      // The 1942 scenario is 4-seat only.
-      if (selectedMap === 'world1942') forceFourPlayers();
+      // The 1942 scenario is 5-seat only; America tops out at 4.
+      if (selectedMap === 'world1942') forceFivePlayers();
+      else if (numPlayers > 4) forcePlayerCount(4);
       // Preload the 1942 data while the user is still on setup, so
       // Commence usually finds it already loaded. America needs nothing.
       if (selectedMap === 'world1942' && !isMapLoaded('world1942')) {
@@ -435,7 +438,8 @@ function boot(): void {
     // Map choice first — BEFORE any game creation, in every mode: the
     // data layer (MAP / scenarioFor), the viewport, and (for 1942) the
     // player count all follow the selected folio.
-    if (selectedMap === 'world1942') forceFourPlayers();
+    if (selectedMap === 'world1942') forceFivePlayers();
+    else if (numPlayers > 4) forcePlayerCount(4);
     // When the map (or AI chunk) is already loaded this path takes no
     // await and the game starts synchronously on the click, as before.
     if (!isMapLoaded(selectedMap)) {

@@ -2,13 +2,19 @@
 
 import {
   autoCasualties,
+  countLand,
+  countSea,
+  countUnits,
   endPhase,
+  log,
   openBattles,
   resolveCombatRound,
   submergeSubs,
   submergeTurn,
 } from '../engine/engine';
-import type { ActionResult, GameState, Phase } from '../engine/types';
+import type { ActionResult, Battle, GameState, Phase, UnitCounts } from '../engine/types';
+import { UNITS } from '../data/data';
+import type { UnitType } from '../data/data';
 import type { Agent, ToolResultRecord } from './agent';
 import { phaseHasActions } from './affordance';
 import {
@@ -451,12 +457,109 @@ function summarizeOk(name: string, args: Record<string, unknown>): string {
  * each round it records a 0-submerge decision for whichever side is due
  * (attacker first), keeping every sub in the fight, consistent with an
  * auto-resolver that already auto-picks casualties for both sides.
+ *
+ * Stalemate guard (1942 2e pp.28-29): a battle neither side can ever
+ * damage - air-only vs submarines with no friendly destroyer is the
+ * case that killed league game g-20261126-103 - would roll all 100
+ * rounds with zero casualties and throw. The resolver ends it after
+ * the first round as defender-holds, with surviving attacker aircraft
+ * left aloft in the battle record to land in the non-combat phase.
  */
+/**
+ * Hit classes in the engine's combat model (engine/combat.ts):
+ * submarine hits sink sea units only, never aircraft; air hits sink
+ * anything except submarines unless a friendly destroyer is in the
+ * battle (1942 2e p.29); all other hits can be assigned to any losable
+ * unit. AA guns are never lost (captured instead), so they count for
+ * neither side.
+ */
+const OTHER_HIT_TYPES: UnitType[] = [
+  'infantry',
+  'artillery',
+  'tank',
+  'destroyer',
+  'cruiser',
+  'carrier',
+  'battleship',
+];
+const AIR_HIT_TYPES: UnitType[] = ['fighter', 'bomber'];
+const SEA_HIT_TYPES: UnitType[] = [
+  'submarine',
+  'destroyer',
+  'cruiser',
+  'carrier',
+  'battleship',
+  'transport',
+];
+
+/** Whether `scorer` can ever sink a unit of `target` with its attack
+ * (offense) or defense values. Pure function of the two forces. */
+function canHit(scorer: UnitCounts, target: UnitCounts, offense: boolean): boolean {
+  const value = (t: UnitType): number => {
+    const s = UNITS[t];
+    return offense ? (s.attack ?? 0) : (s.defense ?? 0);
+  };
+  const losable = countUnits({ ...target, aa: 0 });
+  if (losable === 0) return false;
+  if (OTHER_HIT_TYPES.some((t) => scorer[t] > 0 && value(t) > 0)) return true;
+  if (AIR_HIT_TYPES.some((t) => scorer[t] > 0 && value(t) > 0)) {
+    if (losable - (target.submarine ?? 0) > 0) return true;
+    if ((target.submarine ?? 0) > 0 && scorer.destroyer > 0) return true;
+  }
+  if (scorer.submarine > 0 && value('submarine') > 0) {
+    if (SEA_HIT_TYPES.some((t) => (target[t] ?? 0) > 0)) return true;
+  }
+  return false;
+}
+
+/** A battle neither side can ever damage (1942 2e pp.28-29): the
+ * tabletop case is air-only vs submarines with no friendly destroyer,
+ * but the check is general over the engine's hit model. */
+function isStalemate(state: GameState, b: Battle): boolean {
+  const def = state.territories[b.territoryId].units;
+  return !canHit(b.attack, def, true) && !canHit(def, b.attack, false);
+}
+
+/**
+ * End a stalemated battle the way the engine ends a failed attack:
+ * defender holds; surviving attacker aircraft stay aloft in the battle
+ * record to land in the non-combat phase (the engine's established
+ * air-only handling - see nonCombatMove's airAloft). A stalemate can
+ * only leave attacker aircraft: any attacker land or sea unit could be
+ * hit by the defender, so its presence contradicts the stalemate. If
+ * that ever fails, return false and let the 100-round backstop throw
+ * rather than stranding units the non-combat phase cannot land.
+ */
+function endStalemate(state: GameState, b: Battle): boolean {
+  if (countLand(b.attack) > 0 || countSea(b.attack) > 0) return false;
+  b.damagedAttackBB = 0;
+  b.damagedDefBB = 0;
+  b.pendingAttacker = 0;
+  b.pendingDefender = 0;
+  b.pendAtkAir = 0;
+  b.pendDefAir = 0;
+  b.over = true;
+  b.result = 'defender_holds';
+  log(
+    state,
+    'battle_end',
+    `${state.players[b.attackerId].name} cannot damage ${b.territoryId} and the defender cannot return fire; the attack ends with the defender holding and surviving aircraft aloft to land.`,
+  );
+  return true;
+}
+
 function autoResolveCombat(state: GameState, pid: number): void {
   for (const b0 of openBattles(state)) {
     for (let round = 0; round < MAX_BATTLE_ROUNDS; round++) {
       const b = state.battles.find((x) => x.id === b0.id && !x.over);
       if (!b) break;
+      // Stalemate guard: end a battle neither side can damage instead of
+      // rolling it to the 100-round backstop. One round must be fought
+      // first - the check reads the post-round forces, so a fresh
+      // stalemate rolls exactly one (harmless) round.
+      if (b.kind === 'combat' && b.rounds >= 1 && isStalemate(state, b)) {
+        if (endStalemate(state, b)) break;
+      }
       for (;;) {
         const due = submergeTurn(state, b.territoryId);
         if (!due) break;

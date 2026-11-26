@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { createGame, emptyUnits, endPhase } from '../../engine/engine';
-import type { GameState, UnitCounts } from '../../engine/types';
+import type { Battle, GameState, Phase, UnitCounts } from '../../engine/types';
 import { Agent } from '../../agents/agent';
 import { MaxRoundsExceeded, runGame } from '../../agents/driver';
 import type { SeatRuntime } from '../../agents/driver';
@@ -232,6 +232,77 @@ describe('driver: submerge auto-resolve', () => {
       (e) => e.kind === 'submerge' && e.detail.includes('western_gulf'),
     );
     expect(decisions.length).toBeGreaterThanOrEqual(2);
+    assertValidUnits(result.state);
+  }, 30000);
+});
+
+describe('driver: stalemate auto-resolve', () => {
+  it('ends an air-only attack on submarines as defender-holds instead of looping 100 rounds', async () => {
+    const state = createGame({ numPlayers: 2, seed: 42 });
+    state.turnCap = 3;
+    const pid = state.currentPlayer;
+    const foe = 1 - pid;
+    const setUnits = (zid: string, owner: number, units: Partial<UnitCounts>): void => {
+      state.territories[zid].owner = owner;
+      state.territories[zid].units = { ...emptyUnits(), ...units };
+    };
+    // The sz9 shape that killed league game g-20261126-103 in round 1:
+    // a lone bomber against 2 submarines. Air cannot hit subs without a
+    // friendly destroyer and subs cannot hit air (1942 2e pp.28-29), so
+    // neither side can ever score an effective hit.
+    setUnits('texas', pid, { bomber: 1 });
+    setUnits('western_gulf', foe, { submarine: 2 });
+
+    const attacker: MockHandler = (req) => {
+      const tools = new Set(req.tools.map((t) => t.name));
+      const staged =
+        state.territories['texas'].units.bomber > 0 && state.currentPlayer === pid;
+      if (
+        staged &&
+        tools.has('combat_move') &&
+        (state.phase === 'purchase' || state.phase === 'combatMove')
+      ) {
+        return mockResponse('sortie', [
+          mockToolCall('combat_move', {
+            moves: [{ from: 'texas', to: 'western_gulf', units: { bomber: 1 } }],
+          }),
+        ]);
+      }
+      return mockResponse('pass');
+    };
+    const seats: SeatRuntime[] = [];
+    seats[pid] = aiSeat(pid, attacker);
+    seats[foe] = aiSeat(foe, passBotHandler);
+
+    // The engine clears state.battles at the end of non-combat movement,
+    // so capture the battle via the onPhase hook at the start of the
+    // attacker's non-combat phase: after auto-resolve, before the list is
+    // cleared. Snapshot the fields (the engine later zeroes the attacker's
+    // air in the battle record when the phase ends).
+    let battle: Pick<Battle, 'over' | 'result' | 'rounds'> | undefined;
+    const events = {
+      onPhase: (s: GameState, _pid: number, phase: Phase): void => {
+        if (phase === 'nonCombat' && !battle) {
+          const b = s.battles.find((x) => x.territoryId === 'western_gulf');
+          if (b) battle = { over: b.over, result: b.result, rounds: b.rounds };
+        }
+      },
+    };
+    const result = await runGame(state, seats, events, { diplomacy: { enabled: false } });
+
+    expect(result.state.phase).toBe('gameover');
+    // The battle ended after one round as defender-holds, not with the
+    // 100-round throw: the defender's subs survived untouched.
+    expect(battle).toBeDefined();
+    expect(battle!.over).toBe(true);
+    expect(battle!.result).toBe('defender_holds');
+    expect(battle!.rounds).toBe(1);
+    expect(result.state.territories['western_gulf'].units.submarine).toBe(2);
+    expect(
+      result.state.events.some(
+        (e) => e.kind === 'battle_end' && e.detail.includes('western_gulf'),
+      ),
+    ).toBe(true);
     assertValidUnits(result.state);
   }, 30000);
 });
